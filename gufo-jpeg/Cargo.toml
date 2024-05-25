@@ -1,0 +1,12 @@
+[package]
+name = "gufo-jpeg"
+version = "0.1.0"
+license.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+gufo-common.workspace = true

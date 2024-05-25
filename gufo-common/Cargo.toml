@@ -1,0 +1,17 @@
+[package]
+name = "gufo-common"
+version = "0.1.0"
+license.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+once_cell.workspace = true
+paste.workspace = true
+serde = { workspace = true, optional = true }
+
+[features]
+serde = ["dep:serde"]

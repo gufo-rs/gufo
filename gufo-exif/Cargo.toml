@@ -1,0 +1,16 @@
+[package]
+name = "gufo-exif"
+version = "0.1.0"
+authors = ["Sophie Herold"]
+license.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+gufo-common.workspace = true
+
+[dev-dependencies]
+gufo-jpeg.workspace = true
