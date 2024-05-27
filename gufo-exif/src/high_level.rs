@@ -25,17 +25,17 @@ impl Exif {
     ///
     /// Rotation and mirroring that have to be applied to show the image
     /// correctly
-    pub fn orientation(&self) -> Option<orientation::Orientation> {
-        let num = self
-            .decoder
+    pub fn orientation(&self) -> orientation::Orientation {
+        self.decoder
             .borrow_mut()
             .lookup_short(TagIfd::new(
                 field::Orientation::TAG,
                 field::Orientation::IFD,
             ))
-            .ok()??;
-
-        orientation::Orientation::try_from(num).ok()
+            .ok()
+            .flatten()
+            .and_then(|x| orientation::Orientation::try_from(x).ok())
+            .unwrap_or(orientation::Orientation::Id)
     }
 
     /// Camera manifacturer
