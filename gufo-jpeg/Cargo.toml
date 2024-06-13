@@ -10,3 +10,4 @@ workspace = true
 
 [dependencies]
 gufo-common.workspace = true
+tracing.workspace = true

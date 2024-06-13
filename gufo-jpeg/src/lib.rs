@@ -76,13 +76,14 @@ impl<'a> Jpeg<'a> {
         let buf = &mut [0; 2];
         source.read_exact(buf).unwrap();
 
-        eprintln!("{buf:x?}");
+        tracing::debug!("Magic bytes {buf:x?}");
+        // TODO: check magic bytes
 
         let mut segments = Vec::new();
         loop {
             // Read tag
             source.read_exact(buf).unwrap();
-            eprintln!("{buf:x?}");
+            tracing::debug!("Found tag {buf:x?}");
 
             let marker = Marker::from(buf[1]);
             let pos = source.stream_position().unwrap();

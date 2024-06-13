@@ -62,7 +62,7 @@ impl super::ExifRaw {
 
     pub fn decode_entries(&mut self, ifd: Ifd) -> Result<u32> {
         let n_entries: u16 = self.raw().read_u16().e(Error::NumerEntriesEof)?;
-        eprintln!(
+        tracing::debug!(
             "Reading {ifd:?} with {n_entries} entries at {}",
             self.raw().position()?
         );
@@ -101,7 +101,7 @@ impl super::ExifRaw {
         let exists = self.ifd_locations.insert(ifd, location).is_some();
 
         if exists {
-            eprintln!("Exif: Warning: Ifd exists twice {ifd:?}");
+            tracing::warn!("Exif: Warning: Ifd exists twice {ifd:?}");
         }
     }
 }
