@@ -1,4 +1,4 @@
-use std::ops::Add;
+use std::ops::{Add, Sub};
 
 crate::utils::maybe_convertible_enum!(
     #[repr(u16)]
@@ -64,6 +64,13 @@ impl Add for Rotation {
     type Output = Self;
     fn add(self, rhs: Self) -> Self::Output {
         Rotation::try_from((self.degrees().checked_add(rhs.degrees()).unwrap()) as f64).unwrap()
+    }
+}
+
+impl Sub for Rotation {
+    type Output = Self;
+    fn sub(self, rhs: Self) -> Self::Output {
+        Rotation::try_from((self.degrees() as f64) - (rhs.degrees() as f64)).unwrap()
     }
 }
 
