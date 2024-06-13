@@ -1,6 +1,7 @@
 use std::collections::BTreeMap;
 use std::fmt::Display;
 use std::io::Cursor;
+use std::sync::Arc;
 
 use xml::name::OwnedName;
 use xml::reader::XmlEvent;
@@ -39,22 +40,14 @@ pub struct Xmp {
     entries: BTreeMap<Ref, String>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, thiserror::Error)]
+#[non_exhaustive]
 pub enum Error {
+    #[error("XmlReader: {0}")]
     XmlReader(xml::reader::Error),
-    XmlWriter(xml::writer::Error),
+    #[error("XmlWriter: {0}")]
+    XmlWriter(Arc<xml::writer::Error>),
 }
-
-impl Display for Error {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::XmlReader(err) => write!(f, "XmlReader: {err}"),
-            Self::XmlWriter(err) => write!(f, "XmlWriter: {err}"),
-        }
-    }
-}
-
-impl std::error::Error for Error {}
 
 impl From<xml::reader::Error> for Error {
     fn from(value: xml::reader::Error) -> Self {
@@ -64,7 +57,7 @@ impl From<xml::reader::Error> for Error {
 
 impl From<xml::writer::Error> for Error {
     fn from(value: xml::writer::Error) -> Self {
-        Self::XmlWriter(value)
+        Self::XmlWriter(Arc::new(value))
     }
 }
 
