@@ -9,7 +9,7 @@ fn exif() {
 
     assert_eq!(
         exif.orientation(),
-        Some(gufo_common::orientation::Orientation::Id)
+        gufo_common::orientation::Orientation::Id
     );
 
     assert_eq!(exif.model(), Some(String::from("iPhone 6")));
@@ -57,6 +57,6 @@ fn rotate() {
     let exif = gufo_exif::Exif::new(jpeg.exif_data().next().unwrap().to_vec()).unwrap();
     assert_eq!(
         exif.orientation(),
-        Some(gufo_common::orientation::Orientation::Rotation180)
+        gufo_common::orientation::Orientation::Rotation180
     );
 }
