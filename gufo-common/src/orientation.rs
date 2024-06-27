@@ -89,12 +89,16 @@ impl TryFrom<f64> for Rotation {
     fn try_from(value: f64) -> Result<Self, Self::Error> {
         let rotation = value.round().rem_euclid(360.);
 
-        match rotation {
-            0. => Ok(Self::_0),
-            90. => Ok(Self::_90),
-            180. => Ok(Self::_180),
-            270. => Ok(Self::_270),
-            _ => Err(InvalidRotation(value)),
+        if rotation == 0. {
+            Ok(Self::_0)
+        } else if rotation == 90. {
+            Ok(Self::_90)
+        } else if rotation == 180. {
+            Ok(Self::_180)
+        } else if rotation == 270. {
+            Ok(Self::_270)
+        } else {
+            Err(InvalidRotation(rotation))
         }
     }
 }

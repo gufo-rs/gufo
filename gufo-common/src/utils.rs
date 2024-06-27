@@ -93,6 +93,7 @@ macro_rules! maybe_convertible_enum {
 
             impl std::error::Error for [<Unknown $enum_name ValueError>] {}
 
+            /// Create enum from it's discriminant value
             impl std::convert::TryFrom<$type> for $enum_name {
                 type Error =  [<Unknown $enum_name ValueError>];
                 fn try_from(v: $type) -> Result<Self, Self::Error> {
@@ -104,10 +105,11 @@ macro_rules! maybe_convertible_enum {
             }
         }
 
-        impl std::convert::Into<$type> for $enum_name {
-            fn into(self) -> $type {
-                match self {
-                    $(Self::$variant_name => $variant_value,)*
+        /// Convert enum to it's discriminant value
+        impl From<$enum_name> for $type {
+            fn from(v: $enum_name) -> $type {
+                match v {
+                    $($enum_name::$variant_name => $variant_value,)*
                 }
             }
         }
