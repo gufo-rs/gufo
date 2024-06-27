@@ -1,6 +1,7 @@
 [package]
 name = "gufo-exif"
-version = "0.1.0"
+description = "Exif loading and editing"
+version.workspace = true
 authors = ["Sophie Herold"]
 license.workspace = true
 edition.workspace = true

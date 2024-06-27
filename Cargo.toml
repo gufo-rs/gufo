@@ -1,4 +1,5 @@
 [workspace.package]
+version = "0.1.0-alpha"
 license = "MPL-2.0 OR LGPL-2.1-or-later"
 edition = "2021"
 rust-version = "1.75"
@@ -21,8 +22,8 @@ cast_possible_truncation = "forbid"
 cast_possible_wrap = "forbid"
 
 [workspace.dependencies]
-gufo-common = { path = "gufo-common" }
-gufo-exif = { path = "gufo-exif" }
+gufo-common = { version = "0.1.0-alpha", path = "gufo-common" }
+gufo-exif = { version = "0.1.0-alpha", path = "gufo-exif" }
 gufo-jpeg = { path = "gufo-jpeg" }
 gufo-xmp = { path = "gufo-xmp" }
 once_cell = "1.19.0"

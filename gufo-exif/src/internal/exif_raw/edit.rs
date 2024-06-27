@@ -22,13 +22,10 @@ impl super::ExifRaw {
         let tagifd = tagifd.into();
         let mut raw = self.raw();
 
-        dbg!(&tagifd.ifd);
-        dbg!(&self.ifd_locations);
         let Some(ifd_location) = self.ifd_locations.get(&tagifd.ifd).copied() else {
             // TODO: Create IFD instead
             return Err(Error::IfdNotFound);
         };
-        dbg!(ifd_location);
 
         self.raw().seek_start(ifd_location)?;
         let ifd_offset = self.raw().read_u32()?;

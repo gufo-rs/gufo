@@ -18,7 +18,6 @@ fn all_jpgs() {
 }
 
 fn load_file(path: &std::path::Path) {
-    dbg!(path);
     let image_data = std::fs::read(path).unwrap();
 
     let image = Jpeg::new(&image_data);
@@ -28,6 +27,6 @@ fn load_file(path: &std::path::Path) {
         let mut decoder = ExifRaw::new(exif_raw.to_vec());
         decoder.decode().unwrap();
     } else {
-        dbg!("Skipping.");
+        eprintln!("No exif data found {path:?}");
     }
 }
