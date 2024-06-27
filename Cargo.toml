@@ -9,7 +9,14 @@ codegen-units = 1
 
 [workspace]
 resolver = "2"
-members = ["gufo-exif", "gufo-common", "gufo-jpeg", "tests", "gufo-xmp"]
+members = [
+    "gufo-exif",
+    "gufo-common",
+    "gufo-jpeg",
+    "tests",
+    "gufo-xmp",
+    "gufo-jxl",
+]
 default-members = ["gufo-exif", "gufo-common", "gufo-jpeg", "tests", "gufo-xmp"]
 
 [workspace.lints.rust]
@@ -30,3 +37,4 @@ paste = "1.0.15"
 serde = { version = "1.0.202", features = ["derive"] }
 tracing = "0.1"
 thiserror = "1.0.61"
+nom = "7.1.3"

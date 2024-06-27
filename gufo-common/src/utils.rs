@@ -114,7 +114,47 @@ macro_rules! maybe_convertible_enum {
     }
 }
 
-pub use {convertible_enum, maybe_convertible_enum};
+#[macro_export]
+macro_rules! convertible_enum_binary {
+    (#[repr($type:ty)]$(#[$meta:meta])* $visibility:vis enum $enum_name:ident {
+        $($(#[$variant_meta:meta])* $variant_name:ident = $variant_value:expr,)*
+    }) => {
+        #[repr($type)]
+        $(#[$meta])*
+        $visibility enum $enum_name {
+            $($(#[$variant_meta])* $variant_name = u32::from_le_bytes(*$variant_value),)*
+            Unknown([u8; std::mem::size_of::<$type>()])
+        }
+
+        impl std::convert::From<$type> for $enum_name {
+            fn from(v: $type) -> Self {
+                match &v.to_be_bytes() {
+                    $($variant_value => Self::$variant_name,)*
+                    other => Self::Unknown(*other),
+                }
+            }
+        }
+
+        impl std::convert::From<[u8; std::mem::size_of::<$type>()]> for $enum_name {
+            fn from(v: [u8; std::mem::size_of::<$type>()]) -> Self {
+                if false { unreachable!() }
+                $(else if *$variant_value == v { Self::$variant_name })*
+                else { Self::Unknown(v) }
+            }
+        }
+
+        impl std::convert::Into<[u8; std::mem::size_of::<$type>()]> for $enum_name {
+            fn into(self) -> [u8; std::mem::size_of::<$type>()] {
+                match self {
+                    $(Self::$variant_name => *$variant_value,)*
+                    Self::Unknown(other) => other,
+                }
+            }
+        }
+    }
+}
+
+pub use {convertible_enum, convertible_enum_binary, maybe_convertible_enum};
 
 #[derive(Debug, PartialEq, Eq)]
 pub struct AdditionOverflowError;
