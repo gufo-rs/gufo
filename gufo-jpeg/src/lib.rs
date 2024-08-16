@@ -116,6 +116,7 @@ impl<'a> Jpeg<'a> {
 gufo_common::utils::convertible_enum!(
     #[repr(u8)]
     #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
+    #[non_exhaustive]
     pub enum Marker {
         SOF0 = 0xC0,
         SOF1 = 0xC1,
