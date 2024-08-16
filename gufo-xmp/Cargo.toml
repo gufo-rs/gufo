@@ -4,6 +4,7 @@ name = "gufo-xmp"
 license.workspace = true
 edition.workspace = true
 rust-version.workspace = true
+repository.workspace = true
 
 [dependencies]
 xml-rs = "0.8.19"

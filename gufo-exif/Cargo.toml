@@ -6,6 +6,7 @@ authors = ["Sophie Herold"]
 license.workspace = true
 edition.workspace = true
 rust-version.workspace = true
+repository.workspace = true
 
 exclude = ["tests"]
 
