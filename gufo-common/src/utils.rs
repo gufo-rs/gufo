@@ -32,10 +32,9 @@ macro_rules! convertible_enum {
 
         impl std::convert::From<$type> for $enum_name {
             fn from(v: $type) -> Self {
-                match v {
-                    $($variant_value => Self::$variant_name,)*
-                    other => Self::Unknown(other),
-                }
+                if false { unreachable!() }
+                $( else if v == $variant_value { Self::$variant_name } )*
+                else { Self::Unknown(v) }
             }
         }
 
