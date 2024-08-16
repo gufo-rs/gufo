@@ -1,0 +1,403 @@
+
+# cargo-vet imports lock
+
+[[unpublished.gufo]]
+version = "0.1.1"
+audited_as = "0.1.0"
+
+[[unpublished.gufo-common]]
+version = "0.1.1"
+audited_as = "0.1.0"
+
+[[unpublished.gufo-jpeg]]
+version = "0.1.1"
+audited_as = "0.1.0"
+
+[[publisher.gufo]]
+version = "0.1.0"
+when = "2024-07-30"
+user-id = 195802
+user-login = "sophie-h"
+user-name = "Sophie Herold"
+
+[[publisher.gufo-common]]
+version = "0.1.0"
+when = "2024-07-30"
+user-id = 195802
+user-login = "sophie-h"
+user-name = "Sophie Herold"
+
+[[publisher.gufo-exif]]
+version = "0.1.0"
+when = "2024-07-30"
+user-id = 195802
+user-login = "sophie-h"
+user-name = "Sophie Herold"
+
+[[publisher.gufo-exif]]
+version = "0.1.1"
+when = "2024-07-30"
+user-id = 195802
+user-login = "sophie-h"
+user-name = "Sophie Herold"
+
+[[publisher.gufo-jpeg]]
+version = "0.1.0"
+when = "2024-07-30"
+user-id = 195802
+user-login = "sophie-h"
+user-name = "Sophie Herold"
+
+[[publisher.tracing]]
+version = "0.1.40"
+when = "2023-10-19"
+user-id = 1249
+user-login = "hawkw"
+user-name = "Eliza Weisman"
+
+[[publisher.tracing-attributes]]
+version = "0.1.27"
+when = "2023-10-13"
+user-id = 1249
+user-login = "hawkw"
+user-name = "Eliza Weisman"
+
+[[publisher.tracing-core]]
+version = "0.1.32"
+when = "2023-10-13"
+user-id = 1249
+user-login = "hawkw"
+user-name = "Eliza Weisman"
+
+[[audits.bytecode-alliance.audits.pin-project-lite]]
+who = "Alex Crichton <alex@alexcrichton.com>"
+criteria = "safe-to-deploy"
+delta = "0.2.13 -> 0.2.14"
+notes = "No substantive changes in this update"
+
+[[audits.embark-studios.audits.thiserror]]
+who = "Johan Andersson <opensource@embark-studios.com>"
+criteria = "safe-to-deploy"
+version = "1.0.40"
+notes = "Wrapper over implementation crate, found no unsafe or ambient capabilities used"
+
+[[audits.embark-studios.audits.thiserror-impl]]
+who = "Johan Andersson <opensource@embark-studios.com>"
+criteria = "safe-to-deploy"
+version = "1.0.40"
+notes = "Found no unsafe or ambient capabilities used"
+
+[audits.gnome-audited.audits]
+
+[[audits.gnome-created.wildcard-audits.gufo]]
+who = "Sophie Herold <sophie@hemio.de>"
+criteria = "safe-to-deploy"
+user-id = 195802 # Sophie Herold (sophie-h)
+start = "2024-07-30"
+end = "2025-07-30"
+notes = "GNOME contributor"
+
+[[audits.gnome-created.wildcard-audits.gufo-common]]
+who = "Sophie Herold <sophie@hemio.de>"
+criteria = "safe-to-deploy"
+user-id = 195802 # Sophie Herold (sophie-h)
+start = "2024-06-27"
+end = "2025-07-30"
+notes = "GNOME contributor"
+
+[[audits.gnome-created.wildcard-audits.gufo-exif]]
+who = "Sophie Herold <sophie@hemio.de>"
+criteria = "safe-to-deploy"
+user-id = 195802 # Sophie Herold (sophie-h)
+start = "2024-06-27"
+end = "2025-07-30"
+notes = "GNOME contributor"
+
+[[audits.gnome-created.wildcard-audits.gufo-jpeg]]
+who = "Sophie Herold <sophie@hemio.de>"
+criteria = "safe-to-deploy"
+user-id = 195802 # Sophie Herold (sophie-h)
+start = "2024-06-27"
+end = "2025-07-30"
+notes = "GNOME contributor"
+
+[audits.gnome-created.audits]
+
+[[audits.gnome-trusted.wildcard-audits.tracing]]
+who = "Sophie Herold <sophie@hemio.de>"
+criteria = "safe-to-deploy"
+user-id = 1249 # Eliza Weisman (hawkw)
+start = "2019-06-28"
+end = "2025-07-22"
+notes = "tokio-rs/ repo"
+
+[[audits.gnome-trusted.wildcard-audits.tracing-attributes]]
+who = "Sophie Herold <sophie@hemio.de>"
+criteria = "safe-to-deploy"
+user-id = 1249 # Eliza Weisman (hawkw)
+start = "2019-08-08"
+end = "2025-07-22"
+notes = "tokio-rs/ repo"
+
+[[audits.gnome-trusted.wildcard-audits.tracing-core]]
+who = "Sophie Herold <sophie@hemio.de>"
+criteria = "safe-to-deploy"
+user-id = 1249 # Eliza Weisman (hawkw)
+start = "2019-06-20"
+end = "2025-07-22"
+notes = "tokio-rs/ repo"
+
+[audits.gnome-trusted.audits]
+
+[[audits.google.audits.pin-project-lite]]
+who = "David Koloski <dkoloski@google.com>"
+criteria = "safe-to-deploy"
+version = "0.2.9"
+notes = "Reviewed on https://fxrev.dev/824504"
+aggregated-from = "https://fuchsia.googlesource.com/fuchsia/+/refs/heads/main/third_party/rust_crates/supply-chain/audits.toml?format=TEXT"
+
+[[audits.google.audits.pin-project-lite]]
+who = "David Koloski <dkoloski@google.com>"
+criteria = "safe-to-deploy"
+delta = "0.2.9 -> 0.2.13"
+notes = "Audited at https://fxrev.dev/946396"
+aggregated-from = "https://fuchsia.googlesource.com/fuchsia/+/refs/heads/main/third_party/rust_crates/supply-chain/audits.toml?format=TEXT"
+
+[[audits.google.audits.proc-macro2]]
+who = "Lukasz Anforowicz <lukasza@chromium.org>"
+criteria = "safe-to-deploy"
+version = "1.0.78"
+notes = """
+Grepped for \"crypt\", \"cipher\", \"fs\", \"net\" - there were no hits
+(except for a benign \"fs\" hit in a doc comment)
+
+Notes from the `unsafe` review can be found in https://crrev.com/c/5385745.
+"""
+aggregated-from = "https://chromium.googlesource.com/chromium/src/+/main/third_party/rust/chromium_crates_io/supply-chain/audits.toml?format=TEXT"
+
+[[audits.google.audits.proc-macro2]]
+who = "Adrian Taylor <adetaylor@chromium.org>"
+criteria = "safe-to-deploy"
+delta = "1.0.78 -> 1.0.79"
+aggregated-from = "https://chromium.googlesource.com/chromium/src/+/main/third_party/rust/chromium_crates_io/supply-chain/audits.toml?format=TEXT"
+
+[[audits.google.audits.proc-macro2]]
+who = "Adrian Taylor <adetaylor@chromium.org>"
+criteria = "safe-to-deploy"
+delta = "1.0.79 -> 1.0.80"
+aggregated-from = "https://chromium.googlesource.com/chromium/src/+/main/third_party/rust/chromium_crates_io/supply-chain/audits.toml?format=TEXT"
+
+[[audits.google.audits.proc-macro2]]
+who = "Dustin J. Mitchell <djmitche@chromium.org>"
+criteria = "safe-to-deploy"
+delta = "1.0.80 -> 1.0.81"
+notes = "Comment changes only"
+aggregated-from = "https://chromium.googlesource.com/chromium/src/+/main/third_party/rust/chromium_crates_io/supply-chain/audits.toml?format=TEXT"
+
+[[audits.google.audits.proc-macro2]]
+who = "danakj <danakj@chromium.org>"
+criteria = "safe-to-deploy"
+delta = "1.0.81 -> 1.0.82"
+aggregated-from = "https://chromium.googlesource.com/chromium/src/+/main/third_party/rust/chromium_crates_io/supply-chain/audits.toml?format=TEXT"
+
+[[audits.google.audits.proc-macro2]]
+who = "Dustin J. Mitchell <djmitche@chromium.org>"
+criteria = "safe-to-deploy"
+delta = "1.0.82 -> 1.0.83"
+notes = "Substantive change is replacing String with Box<str>, saving memory."
+aggregated-from = "https://chromium.googlesource.com/chromium/src/+/main/third_party/rust/chromium_crates_io/supply-chain/audits.toml?format=TEXT"
+
+[[audits.google.audits.quote]]
+who = "Lukasz Anforowicz <lukasza@chromium.org>"
+criteria = "safe-to-deploy"
+version = "1.0.35"
+notes = """
+Grepped for \"unsafe\", \"crypt\", \"cipher\", \"fs\", \"net\" - there were no hits
+(except for benign \"net\" hit in tests and \"fs\" hit in README.md)
+"""
+aggregated-from = "https://chromium.googlesource.com/chromium/src/+/main/third_party/rust/chromium_crates_io/supply-chain/audits.toml?format=TEXT"
+
+[[audits.google.audits.quote]]
+who = "Adrian Taylor <adetaylor@chromium.org>"
+criteria = "safe-to-deploy"
+delta = "1.0.35 -> 1.0.36"
+aggregated-from = "https://chromium.googlesource.com/chromium/src/+/main/third_party/rust/chromium_crates_io/supply-chain/audits.toml?format=TEXT"
+
+[[audits.google.audits.serde]]
+who = "Lukasz Anforowicz <lukasza@chromium.org>"
+criteria = "safe-to-deploy"
+version = "1.0.197"
+notes = """
+Grepped for `-i cipher`, `-i crypto`, `'\bfs\b'`, `'\bnet\b'`, `'\bunsafe\b'`.
+
+There were some hits for `net`, but they were related to serialization and
+not actually opening any connections or anything like that.
+
+There were 2 hits of `unsafe` when grepping:
+* In `fn as_str` in `impl Buf`
+* In `fn serialize` in `impl Serialize for net::Ipv4Addr`
+
+Unsafe review comments can be found in https://crrev.com/c/5350573/2 (this
+review also covered `serde_json_lenient`).
+
+Version 1.0.130 of the crate has been added to Chromium in
+https://crrev.com/c/3265545.  The CL description contains a link to a
+(Google-internal, sorry) document with a mini security review.
+"""
+aggregated-from = "https://chromium.googlesource.com/chromium/src/+/main/third_party/rust/chromium_crates_io/supply-chain/audits.toml?format=TEXT"
+
+[[audits.google.audits.serde]]
+who = "Dustin J. Mitchell <djmitche@chromium.org>"
+criteria = "safe-to-deploy"
+delta = "1.0.197 -> 1.0.198"
+aggregated-from = "https://chromium.googlesource.com/chromium/src/+/main/third_party/rust/chromium_crates_io/supply-chain/audits.toml?format=TEXT"
+
+[[audits.google.audits.serde]]
+who = "danakj <danakj@chromium.org>"
+criteria = "safe-to-deploy"
+delta = "1.0.198 -> 1.0.201"
+aggregated-from = "https://chromium.googlesource.com/chromium/src/+/main/third_party/rust/chromium_crates_io/supply-chain/audits.toml?format=TEXT"
+
+[[audits.google.audits.serde]]
+who = "Dustin J. Mitchell <djmitche@chromium.org>"
+criteria = "safe-to-deploy"
+delta = "1.0.201 -> 1.0.202"
+notes = "Trivial changes"
+aggregated-from = "https://chromium.googlesource.com/chromium/src/+/main/third_party/rust/chromium_crates_io/supply-chain/audits.toml?format=TEXT"
+
+[[audits.google.audits.serde_derive]]
+who = "Lukasz Anforowicz <lukasza@chromium.org>"
+criteria = "safe-to-deploy"
+version = "1.0.197"
+notes = "Grepped for \"unsafe\", \"crypt\", \"cipher\", \"fs\", \"net\" - there were no hits"
+aggregated-from = "https://chromium.googlesource.com/chromium/src/+/main/third_party/rust/chromium_crates_io/supply-chain/audits.toml?format=TEXT"
+
+[[audits.google.audits.serde_derive]]
+who = "danakj <danakj@chromium.org>"
+criteria = "safe-to-deploy"
+delta = "1.0.197 -> 1.0.201"
+aggregated-from = "https://chromium.googlesource.com/chromium/src/+/main/third_party/rust/chromium_crates_io/supply-chain/audits.toml?format=TEXT"
+
+[[audits.google.audits.serde_derive]]
+who = "Dustin J. Mitchell <djmitche@chromium.org>"
+criteria = "safe-to-deploy"
+delta = "1.0.201 -> 1.0.202"
+aggregated-from = "https://chromium.googlesource.com/chromium/src/+/main/third_party/rust/chromium_crates_io/supply-chain/audits.toml?format=TEXT"
+
+[[audits.google.audits.unicode-ident]]
+who = "Lukasz Anforowicz <lukasza@chromium.org>"
+criteria = "safe-to-deploy"
+version = "1.0.12"
+notes = '''
+I grepped for \"crypt\", \"cipher\", \"fs\", \"net\" - there were no hits.
+
+All two functions from the public API of this crate use `unsafe` to avoid bound
+checks for an array access.  Cross-module analysis shows that the offsets can
+be statically proven to be within array bounds.  More details can be found in
+the unsafe review CL at https://crrev.com/c/5350386.
+
+This crate has been added to Chromium in https://crrev.com/c/3891618.
+'''
+aggregated-from = "https://chromium.googlesource.com/chromium/src/+/main/third_party/rust/chromium_crates_io/supply-chain/audits.toml?format=TEXT"
+
+[[audits.isrg.audits.thiserror]]
+who = "Brandon Pitman <bran@bran.land>"
+criteria = "safe-to-deploy"
+delta = "1.0.40 -> 1.0.43"
+
+[[audits.isrg.audits.thiserror-impl]]
+who = "Brandon Pitman <bran@bran.land>"
+criteria = "safe-to-deploy"
+delta = "1.0.40 -> 1.0.43"
+
+[audits.mozilla.audits]
+
+[[audits.zcash.audits.thiserror]]
+who = "Jack Grigg <jack@electriccoin.co>"
+criteria = "safe-to-deploy"
+delta = "1.0.43 -> 1.0.48"
+aggregated-from = "https://raw.githubusercontent.com/zcash/zcash/master/qa/supply-chain/audits.toml"
+
+[[audits.zcash.audits.thiserror]]
+who = "Jack Grigg <jack@electriccoin.co>"
+criteria = "safe-to-deploy"
+delta = "1.0.48 -> 1.0.51"
+aggregated-from = "https://raw.githubusercontent.com/zcash/zcash/master/qa/supply-chain/audits.toml"
+
+[[audits.zcash.audits.thiserror]]
+who = "Jack Grigg <jack@electriccoin.co>"
+criteria = "safe-to-deploy"
+delta = "1.0.51 -> 1.0.52"
+notes = "Reruns the build script if the `RUSTC_BOOTSTRAP` env variable changes."
+aggregated-from = "https://raw.githubusercontent.com/zcash/zcash/master/qa/supply-chain/audits.toml"
+
+[[audits.zcash.audits.thiserror]]
+who = "Jack Grigg <jack@electriccoin.co>"
+criteria = "safe-to-deploy"
+delta = "1.0.52 -> 1.0.56"
+notes = """
+Build script changes are to refactor the existing probe into a separate file
+(which removes a filesystem write), and adjust how it gets rerun in response to
+changes in the build environment.
+"""
+aggregated-from = "https://raw.githubusercontent.com/zcash/zcash/master/qa/supply-chain/audits.toml"
+
+[[audits.zcash.audits.thiserror]]
+who = "Daira-Emma Hopwood <daira@jacaranda.org>"
+criteria = "safe-to-deploy"
+delta = "1.0.56 -> 1.0.58"
+aggregated-from = "https://raw.githubusercontent.com/zcash/zcash/master/qa/supply-chain/audits.toml"
+
+[[audits.zcash.audits.thiserror]]
+who = "Daira-Emma Hopwood <daira@jacaranda.org>"
+criteria = "safe-to-deploy"
+delta = "1.0.58 -> 1.0.60"
+aggregated-from = "https://raw.githubusercontent.com/zcash/librustzcash/main/supply-chain/audits.toml"
+
+[[audits.zcash.audits.thiserror]]
+who = "Jack Grigg <jack@electriccoin.co>"
+criteria = "safe-to-deploy"
+delta = "1.0.60 -> 1.0.61"
+aggregated-from = "https://raw.githubusercontent.com/zcash/librustzcash/main/supply-chain/audits.toml"
+
+[[audits.zcash.audits.thiserror-impl]]
+who = "Jack Grigg <jack@electriccoin.co>"
+criteria = "safe-to-deploy"
+delta = "1.0.43 -> 1.0.48"
+aggregated-from = "https://raw.githubusercontent.com/zcash/zcash/master/qa/supply-chain/audits.toml"
+
+[[audits.zcash.audits.thiserror-impl]]
+who = "Jack Grigg <jack@electriccoin.co>"
+criteria = "safe-to-deploy"
+delta = "1.0.48 -> 1.0.51"
+aggregated-from = "https://raw.githubusercontent.com/zcash/zcash/master/qa/supply-chain/audits.toml"
+
+[[audits.zcash.audits.thiserror-impl]]
+who = "Jack Grigg <jack@electriccoin.co>"
+criteria = "safe-to-deploy"
+delta = "1.0.51 -> 1.0.52"
+aggregated-from = "https://raw.githubusercontent.com/zcash/zcash/master/qa/supply-chain/audits.toml"
+
+[[audits.zcash.audits.thiserror-impl]]
+who = "Jack Grigg <jack@electriccoin.co>"
+criteria = "safe-to-deploy"
+delta = "1.0.52 -> 1.0.56"
+aggregated-from = "https://raw.githubusercontent.com/zcash/zcash/master/qa/supply-chain/audits.toml"
+
+[[audits.zcash.audits.thiserror-impl]]
+who = "Daira-Emma Hopwood <daira@jacaranda.org>"
+criteria = "safe-to-deploy"
+delta = "1.0.56 -> 1.0.58"
+aggregated-from = "https://raw.githubusercontent.com/zcash/zcash/master/qa/supply-chain/audits.toml"
+
+[[audits.zcash.audits.thiserror-impl]]
+who = "Daira-Emma Hopwood <daira@jacaranda.org>"
+criteria = "safe-to-deploy"
+delta = "1.0.58 -> 1.0.60"
+aggregated-from = "https://raw.githubusercontent.com/zcash/librustzcash/main/supply-chain/audits.toml"
+
+[[audits.zcash.audits.thiserror-impl]]
+who = "Jack Grigg <jack@electriccoin.co>"
+criteria = "safe-to-deploy"
+delta = "1.0.60 -> 1.0.61"
+aggregated-from = "https://raw.githubusercontent.com/zcash/librustzcash/main/supply-chain/audits.toml"
