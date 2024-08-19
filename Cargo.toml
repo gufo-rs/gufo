@@ -17,6 +17,7 @@ members = [
     "gufo-exif",
     "gufo-jpeg",
     "gufo-png",
+    "gufo-webp",
     "gufo-xmp",
     "tests",
 ]

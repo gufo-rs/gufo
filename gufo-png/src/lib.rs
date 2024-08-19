@@ -1,7 +1,5 @@
-use std::{
-    io::{Cursor, Read, Seek},
-    ops::Range,
-};
+use std::io::{Cursor, Read, Seek};
+use std::ops::Range;
 
 use miniz_oxide::inflate::DecompressError;
 
