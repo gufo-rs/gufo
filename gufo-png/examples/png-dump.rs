@@ -7,7 +7,7 @@ fn main() {
         .nth(1)
         .expect("First agument must be a path.");
     let data = std::fs::read(path).unwrap();
-    let png = Png::new(&data).unwrap();
+    let png = Png::new(data).unwrap();
 
     for chunk in png.chunks() {
         match chunk.chunk_type() {
@@ -45,7 +45,7 @@ fn main() {
                 ));
             }
             ChunkType::eXIf => {
-                println!(" {}\n", String::from_utf8_lossy(&chunk.data()[..2]));
+                println!(" {}\n", String::from_utf8_lossy(&chunk.chunk_data()[..2]));
             }
             _ => (),
         }

@@ -1,4 +1,7 @@
-use std::io::{Cursor, Read, Seek};
+use std::{
+    io::{Cursor, Read, Seek},
+    ops::Range,
+};
 
 use miniz_oxide::inflate::DecompressError;
 
@@ -7,39 +10,33 @@ pub const MAGIC_BYTES: &[u8] = &[137, 80, 78, 71, 13, 10, 26, 10];
 pub const LEGACY_EXIF_KEYWORD: &[u8] = b"Raw profile type exif";
 
 #[derive(Debug, Clone)]
-pub struct Png<'a> {
-    chunks: Vec<Chunk<'a>>,
-}
-
-#[derive(Debug, Clone)]
-pub struct Chunk<'a> {
-    chunk_type: ChunkType,
-    data: &'a [u8],
-    crc: [u8; 4],
+pub struct Png {
+    data: Vec<u8>,
+    chunks: Vec<RawChunk>,
 }
 
 /// Representation of a PNG image
-impl<'a> Png<'a> {
+impl Png {
     /// Returns PNG image representation
     ///
     /// * `data`: PNG image data starting with magic byte
-    pub fn new(data: &'a [u8]) -> Result<Self, Error> {
-        let chunks = Self::find_chunks(data)?;
+    pub fn new(data: Vec<u8>) -> Result<Self, Error> {
+        let chunks = Self::find_chunks(&data)?;
 
-        Ok(Self { chunks })
+        Ok(Self { chunks, data })
     }
 
     /// Returns all chunks
-    pub fn chunks(&self) -> &[Chunk<'a>] {
-        &self.chunks
+    pub fn chunks(&self) -> Vec<Chunk> {
+        self.chunks.iter().map(|x| x.chunk(self)).collect()
     }
 
-    pub fn chunks_with_position(&self) -> Vec<(usize, &Chunk<'a>)> {
+    pub fn chunks_with_position(&self) -> Vec<(usize, Chunk)> {
         let mut pos = MAGIC_BYTES.len();
 
         let mut chunks = Vec::new();
         for chunk in &self.chunks {
-            chunks.push((pos, chunk));
+            chunks.push((pos, chunk.chunk(self)));
             pos = pos.checked_add(chunk.total_len()).unwrap();
         }
 
@@ -47,7 +44,7 @@ impl<'a> Png<'a> {
     }
 
     /// List all chunks in the data
-    fn find_chunks(data: &'a [u8]) -> Result<Vec<Chunk<'a>>, Error> {
+    fn find_chunks(data: &[u8]) -> Result<Vec<RawChunk>, Error> {
         let mut cur = Cursor::new(data);
         let magic_bytes = &mut [0; MAGIC_BYTES.len()];
 
@@ -80,16 +77,16 @@ impl<'a> Png<'a> {
             let data_end = data_start
                 .checked_add(length as usize)
                 .ok_or(Error::PositionTooLarge)?;
-            let chunk_data = data.get(data_start..data_end).ok_or(Error::UnexpectedEof)?;
+            let chunk_data = data_start..data_end;
 
             // Last 4 bytes after the data are a CRC
             cur.set_position(data_end as u64);
             let crc = &mut [0; 4];
             cur.read_exact(crc).map_err(|_| Error::UnexpectedEof)?;
 
-            let chunk = Chunk {
+            let chunk = RawChunk {
                 chunk_type,
-                data: chunk_data,
+                chunk_data,
                 crc: *crc,
             };
 
@@ -104,19 +101,47 @@ impl<'a> Png<'a> {
     }
 }
 
-impl<'a> Chunk<'a> {
+#[derive(Debug, Clone)]
+pub struct RawChunk {
+    chunk_type: ChunkType,
+    chunk_data: Range<usize>,
+    crc: [u8; 4],
+}
+
+impl RawChunk {
+    fn chunk<'a>(&self, png: &'a Png) -> Chunk<'a> {
+        Chunk {
+            chunk_type: self.chunk_type,
+            chunk_data_location: self.chunk_data.clone(),
+            crc: self.crc,
+            png,
+        }
+    }
+
     pub fn total_len(&self) -> usize {
-        self.data.len().checked_add(8).unwrap()
+        self.chunk_data.len().checked_add(8).unwrap()
     }
 }
 
+#[derive(Debug, Clone)]
+pub struct Chunk<'a> {
+    chunk_type: ChunkType,
+    chunk_data_location: Range<usize>,
+    crc: [u8; 4],
+    png: &'a Png,
+}
+
 impl<'a> Chunk<'a> {
+    pub fn total_len(&self) -> usize {
+        self.chunk_data_location.len().checked_add(8).unwrap()
+    }
+
     pub fn chunk_type(&self) -> ChunkType {
         self.chunk_type
     }
 
-    pub fn data(&self) -> &[u8] {
-        self.data
+    pub fn chunk_data(&self) -> &[u8] {
+        self.png.data.get(self.chunk_data_location.clone()).unwrap()
     }
 
     pub fn crc(&self) -> &[u8] {
@@ -124,10 +149,11 @@ impl<'a> Chunk<'a> {
     }
 
     pub fn keyword(&self) -> Result<&[u8], Error> {
-        let keyword_length = self.data.iter().take_while(|x| **x != 0).count();
+        let data = self.chunk_data();
 
-        self.data
-            .get(..keyword_length)
+        let keyword_length = data.iter().take_while(|x| **x != 0).count();
+
+        data.get(..keyword_length)
             .ok_or(Error::UnexpectedEndOfChunkData)
     }
 
@@ -140,7 +166,7 @@ impl<'a> Chunk<'a> {
             .ok_or(Error::PositionTooLarge)?;
 
         let text = self
-            .data
+            .chunk_data()
             .get(data_start..)
             .ok_or(Error::UnexpectedEndOfChunkData)?;
 
@@ -204,6 +230,14 @@ impl<'a> Chunk<'a> {
         exif_with_prefix
             .strip_prefix(b"Exif\0\0")
             .map(|x| x.to_vec())
+    }
+
+    pub fn raw_chunk(self) -> RawChunk {
+        RawChunk {
+            chunk_type: self.chunk_type,
+            chunk_data: self.chunk_data_location,
+            crc: self.crc,
+        }
     }
 }
 
