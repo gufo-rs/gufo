@@ -8,9 +8,12 @@ rust-version.workspace = true
 repository.workspace = true
 
 [dependencies]
-gufo-common = "0.1.0"
-gufo-exif = "0.1.0"
-gufo-jpeg = "0.1.0"
+gufo-common.workspace = true
+gufo-exif.workspace = true
+gufo-jpeg.workspace = true
+gufo-png.workspace = true
+gufo-webp.workspace = true
+gufo-xmp.workspace = true
 
 [lints]
 workspace = true

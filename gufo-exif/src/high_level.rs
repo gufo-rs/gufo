@@ -7,6 +7,7 @@ use gufo_common::orientation;
 use crate::error::Result;
 use crate::internal::*;
 
+#[derive(Debug)]
 pub struct Exif {
     decoder: RefCell<ExifRaw>,
 }

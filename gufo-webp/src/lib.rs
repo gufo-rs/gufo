@@ -1,5 +1,6 @@
 use std::io::{Cursor, Read, Seek};
 use std::ops::Range;
+use std::slice::SliceIndex;
 
 pub const RIFF_MAGIC_BYTES: &[u8] = b"RIFF";
 pub const WEBP_MAGIC_BYTES: &[u8] = b"WEBP";
@@ -21,9 +22,20 @@ impl WebP {
         Ok(Self { chunks, data })
     }
 
+    pub fn get(&self, index: impl SliceIndex<[u8], Output = [u8]>) -> Option<&[u8]> {
+        self.data.get(index)
+    }
+
     /// Returns all chunks
     pub fn chunks(&self) -> Vec<Chunk> {
         self.chunks.iter().map(|x| x.chunk(self)).collect()
+    }
+
+    pub fn exif(&self) -> Option<&[u8]> {
+        self.chunks
+            .iter()
+            .find(|x| x.four_cc == FourCC::EXIF)
+            .and_then(|x| self.get(x.payload.clone()))
     }
 
     /// List all chunks in the data

@@ -9,3 +9,4 @@ repository.workspace = true
 [dependencies]
 xml-rs = "0.8.19"
 thiserror.workspace = true
+gufo-common.workspace = true

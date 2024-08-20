@@ -25,7 +25,22 @@ pub enum Tag {
     XmpRights,
 }
 
-type Ref = (Tag, String);
+#[derive(Debug, Clone, PartialEq, PartialOrd, Eq, Ord)]
+pub struct Ref {
+    tag: Tag,
+    name: String,
+}
+
+impl<T: gufo_common::xmp::Field> From<T> for Ref {
+    fn from(_: T) -> Self {
+        let tag = if T::EX { Tag::Exif } else { Tag::Exif };
+
+        Self {
+            name: T::NAME.to_string(),
+            tag,
+        }
+    }
+}
 
 enum ReaderState {
     Nothing,
@@ -80,6 +95,11 @@ impl Xmp {
 
     pub fn get(&self, ref_: &Ref) -> Option<&str> {
         self.entries.get(ref_).map(|x| x.as_str())
+    }
+
+    pub fn model(&self) -> Option<String> {
+        self.get(&gufo_common::field::Model.into())
+            .map(ToString::to_string)
     }
 
     pub fn entries(&self) -> &BTreeMap<Ref, String> {
@@ -200,7 +220,7 @@ fn get_namespace(OwnedName { namespace, .. }: &OwnedName) -> Option<&str> {
     namespace.as_ref().map(|x| x.as_str())
 }
 
-fn name_to_tag(name: &OwnedName) -> Option<(Tag, String)> {
+fn name_to_tag(name: &OwnedName) -> Option<Ref> {
     if let Some(namespace) = get_namespace(name) {
         let tag = if namespace.starts_with(EXIF_LATER_XML_NS) {
             Tag::Exif
@@ -217,7 +237,7 @@ fn name_to_tag(name: &OwnedName) -> Option<(Tag, String)> {
         };
 
         let name = local_name(name).to_owned();
-        Some((tag, name))
+        Some(Ref { name, tag })
     } else {
         None
     }

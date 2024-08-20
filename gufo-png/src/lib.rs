@@ -41,6 +41,21 @@ impl Png {
         chunks
     }
 
+    /// Returns raw exif data if available
+    ///
+    /// Prefers the newer [`eXIf`](ChunkType::eXIf) chunk if available and uses
+    /// the legacy [`zTXt`](ChunkType::zTXt) chunk with [`LEGACY_EXIF_KEYWORD`]
+    /// as fallback.
+    pub fn exif(&self, inflate_limit: usize) -> Option<Vec<u8>> {
+        let chunks = self.chunks();
+
+        if let Some(exif) = chunks.iter().find(|x| x.chunk_type == ChunkType::eXIf) {
+            Some(exif.chunk_data().to_vec())
+        } else {
+            chunks.iter().find_map(|x| x.legacy_exif(inflate_limit))
+        }
+    }
+
     /// List all chunks in the data
     fn find_chunks(data: &[u8]) -> Result<Vec<RawChunk>, Error> {
         let mut cur = Cursor::new(data);
