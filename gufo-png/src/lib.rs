@@ -2,6 +2,7 @@ use std::io::{Cursor, Read, Seek};
 use std::ops::Range;
 use std::slice::SliceIndex;
 
+use gufo_common::error::ErrorWithData;
 use miniz_oxide::inflate::DecompressError;
 
 pub const MAGIC_BYTES: &[u8] = &[137, 80, 78, 71, 13, 10, 26, 10];
@@ -19,10 +20,15 @@ impl Png {
     /// Returns PNG image representation
     ///
     /// * `data`: PNG image data starting with magic byte
-    pub fn new(data: Vec<u8>) -> Result<Self, Error> {
-        let chunks = Self::find_chunks(&data)?;
+    pub fn new(data: Vec<u8>) -> Result<Self, ErrorWithData<Error>> {
+        match Self::find_chunks(&data) {
+            Ok(chunks) => Ok(Self { chunks, data }),
+            Err(err) => Err(ErrorWithData::new(err, data)),
+        }
+    }
 
-        Ok(Self { chunks, data })
+    pub fn is_filetype(data: &[u8]) -> bool {
+        data.starts_with(MAGIC_BYTES)
     }
 
     pub fn into_inner(self) -> Vec<u8> {
@@ -274,12 +280,17 @@ impl<'a> Chunk<'a> {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, thiserror::Error)]
 pub enum Error {
+    #[error("Unexpected end of file")]
     UnexpectedEof,
+    #[error("Invalid magic bytes: {0:x?}")]
     InvalidMagicBytes(Vec<u8>),
+    #[error("Position too large")]
     PositionTooLarge,
+    #[error("Unexpected end of chunk data")]
     UnexpectedEndOfChunkData,
+    #[error("Zlib decompression error: {0}")]
     Zlib(DecompressError),
 }
 
