@@ -1,5 +1,3 @@
-use std::usize;
-
 use gufo_png::{ChunkType, Png};
 
 fn main() {
@@ -39,10 +37,6 @@ fn main() {
                     String::from_utf8_lossy(keyword),
                     String::from_utf8_lossy(&data[..15])
                 );
-
-                dbg!(String::from_utf8_lossy(
-                    &chunk.legacy_exif(usize::MAX).unwrap()[0..10]
-                ));
             }
             ChunkType::eXIf => {
                 println!(" {}\n", String::from_utf8_lossy(&chunk.chunk_data()[..2]));

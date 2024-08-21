@@ -24,6 +24,10 @@ impl Png {
         Ok(Self { chunks, data })
     }
 
+    pub fn into_inner(self) -> Vec<u8> {
+        self.data
+    }
+
     /// Returns all chunks
     pub fn chunks(&self) -> Vec<Chunk> {
         self.chunks.iter().map(|x| x.chunk(self)).collect()
@@ -39,6 +43,12 @@ impl Png {
         }
 
         chunks
+    }
+
+    pub fn remove_chunk(&mut self, chunk: RawChunk) -> Result<(), Error> {
+        self.data.drain(chunk.complete_data());
+        self.chunks = Self::find_chunks(&self.data)?;
+        Ok(())
     }
 
     /// Returns raw exif data if available
@@ -131,12 +141,17 @@ impl RawChunk {
         }
     }
 
+    pub fn complete_data(&self) -> Range<usize> {
+        (self.chunk_data.start.checked_sub(8).unwrap())
+            ..(self.chunk_data.end.checked_add(4).unwrap())
+    }
+
     pub fn total_len(&self) -> usize {
         self.chunk_data.len().checked_add(8).unwrap()
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct Chunk<'a> {
     chunk_type: ChunkType,
     chunk_data_location: Range<usize>,
@@ -245,7 +260,7 @@ impl<'a> Chunk<'a> {
             .map(|x| x.to_vec())
     }
 
-    pub fn raw_chunk(self) -> RawChunk {
+    pub fn unsafe_raw_chunk(self) -> RawChunk {
         RawChunk {
             chunk_type: self.chunk_type,
             chunk_data: self.chunk_data_location,
@@ -328,4 +343,12 @@ fn skip_while(
     cur.seek(std::io::SeekFrom::Current(-1))?;
 
     Ok(())
+}
+
+#[macro_export]
+macro_rules! remove_chunk {
+    ($png:ident, $chunk:expr) => {{
+        let raw_chunk = $chunk.unsafe_raw_chunk();
+        $png.remove_chunk(raw_chunk)
+    }};
 }
