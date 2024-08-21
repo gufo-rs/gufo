@@ -4,8 +4,23 @@ pub fn main() {
         .expect("First agument must be a path.");
     let data = std::fs::read(path).unwrap();
 
-    let png = gufo_png::Png::new(data).unwrap();
-    let metadata = gufo::Metadata::for_png(&png);
+    let metadata = match gufo::Metadata::for_guessed(data) {
+        Ok(metadata) => metadata,
+        Err(err) => {
+            dbg!(&err);
+            eprintln!("\n{}", err);
+            return;
+        }
+    };
 
-    println!("Model: {:?}", metadata.model());
+    p("Model", metadata.model());
+    p("Creator", metadata.creator());
+}
+
+pub fn p(label: &str, s: Option<String>) {
+    if let Some(s) = s {
+        println!("{label}: {s}");
+    } else {
+        println!("{label}: –");
+    }
 }
