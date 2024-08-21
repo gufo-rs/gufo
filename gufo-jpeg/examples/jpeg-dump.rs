@@ -5,7 +5,7 @@ fn main() {
         .nth(1)
         .expect("First agument must be a file path.");
     let data = std::fs::read(path).unwrap();
-    let jpeg = Jpeg::new(&data);
+    let jpeg = Jpeg::new(data);
 
     for segment in jpeg.segments() {
         let data_init = segment

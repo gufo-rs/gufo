@@ -20,7 +20,7 @@ fn all_jpgs() {
 fn load_file(path: &std::path::Path) {
     let image_data = std::fs::read(path).unwrap();
 
-    let image = Jpeg::new(&image_data);
+    let image = Jpeg::new(image_data);
 
     let mut iter = image.exif_data();
     if let Some(exif_raw) = iter.next() {

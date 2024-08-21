@@ -31,6 +31,12 @@ pub struct Ref {
     name: String,
 }
 
+impl Ref {
+    pub fn new(tag: Tag, name: String) -> Self {
+        Self { tag, name }
+    }
+}
+
 impl<T: gufo_common::xmp::Field> From<T> for Ref {
     fn from(_: T) -> Self {
         let tag = if T::EX { Tag::Exif } else { Tag::Exif };

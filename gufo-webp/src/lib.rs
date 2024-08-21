@@ -22,6 +22,10 @@ impl WebP {
         Ok(Self { chunks, data })
     }
 
+    pub fn into_inner(self) -> Vec<u8> {
+        self.data
+    }
+
     pub fn get(&self, index: impl SliceIndex<[u8], Output = [u8]>) -> Option<&[u8]> {
         self.data.get(index)
     }

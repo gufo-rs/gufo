@@ -1,5 +1,6 @@
 use std::io::{Cursor, Read, Seek};
 use std::ops::Range;
+use std::slice::SliceIndex;
 
 use miniz_oxide::inflate::DecompressError;
 
@@ -26,6 +27,10 @@ impl Png {
 
     pub fn into_inner(self) -> Vec<u8> {
         self.data
+    }
+
+    pub fn get(&mut self, index: impl SliceIndex<[u8], Output = [u8]>) -> Option<&[u8]> {
+        self.data.get(index)
     }
 
     /// Returns all chunks
@@ -147,7 +152,7 @@ impl RawChunk {
     }
 
     pub fn total_len(&self) -> usize {
-        self.chunk_data.len().checked_add(8).unwrap()
+        self.complete_data().len()
     }
 }
 

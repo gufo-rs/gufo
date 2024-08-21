@@ -1,56 +1,41 @@
 use std::io::{Cursor, Read, Seek, SeekFrom};
+use std::ops::Range;
 
 pub const EXIF_IDENTIFIER_STRING: &[u8] = b"Exif\0\0";
 pub const XMP_IDENTIFIER_STRING: &[u8] = b"http://ns.adobe.com/xap/1.0/\0";
 
-#[derive(Clone, Debug)]
-pub struct Segment<'a> {
-    marker: Marker,
-    pos: u64,
-    data: &'a [u8],
-}
-
-impl<'a> Segment<'a> {
-    pub fn marker(&self) -> Marker {
-        self.marker
-    }
-
-    pub fn pos(&self) -> u64 {
-        self.pos
-    }
-
-    pub fn data_pos(&self) -> u64 {
-        self.pos + 2
-    }
-
-    pub fn data(&self) -> &'a [u8] {
-        self.data
-    }
-}
-
 pub const MARKER_START: u16 = 0xFF;
 
-pub struct Jpeg<'a> {
-    segments: Vec<Segment<'a>>,
+#[derive(Debug)]
+pub struct Jpeg {
+    segments: Vec<RawSegment>,
+    data: Vec<u8>,
 }
 
-impl<'a> Jpeg<'a> {
-    pub fn new(data: &'a [u8]) -> Self {
-        let segments = Self::find_segments(data);
-        Self { segments }
+impl Jpeg {
+    pub fn new(data: Vec<u8>) -> Self {
+        let segments = Self::find_segments(&data);
+        Self { segments, data }
+    }
+
+    pub fn into_inner(self) -> Vec<u8> {
+        self.data
     }
 
     /// List all segments in their order of appearance
-    pub fn segments(&self) -> &'a [Segment] {
-        &self.segments
+    pub fn segments(&self) -> Vec<Segment> {
+        self.segments.iter().map(|x| x.segment(self)).collect()
     }
 
     /// List all segments with the given marker
-    pub fn segments_marker(&self, marker: Marker) -> impl Iterator<Item = &Segment> {
-        self.segments.iter().filter(move |x| x.marker == marker)
+    pub fn segments_marker(&self, marker: Marker) -> impl Iterator<Item = Segment> {
+        self.segments
+            .iter()
+            .filter(move |x| x.marker == marker)
+            .map(|x| x.segment(self))
     }
 
-    pub fn exif(&self) -> impl Iterator<Item = &Segment> {
+    pub fn exif(&self) -> impl Iterator<Item = Segment> {
         self.segments_marker(Marker::APP1)
             .filter(|x| x.data().starts_with(EXIF_IDENTIFIER_STRING))
     }
@@ -60,7 +45,7 @@ impl<'a> Jpeg<'a> {
             .filter_map(|x| x.data().get(EXIF_IDENTIFIER_STRING.len()..))
     }
 
-    pub fn xmp(&self) -> impl Iterator<Item = &Segment> {
+    pub fn xmp(&self) -> impl Iterator<Item = Segment> {
         self.segments_marker(Marker::APP1)
             .filter(|x| x.data().starts_with(XMP_IDENTIFIER_STRING))
     }
@@ -70,7 +55,7 @@ impl<'a> Jpeg<'a> {
             .filter_map(|x| x.data().get(XMP_IDENTIFIER_STRING.len()..))
     }
 
-    fn find_segments(data: &[u8]) -> Vec<Segment> {
+    fn find_segments(data: &[u8]) -> Vec<RawSegment> {
         let mut source = Cursor::new(data);
 
         let buf = &mut [0; 2];
@@ -92,13 +77,9 @@ impl<'a> Jpeg<'a> {
             source.read_exact(buf).unwrap();
             let len: u16 = u16::from_be_bytes(*buf);
 
-            let segment = Segment {
+            let segment = RawSegment {
                 marker,
-                pos,
-                data: data
-                    .as_ref()
-                    .get((pos + 2) as usize..(pos as usize + len as usize))
-                    .unwrap(),
+                data: (pos + 2) as usize..(pos as usize + len as usize),
             };
 
             segments.push(segment);
@@ -110,6 +91,49 @@ impl<'a> Jpeg<'a> {
         }
 
         segments
+    }
+}
+
+#[derive(Debug)]
+pub struct RawSegment {
+    marker: Marker,
+    data: Range<usize>,
+}
+
+impl RawSegment {
+    pub fn segment<'a>(&self, jpeg: &'a Jpeg) -> Segment<'a> {
+        Segment {
+            marker: self.marker,
+            data: self.data.clone(),
+            jpeg,
+        }
+    }
+}
+
+#[derive(Clone, Debug)]
+pub struct Segment<'a> {
+    marker: Marker,
+    data: Range<usize>,
+    jpeg: &'a Jpeg,
+}
+
+impl<'a> Segment<'a> {
+    pub fn marker(&self) -> Marker {
+        self.marker
+    }
+
+    /*
+    pub fn pos(&self) -> u64 {
+        self.pos
+    }
+     */
+
+    pub fn data_pos(&self) -> usize {
+        self.data.start
+    }
+
+    pub fn data(&self) -> &'a [u8] {
+        self.jpeg.data.get(self.data.clone()).unwrap()
     }
 }
 
