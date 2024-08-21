@@ -9,6 +9,7 @@ use macros::*;
 
 use crate::exif::Ifd;
 
+// Exif
 macros::make_tags![
     // Primary
     (0x10F, Make, Ifd::Primary, xmp = old),
@@ -29,3 +30,9 @@ macros::make_tags![
     (0xA433, LensMake, Ifd::Exif, xmp = new),
     (0xA434, LensModel, Ifd::Exif, xmp = new),
 ];
+
+// Dublin Core
+macros::make_xmp_tags![(Creator, "creator", Dc)];
+
+// XMP
+macros::make_xmp_tags![(CreatorTool, Xmp)];

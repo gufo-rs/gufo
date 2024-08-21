@@ -4,66 +4,11 @@ use std::collections::BTreeMap;
 use std::io::Cursor;
 use std::sync::Arc;
 
+use gufo_common::field;
+use gufo_common::xmp::{Namespace, XML_NS_RDF};
 use xml::name::OwnedName;
 use xml::reader::XmlEvent;
 use xml::{writer, EmitterConfig, ParserConfig};
-
-/// Namespace for fields defined in TIFF
-const XML_NS_TIFF: &str = "http://ns.adobe.com/tiff/1.0/";
-/// Namespace for fields defined in Exif 2.2 or earlier
-const XML_NS_EXIF: &str = "http://ns.adobe.com/exif/1.0/";
-/// Namespace for fields defined in Exif 2.21 or later
-const XML_NS_EXIF_EX: &str = "http://cipa.jp/exif/1.0/";
-
-const XML_NS_XMP: &str = "http://ns.adobe.com/xap/1.0/";
-const XML_NS_XMP_RIGHTS: &str = "http://ns.adobe.com/xap/1.0/rights/";
-/// RDF
-const XML_NS_RDF: &str = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
-const XML_NS_PS: &str = "http://ns.adobe.com/photoshop/1.0/";
-const XML_NS_DC: &str = "http://purl.org/dc/elements/1.1/";
-
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
-pub enum Namespace {
-    /// Namespace for fields defined in TIFF
-    Tiff,
-    /// Namespace for fields defined in Exif 2.2 or earlier
-    Exif,
-    /// Namespace for fields defined in Exif 2.21 or later
-    ExifEX,
-    Ps,
-    Dc,
-    Xmp,
-    XmpRights,
-    Unknown(String),
-}
-
-impl Namespace {
-    pub fn from_url(url: &str) -> Self {
-        match url {
-            XML_NS_TIFF => Namespace::Tiff,
-            XML_NS_EXIF => Namespace::Exif,
-            XML_NS_EXIF_EX => Namespace::ExifEX,
-            XML_NS_XMP => Namespace::Xmp,
-            XML_NS_XMP_RIGHTS => Namespace::XmpRights,
-            XML_NS_PS => Namespace::Ps,
-            XML_NS_DC => Namespace::Dc,
-            namespace => Namespace::Unknown(namespace.to_string()),
-        }
-    }
-
-    pub fn to_url(&self) -> &str {
-        match self {
-            Namespace::Tiff => XML_NS_TIFF,
-            Namespace::Exif => XML_NS_EXIF,
-            Namespace::ExifEX => XML_NS_EXIF_EX,
-            Namespace::Xmp => XML_NS_XMP,
-            Namespace::XmpRights => XML_NS_XMP_RIGHTS,
-            Namespace::Ps => XML_NS_PS,
-            Namespace::Dc => XML_NS_DC,
-            Namespace::Unknown(namespace) => namespace.as_str(),
-        }
-    }
-}
 
 impl Tag {
     fn from_name(name: &OwnedName) -> Option<Self> {
@@ -92,15 +37,9 @@ impl Tag {
 
 impl<T: gufo_common::xmp::Field> From<T> for Tag {
     fn from(_: T) -> Self {
-        let tag = if T::EX {
-            Namespace::ExifEX
-        } else {
-            Namespace::Exif
-        };
-
         Self {
             name: T::NAME.to_string(),
-            namespace: tag,
+            namespace: T::NAMESPACE,
         }
     }
 }
@@ -166,8 +105,7 @@ impl Xmp {
     }
 
     pub fn creator(&self) -> Option<String> {
-        self.get(&Tag::new(Namespace::Dc, "creator".into()))
-            .map(ToString::to_string)
+        self.get(&field::Creator.into()).map(ToString::to_string)
     }
 
     pub fn entries(&self) -> &BTreeMap<Tag, String> {

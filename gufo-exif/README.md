@@ -19,7 +19,7 @@ let exif = gufo_exif::Exif::new(raw_exif).unwrap();
 println!("Camera Model: {}", exif.model().unwrap());
 ```
 
-This library also exposes lower level access to the Exif data. More details can be found in the [`internal`](internal) documentation.
+This library also exposes lower level access to the Exif data. More details can be found in the [`internal`] documentation.
 
 ## Existing Crates
 
