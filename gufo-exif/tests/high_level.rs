@@ -11,7 +11,7 @@ fn canon() {
 
     assert_eq!(exif.make().unwrap().as_str(), "Canon");
     assert_eq!(exif.model().unwrap().as_str(), "Canon EOS 400D DIGITAL");
-    assert_eq!(exif.photographic_sensitivity().unwrap(), 200);
+    assert_eq!(exif.iso_speed_rating().unwrap(), 200);
     assert_eq!(exif.f_number().unwrap(), 5.6);
     assert_eq!(exif.focal_length().unwrap(), 53.);
     assert_eq!(exif.exposure_time().unwrap(), (1, 60));
@@ -25,7 +25,7 @@ fn apple() {
 
     assert_eq!(exif.make().unwrap().as_str(), "Apple");
     assert_eq!(exif.model().unwrap().as_str(), "iPhone 6");
-    assert_eq!(exif.photographic_sensitivity().unwrap(), 32);
+    assert_eq!(exif.iso_speed_rating().unwrap(), 32);
     assert_eq!(exif.f_number().unwrap(), 2.2);
     assert_eq!(exif.focal_length().unwrap(), 4.15);
     assert_eq!(exif.exposure_time().unwrap(), (1, 682));

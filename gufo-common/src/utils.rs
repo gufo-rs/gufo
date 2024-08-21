@@ -165,3 +165,7 @@ impl I64Ext for i64 {
         self.checked_add(rhs).ok_or(AdditionOverflowError)
     }
 }
+
+pub fn apex_to_f_number(apex: f32) -> f32 {
+    f32::sqrt(1.4).powf(apex)
+}

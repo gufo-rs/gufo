@@ -51,6 +51,7 @@ impl RawMetadata {
         }
 
         for xmp in self.xmp {
+            eprintln!("{}", String::from_utf8_lossy(&xmp));
             let _ = metadata.add_raw_xmp(xmp);
         }
 
@@ -110,14 +111,43 @@ impl Metadata {
         Ok(())
     }
 
+    fn exif<T>(&self, exif_op: impl Fn(&Exif) -> Option<T>) -> Option<T> {
+        self.exif.iter().find_map(exif_op)
+    }
+
+    fn xmp<T>(&self, xmp_op: impl Fn(&Xmp) -> Option<T>) -> Option<T> {
+        self.xmp.iter().find_map(xmp_op)
+    }
+
+    fn exif_xmp<T>(
+        &self,
+        exif_op: impl Fn(&Exif) -> Option<T>,
+        xmp_op: impl Fn(&Xmp) -> Option<T>,
+    ) -> Option<T> {
+        self.exif(exif_op).or_else(|| self.xmp(xmp_op))
+    }
+
+    // TODO: pub fn location
+
+    // TODO: originally created
+
+    pub fn f_number(&self) -> Option<f32> {
+        self.exif_xmp(Exif::f_number, Xmp::f_number)
+    }
+
+    pub fn exposure_time(&self) -> Option<(u32, u32)> {
+        self.exif_xmp(Exif::exposure_time, Xmp::exposure_time)
+    }
+
     pub fn model(&self) -> Option<String> {
-        self.exif
-            .iter()
-            .find_map(|x| x.model())
-            .or_else(|| self.xmp.iter().find_map(|x| x.model()))
+        self.exif_xmp(Exif::model, Xmp::model)
+    }
+
+    pub fn iso_speed_rating(&self) -> Option<u16> {
+        self.exif_xmp(Exif::iso_speed_rating, Xmp::iso_speed_rating)
     }
 
     pub fn creator(&self) -> Option<String> {
-        self.xmp.iter().find_map(|x| x.creator())
+        self.xmp(Xmp::creator)
     }
 }

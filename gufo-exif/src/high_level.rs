@@ -53,7 +53,7 @@ impl Exif {
     }
 
     /// ISO
-    pub fn photographic_sensitivity(&self) -> Option<u16> {
+    pub fn iso_speed_rating(&self) -> Option<u16> {
         self.decoder
             .borrow_mut()
             .lookup_short(TagIfd::new(

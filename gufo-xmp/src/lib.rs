@@ -95,17 +95,57 @@ impl Xmp {
         Ok(())
     }
 
-    pub fn get(&self, ref_: &Tag) -> Option<&str> {
-        self.entries.get(ref_).map(|x| x.as_str())
+    pub fn get(&self, tag: impl Into<Tag>) -> Option<&str> {
+        self.entries.get(&tag.into()).map(|x| x.as_str())
+    }
+
+    pub fn get_frac(&self, tag: impl Into<Tag>) -> Option<(u32, u32)> {
+        let (x, y) = self.get(tag)?.split_once('/')?;
+        let x = x.parse().ok()?;
+        let y = y.parse().ok()?;
+
+        Some((x, y))
+    }
+
+    pub fn get_frac_f32(&self, tag: impl Into<Tag>) -> Option<f32> {
+        let (x, y) = self.get_frac(tag)?;
+
+        let res = x as f32 / y as f32;
+        if res.is_finite() {
+            Some(res)
+        } else {
+            None
+        }
+    }
+
+    pub fn get_u16(&self, tag: impl Into<Tag>) -> Option<u16> {
+        self.get(tag)?.parse().ok()
     }
 
     pub fn model(&self) -> Option<String> {
-        self.get(&gufo_common::field::Model.into())
-            .map(ToString::to_string)
+        self.get(field::Model).map(ToString::to_string)
+    }
+
+    pub fn f_number(&self) -> Option<f32> {
+        if let Some(fnumer) = self.get_frac_f32(field::FNumber) {
+            Some(fnumer)
+        } else {
+            let aperture_apex = self.get_frac_f32(field::Aperture)?;
+            Some(gufo_common::utils::apex_to_f_number(aperture_apex))
+        }
+    }
+
+    pub fn exposure_time(&self) -> Option<(u32, u32)> {
+        self.get_frac(field::ExposureTime)
+    }
+
+    pub fn iso_speed_rating(&self) -> Option<u16> {
+        self.get_u16(field::PhotographicSensitivity)
+            .or_else(|| self.get_u16(field::ISOSpeedRatings))
     }
 
     pub fn creator(&self) -> Option<String> {
-        self.get(&field::Creator.into()).map(ToString::to_string)
+        self.get(field::Creator).map(ToString::to_string)
     }
 
     pub fn entries(&self) -> &BTreeMap<Tag, String> {

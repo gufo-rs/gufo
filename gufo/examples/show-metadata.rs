@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 pub fn main() {
     let path = std::env::args()
         .nth(1)
@@ -14,10 +16,17 @@ pub fn main() {
     };
 
     p("Model", metadata.model());
+    p("F-Number", metadata.f_number().map(|x| format!("f/{x}")));
+    p(
+        "Exposure Time",
+        metadata.exposure_time().map(|(x, y)| format!("{x}/{y} s")),
+    );
+    p("ISO", metadata.iso_speed_rating());
+
     p("Creator", metadata.creator());
 }
 
-pub fn p(label: &str, s: Option<String>) {
+pub fn p(label: &str, s: Option<impl Display>) {
     if let Some(s) = s {
         println!("{label}: {s}");
     } else {

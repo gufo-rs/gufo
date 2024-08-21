@@ -1,23 +1,5 @@
-macro_rules! old {
-    ($id:ident) => {
-        impl $crate::xmp::Field for $id {
-            const NAME: &'static str = stringify!($id);
-            const NAMESPACE: $crate::xmp::Namespace = $crate::xmp::Namespace::Exif;
-        }
-    };
-}
-
-macro_rules! new {
-    ($id:ident) => {
-        impl $crate::xmp::Field for $id {
-            const NAME: &'static str = stringify!($id);
-            const NAMESPACE: $crate::xmp::Namespace = $crate::xmp::Namespace::ExifEX;
-        }
-    };
-}
-
 macro_rules! make_tags {
-    ($($(#[$($attrss:tt)*])*($tag:literal, $id:ident, $ifd:expr $(,xmp = $xmp:ident)?)),*$(,)?) => {
+    ($($(#[$($attrss:tt)*])*($tag:literal, $id:ident, $ifd:expr $(,xmp = $xmp_ns:ident)?)),*$(,)?) => {
         $(
             $(#[$($attrss)*])*
             #[derive(Copy, Clone, Debug)]
@@ -30,7 +12,10 @@ macro_rules! make_tags {
             }
 
             $(
-                $xmp!($id);
+                impl $crate::xmp::Field for $id {
+                    const NAME: &'static str = stringify!($id);
+                    const NAMESPACE: $crate::xmp::Namespace = $crate::xmp::Namespace::$xmp_ns;
+                }
             )*
         )*
 
@@ -73,4 +58,4 @@ macro_rules! make_xmp_tags {
     };
 }
 
-pub(crate) use {make_tags, make_xmp_tags, new, old};
+pub(crate) use {make_tags, make_xmp_tags};
