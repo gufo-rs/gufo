@@ -3,7 +3,7 @@ use gufo_jpeg::EXIF_IDENTIFIER_STRING;
 #[test]
 fn exif() {
     let data = std::fs::read("exif-xmp.jpg").unwrap();
-    let jpeg = gufo_jpeg::Jpeg::new(data);
+    let jpeg = gufo_jpeg::Jpeg::new(data).unwrap();
 
     let exif = gufo_exif::Exif::new(jpeg.exif_data().next().unwrap().to_vec()).unwrap();
 
@@ -18,13 +18,13 @@ fn exif() {
 #[test]
 fn xmp() {
     let data = std::fs::read("exif-xmp.jpg").unwrap();
-    let jpeg = gufo_jpeg::Jpeg::new(data);
+    let jpeg = gufo_jpeg::Jpeg::new(data).unwrap();
 
     let xmp = gufo_xmp::Xmp::new(jpeg.xmp_data().next().unwrap().to_vec()).unwrap();
 
     assert_eq!(
-        xmp.get(&gufo_xmp::Ref::new(
-            gufo_xmp::Tag::Xmp,
+        xmp.get(&gufo_xmp::Tag::new(
+            gufo_xmp::Namespace::Xmp,
             "CreatorTool".into()
         )),
         Some("GIMP 2.10")
@@ -35,7 +35,7 @@ fn xmp() {
 fn rotate() {
     let data = std::fs::read("exif-xmp.jpg").unwrap();
 
-    let jpeg = gufo_jpeg::Jpeg::new(data);
+    let jpeg = gufo_jpeg::Jpeg::new(data).unwrap();
     let mut exif = gufo_exif::internal::ExifRaw::new(jpeg.exif_data().next().unwrap().to_vec());
 
     exif.decode().unwrap();
@@ -57,7 +57,7 @@ fn rotate() {
 
     data[pos] = new_orientation as u8;
 
-    let jpeg = gufo_jpeg::Jpeg::new(data);
+    let jpeg = gufo_jpeg::Jpeg::new(data).unwrap();
     let exif = gufo_exif::Exif::new(jpeg.exif_data().next().unwrap().to_vec()).unwrap();
     assert_eq!(
         exif.orientation(),

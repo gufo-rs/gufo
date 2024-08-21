@@ -5,7 +5,7 @@ pub use gufo_jpeg::Jpeg;
 
 pub fn get_exif(path: impl AsRef<std::path::Path>) -> Vec<u8> {
     let image_data = std::fs::read(path.as_ref()).unwrap();
-    let image = Jpeg::new(image_data);
+    let image = Jpeg::new(image_data).unwrap();
 
     let mut iter = image.exif_data();
     iter.next().unwrap().to_vec()
