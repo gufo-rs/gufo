@@ -1,10 +1,14 @@
 use std::io::{Cursor, Read, Seek, SeekFrom};
 use std::ops::Range;
 
+use gufo_common::error::ErrorWithData;
+
 pub const EXIF_IDENTIFIER_STRING: &[u8] = b"Exif\0\0";
 pub const XMP_IDENTIFIER_STRING: &[u8] = b"http://ns.adobe.com/xap/1.0/\0";
 
-pub const MARKER_START: u16 = 0xFF;
+pub const MAGIC_BYTES: &[u8] = &[0xFF, 0xD8, 0xFF];
+
+pub const MARKER_START: u8 = 0xFF;
 
 #[derive(Debug)]
 pub struct Jpeg {
@@ -13,9 +17,15 @@ pub struct Jpeg {
 }
 
 impl Jpeg {
-    pub fn new(data: Vec<u8>) -> Self {
-        let segments = Self::find_segments(&data);
-        Self { segments, data }
+    pub fn new(data: Vec<u8>) -> Result<Self, ErrorWithData<Error>> {
+        match Self::find_segments(&data) {
+            Ok(segments) => Ok(Self { segments, data }),
+            Err(err) => Err(ErrorWithData::new(err, data)),
+        }
+    }
+
+    pub fn is_filetype(data: &[u8]) -> bool {
+        data.starts_with(MAGIC_BYTES)
     }
 
     pub fn into_inner(self) -> Vec<u8> {
@@ -55,26 +65,31 @@ impl Jpeg {
             .filter_map(|x| x.data().get(XMP_IDENTIFIER_STRING.len()..))
     }
 
-    fn find_segments(data: &[u8]) -> Vec<RawSegment> {
+    fn find_segments(data: &[u8]) -> Result<Vec<RawSegment>, Error> {
         let mut source = Cursor::new(data);
 
         let buf = &mut [0; 2];
-        source.read_exact(buf).unwrap();
+        source.read_exact(buf).map_err(|_| Error::UnexpectedEof)?;
 
-        tracing::debug!("Magic bytes {buf:x?}");
-        // TODO: check magic bytes
+        if data.get(..MAGIC_BYTES.len()) != Some(MAGIC_BYTES) {
+            return Err(Error::InvalidMagicBytes(*buf));
+        }
 
         let mut segments = Vec::new();
         loop {
             // Read tag
-            source.read_exact(buf).unwrap();
+            source.read_exact(buf).map_err(|_| Error::UnexpectedEof)?;
             tracing::debug!("Found tag {buf:x?}");
+
+            if buf[0] != MARKER_START {
+                return Err(Error::ExpectedMarkerStart(buf[0]));
+            }
 
             let marker = Marker::from(buf[1]);
             let pos = source.stream_position().unwrap();
 
             // Read len
-            source.read_exact(buf).unwrap();
+            source.read_exact(buf).map_err(|_| Error::UnexpectedEof)?;
             let len: u16 = u16::from_be_bytes(*buf);
 
             let segment = RawSegment {
@@ -90,7 +105,7 @@ impl Jpeg {
             source.seek(SeekFrom::Current(len as i64 - 2)).unwrap();
         }
 
-        segments
+        Ok(segments)
     }
 }
 
@@ -135,6 +150,16 @@ impl<'a> Segment<'a> {
     pub fn data(&self) -> &'a [u8] {
         self.jpeg.data.get(self.data.clone()).unwrap()
     }
+}
+
+#[derive(Debug, Clone, thiserror::Error)]
+pub enum Error {
+    #[error("Invalid magic bytes: {0:x?}")]
+    InvalidMagicBytes([u8; 2]),
+    #[error("Unexpected end of file")]
+    UnexpectedEof,
+    #[error("Expected marker start: {0:x}")]
+    ExpectedMarkerStart(u8),
 }
 
 gufo_common::utils::convertible_enum!(
