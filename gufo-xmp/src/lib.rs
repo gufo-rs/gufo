@@ -1,3 +1,5 @@
+#![doc = include_str!("../README.md")]
+
 use std::collections::BTreeMap;
 use std::io::Cursor;
 use std::sync::Arc;
@@ -6,44 +8,99 @@ use xml::name::OwnedName;
 use xml::reader::XmlEvent;
 use xml::{writer, EmitterConfig, ParserConfig};
 
-const EXIF_EARLY_XML_NS: &str = "http://ns.adobe.com/exif/1.0/";
-const EXIF_LATER_XML_NS: &str = "http://cipa.jp/exif/";
-const RDF_XML_NS: &str = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
-const TIFF_XML_NS: &str = "http://ns.adobe.com/tiff/1.0/";
-const PS_XML_NS: &str = "http://ns.adobe.com/photoshop/1.0/";
-const DC_XML_NS: &str = "http://purl.org/dc/elements/1.1/";
-const XMP_XML_NS: &str = "http://ns.adobe.com/xap/1.0/";
-const XMP_RIGHTS_XML_NS: &str = "http://ns.adobe.com/xap/1.0/rights/";
+/// Namespace for fields defined in TIFF
+const XML_NS_TIFF: &str = "http://ns.adobe.com/tiff/1.0/";
+/// Namespace for fields defined in Exif 2.2 or earlier
+const XML_NS_EXIF: &str = "http://ns.adobe.com/exif/1.0/";
+/// Namespace for fields defined in Exif 2.21 or later
+const XML_NS_EXIF_EX: &str = "http://cipa.jp/exif/1.0/";
+
+const XML_NS_XMP: &str = "http://ns.adobe.com/xap/1.0/";
+const XML_NS_XMP_RIGHTS: &str = "http://ns.adobe.com/xap/1.0/rights/";
+/// RDF
+const XML_NS_RDF: &str = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
+const XML_NS_PS: &str = "http://ns.adobe.com/photoshop/1.0/";
+const XML_NS_DC: &str = "http://purl.org/dc/elements/1.1/";
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
-pub enum Tag {
+pub enum Namespace {
+    /// Namespace for fields defined in TIFF
     Tiff,
+    /// Namespace for fields defined in Exif 2.2 or earlier
     Exif,
+    /// Namespace for fields defined in Exif 2.21 or later
+    ExifEX,
     Ps,
     Dc,
     Xmp,
     XmpRights,
+    Unknown(String),
 }
 
-#[derive(Debug, Clone, PartialEq, PartialOrd, Eq, Ord)]
-pub struct Ref {
-    tag: Tag,
-    name: String,
-}
+impl Namespace {
+    pub fn from_url(url: &str) -> Self {
+        match url {
+            XML_NS_TIFF => Namespace::Tiff,
+            XML_NS_EXIF => Namespace::Exif,
+            XML_NS_EXIF_EX => Namespace::ExifEX,
+            XML_NS_XMP => Namespace::Xmp,
+            XML_NS_XMP_RIGHTS => Namespace::XmpRights,
+            XML_NS_PS => Namespace::Ps,
+            XML_NS_DC => Namespace::Dc,
+            namespace => Namespace::Unknown(namespace.to_string()),
+        }
+    }
 
-impl Ref {
-    pub fn new(tag: Tag, name: String) -> Self {
-        Self { tag, name }
+    pub fn to_url(&self) -> &str {
+        match self {
+            Namespace::Tiff => XML_NS_TIFF,
+            Namespace::Exif => XML_NS_EXIF,
+            Namespace::ExifEX => XML_NS_EXIF_EX,
+            Namespace::Xmp => XML_NS_XMP,
+            Namespace::XmpRights => XML_NS_XMP_RIGHTS,
+            Namespace::Ps => XML_NS_PS,
+            Namespace::Dc => XML_NS_DC,
+            Namespace::Unknown(namespace) => namespace.as_str(),
+        }
     }
 }
 
-impl<T: gufo_common::xmp::Field> From<T> for Ref {
+impl Tag {
+    fn from_name(name: &OwnedName) -> Option<Self> {
+        if let Some(namespace_url) = get_namespace(name) {
+            let namespace = Namespace::from_url(namespace_url);
+
+            let name = local_name(name).to_owned();
+            Some(Self::new(namespace, name))
+        } else {
+            None
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, PartialOrd, Eq, Ord)]
+pub struct Tag {
+    namespace: Namespace,
+    name: String,
+}
+
+impl Tag {
+    pub fn new(namespace: Namespace, name: String) -> Self {
+        Self { namespace, name }
+    }
+}
+
+impl<T: gufo_common::xmp::Field> From<T> for Tag {
     fn from(_: T) -> Self {
-        let tag = if T::EX { Tag::Exif } else { Tag::Exif };
+        let tag = if T::EX {
+            Namespace::ExifEX
+        } else {
+            Namespace::Exif
+        };
 
         Self {
             name: T::NAME.to_string(),
-            tag,
+            namespace: tag,
         }
     }
 }
@@ -51,13 +108,13 @@ impl<T: gufo_common::xmp::Field> From<T> for Ref {
 enum ReaderState {
     Nothing,
     RdfDescription,
-    Tag(Ref),
+    Tag(Tag),
 }
 
 #[derive(Debug, Clone)]
 pub struct Xmp {
     inner: Vec<u8>,
-    entries: BTreeMap<Ref, String>,
+    entries: BTreeMap<Tag, String>,
 }
 
 #[derive(Debug, Clone, thiserror::Error)]
@@ -91,7 +148,7 @@ impl Xmp {
         })
     }
 
-    pub fn update(&mut self, updates: BTreeMap<Ref, String>) -> Result<(), Error> {
+    pub fn update(&mut self, updates: BTreeMap<Tag, String>) -> Result<(), Error> {
         let (entries, data) = Self::lookup(&self.inner, updates)?;
         self.entries = entries;
         self.inner = data;
@@ -99,7 +156,7 @@ impl Xmp {
         Ok(())
     }
 
-    pub fn get(&self, ref_: &Ref) -> Option<&str> {
+    pub fn get(&self, ref_: &Tag) -> Option<&str> {
         self.entries.get(ref_).map(|x| x.as_str())
     }
 
@@ -108,14 +165,19 @@ impl Xmp {
             .map(ToString::to_string)
     }
 
-    pub fn entries(&self) -> &BTreeMap<Ref, String> {
+    pub fn creator(&self) -> Option<String> {
+        self.get(&Tag::new(Namespace::Dc, "creator".into()))
+            .map(ToString::to_string)
+    }
+
+    pub fn entries(&self) -> &BTreeMap<Tag, String> {
         &self.entries
     }
 
     fn lookup(
         data: &[u8],
-        updates: BTreeMap<Ref, String>,
-    ) -> Result<(BTreeMap<Ref, String>, Vec<u8>), Error> {
+        updates: BTreeMap<Tag, String>,
+    ) -> Result<(BTreeMap<Tag, String>, Vec<u8>), Error> {
         let parser = ParserConfig::default()
             .ignore_root_level_whitespace(false)
             .create_reader(Cursor::new(data));
@@ -138,13 +200,13 @@ impl Xmp {
                 } => {
                     let mut event = event.clone();
 
-                    if local_name(name) == "Description" && get_namespace(name) == Some(RDF_XML_NS)
+                    if local_name(name) == "Description" && get_namespace(name) == Some(XML_NS_RDF)
                     {
                         let mut attributes = attributes.clone();
 
                         reader_state = ReaderState::RdfDescription;
                         for attr in attributes.iter_mut() {
-                            if let Some(tag) = name_to_tag(&attr.name) {
+                            if let Some(tag) = Tag::from_name(&attr.name) {
                                 // Apply updates
                                 if let Some(value) = updates.get(&tag) {
                                     value.clone_into(&mut attr.value);
@@ -159,7 +221,7 @@ impl Xmp {
                             namespace: namespace.to_owned(),
                         }
                     } else if matches!(reader_state, ReaderState::RdfDescription) {
-                        if let Some(tag) = name_to_tag(name) {
+                        if let Some(tag) = Tag::from_name(name) {
                             reader_state = ReaderState::Tag(tag);
                         }
                     }
@@ -188,7 +250,7 @@ impl Xmp {
                     match reader_state {
                         ReaderState::RdfDescription
                             if local_name(name) == "Description"
-                                && get_namespace(name) == Some(RDF_XML_NS) =>
+                                && get_namespace(name) == Some(XML_NS_RDF) =>
                         {
                             reader_state = ReaderState::Nothing;
                         }
@@ -224,27 +286,4 @@ fn local_name(OwnedName { local_name, .. }: &OwnedName) -> &str {
 
 fn get_namespace(OwnedName { namespace, .. }: &OwnedName) -> Option<&str> {
     namespace.as_ref().map(|x| x.as_str())
-}
-
-fn name_to_tag(name: &OwnedName) -> Option<Ref> {
-    if let Some(namespace) = get_namespace(name) {
-        let tag = if namespace.starts_with(EXIF_LATER_XML_NS) {
-            Tag::Exif
-        } else {
-            match namespace {
-                EXIF_EARLY_XML_NS => Tag::Exif,
-                TIFF_XML_NS => Tag::Tiff,
-                PS_XML_NS => Tag::Ps,
-                DC_XML_NS => Tag::Dc,
-                XMP_XML_NS => Tag::Xmp,
-                XMP_RIGHTS_XML_NS => Tag::XmpRights,
-                _ => return None,
-            }
-        };
-
-        let name = local_name(name).to_owned();
-        Some(Ref { name, tag })
-    } else {
-        None
-    }
 }
