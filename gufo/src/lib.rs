@@ -3,6 +3,62 @@ use gufo_exif::Exif;
 use gufo_xmp::Xmp;
 
 #[derive(Debug, Default)]
+pub struct RawMetadata {
+    pub exif: Vec<Vec<u8>>,
+    pub xmp: Vec<Vec<u8>>,
+}
+
+impl RawMetadata {
+    pub fn for_guessed(data: Vec<u8>) -> Result<Self, ErrorWithData<Error>> {
+        if gufo_png::Png::is_filetype(&data) {
+            let png = gufo_png::Png::new(data).map_err(|x| x.map_err(Error::Png))?;
+            Ok(Self::for_png(&png))
+        } else if gufo_jpeg::Jpeg::is_filetype(&data) {
+            let jpeg = gufo_jpeg::Jpeg::new(data).map_err(|x| x.map_err(Error::Jpeg))?;
+            Ok(Self::for_jpeg(&jpeg))
+        } else {
+            Err(ErrorWithData::new(Error::NoSupportedFiletypeFound, data))
+        }
+    }
+
+    pub fn for_png(png: &gufo_png::Png) -> Self {
+        let mut raw_metadata = Self::default();
+
+        raw_metadata
+            .exif
+            .extend(png.exif(10_usize.pow(6) * 100).map(|x| x.to_vec()));
+
+        raw_metadata
+    }
+
+    pub fn for_jpeg(jpeg: &gufo_jpeg::Jpeg) -> Self {
+        let mut raw_metadata = Self::default();
+
+        raw_metadata
+            .exif
+            .extend(jpeg.exif_data().map(|x| x.to_vec()));
+
+        raw_metadata.xmp.extend(jpeg.xmp_data().map(|x| x.to_vec()));
+
+        raw_metadata
+    }
+
+    pub fn into_metadata(self) -> Metadata {
+        let mut metadata = Metadata::new();
+
+        for exif in self.exif {
+            let _ = metadata.add_raw_exif(exif);
+        }
+
+        for xmp in self.xmp {
+            let _ = metadata.add_raw_xmp(xmp);
+        }
+
+        metadata
+    }
+}
+
+#[derive(Debug, Default)]
 pub struct Metadata {
     exif: Vec<Exif>,
     xmp: Vec<Xmp>,
@@ -30,40 +86,15 @@ impl Metadata {
     }
 
     pub fn for_guessed(data: Vec<u8>) -> Result<Self, ErrorWithData<Error>> {
-        if gufo_png::Png::is_filetype(&data) {
-            let png = gufo_png::Png::new(data).map_err(|x| x.map_err(Error::Png))?;
-            Ok(Self::for_png(&png))
-        } else if gufo_jpeg::Jpeg::is_filetype(&data) {
-            let jpeg = gufo_jpeg::Jpeg::new(data).map_err(|x| x.map_err(Error::Jpeg))?;
-            Ok(Self::for_jpeg(&jpeg))
-        } else {
-            Err(ErrorWithData::new(Error::NoSupportedFiletypeFound, data))
-        }
+        RawMetadata::for_guessed(data).map(|x| x.into_metadata())
     }
 
     pub fn for_png(png: &gufo_png::Png) -> Self {
-        let mut metadata = Self::new();
-
-        if let Some(exif) = png.exif(10_usize.pow(6) * 100) {
-            let _ = metadata.add_raw_exif(exif);
-        }
-
-        metadata
+        RawMetadata::for_png(png).into_metadata()
     }
 
     pub fn for_jpeg(jpeg: &gufo_jpeg::Jpeg) -> Self {
-        let mut metadata = Self::new();
-
-        for exif in jpeg.exif_data() {
-            let _ = metadata.add_raw_exif(exif.to_vec());
-        }
-
-        for xmp in jpeg.xmp_data() {
-            println!("{}", String::from_utf8_lossy(xmp));
-            let _ = metadata.add_raw_xmp(xmp.to_vec());
-        }
-
-        metadata
+        RawMetadata::for_jpeg(jpeg).into_metadata()
     }
 
     pub fn add_raw_exif(&mut self, data: Vec<u8>) -> Result<(), Error> {
