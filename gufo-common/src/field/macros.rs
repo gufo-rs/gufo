@@ -34,8 +34,8 @@ macro_rules! make_tags {
             )*
         )*
 
-        pub(crate) static TAG_NAMES: once_cell::sync::Lazy<std::collections::HashMap<(u16, Ifd), &'static str>> =
-         once_cell::sync::Lazy::new(|| std::collections::HashMap::from([
+        pub(crate) static TAG_NAMES: std::sync::LazyLock<std::collections::HashMap<(u16, Ifd), &'static str>> =
+         std::sync::LazyLock::new(|| std::collections::HashMap::from([
             $(
                 (($tag, $ifd), stringify!($id)),
             )*

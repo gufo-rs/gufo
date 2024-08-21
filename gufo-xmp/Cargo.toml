@@ -7,6 +7,6 @@ rust-version.workspace = true
 repository.workspace = true
 
 [dependencies]
-xml-rs = "0.8.19"
+xml-rs.workspace = true
 thiserror.workspace = true
 gufo-common.workspace = true

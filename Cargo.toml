@@ -1,8 +1,8 @@
 [workspace.package]
-version = "0.1.3"
+version = "0.2.0"
 license = "MPL-2.0 OR LGPL-2.1-or-later"
 edition = "2021"
-rust-version = "1.75"
+rust-version = "1.80"
 repository = "https://github.com/gufo-rs/gufo"
 
 [profile.release]
@@ -31,16 +31,16 @@ cast_possible_truncation = "forbid"
 cast_possible_wrap = "forbid"
 
 [workspace.dependencies]
-gufo-common = { version = "0.1.0", path = "gufo-common" }
-gufo-exif = { version = "0.1.0", path = "gufo-exif" }
-gufo-jpeg = { version = "0.1.0", path = "gufo-jpeg" }
-gufo-png = { version = "0.1.0", path = "gufo-png" }
-gufo-webp = { version = "0.1.0", path = "gufo-webp" }
-gufo-xmp = { version = "0.1.0", path = "gufo-xmp" }
+gufo-common = { version = "0.2.0", path = "gufo-common" }
+gufo-exif = { version = "0.2.0", path = "gufo-exif" }
+gufo-jpeg = { version = "0.2.0", path = "gufo-jpeg" }
+gufo-png = { version = "0.2.0", path = "gufo-png" }
+gufo-webp = { version = "0.2.0", path = "gufo-webp" }
+gufo-xmp = { version = "0.2.0", path = "gufo-xmp" }
 hex = "0.4.0"
 miniz_oxide = "0.8.0"
-once_cell = "1.19.0"
 paste = "1.0.15"
 serde = { version = "1.0.202", features = ["derive"] }
 thiserror = "1.0.61"
 tracing = "0.1"
+xml-rs = "0.8.19"

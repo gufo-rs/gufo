@@ -34,18 +34,14 @@ url = "https://raw.githubusercontent.com/zcash/rust-ecosystem/main/supply-chain/
 [policy.gufo]
 audit-as-crates-io = true
 
-[policy."gufo-common:0.1.1"]
+[policy."gufo-common"]
 audit-as-crates-io = true
 
-[policy."gufo-exif:0.1.1"]
+[policy."gufo-exif"]
 audit-as-crates-io = true
 
-[policy."gufo-jpeg:0.1.1"]
+[policy."gufo-jpeg"]
 audit-as-crates-io = true
-
-[[exemptions.once_cell]]
-version = "1.19.0"
-criteria = "safe-to-deploy"
 
 [[exemptions.paste]]
 version = "1.0.15"
