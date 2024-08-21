@@ -122,8 +122,26 @@ impl Xmp {
         self.get(tag)?.parse().ok()
     }
 
+    #[cfg(feature = "chrono")]
+    pub fn get_date_time(
+        &self,
+        tag: impl Into<Tag>,
+    ) -> Option<chrono::DateTime<chrono::FixedOffset>> {
+        self.get(tag)
+            .and_then(|x| chrono::DateTime::parse_from_rfc3339(x).ok())
+    }
+
+    #[cfg(feature = "chrono")]
+    pub fn date_time_original(&self) -> Option<chrono::DateTime<chrono::FixedOffset>> {
+        self.get_date_time(field::DateTimeOriginal)
+    }
+
     pub fn model(&self) -> Option<String> {
         self.get(field::Model).map(ToString::to_string)
+    }
+
+    pub fn make(&self) -> Option<String> {
+        self.get(field::Make).map(ToString::to_string)
     }
 
     pub fn f_number(&self) -> Option<f32> {
@@ -142,6 +160,10 @@ impl Xmp {
     pub fn iso_speed_rating(&self) -> Option<u16> {
         self.get_u16(field::PhotographicSensitivity)
             .or_else(|| self.get_u16(field::ISOSpeedRatings))
+    }
+
+    pub fn focal_length(&self) -> Option<f32> {
+        self.get_frac_f32(field::FocalLength)
     }
 
     pub fn creator(&self) -> Option<String> {

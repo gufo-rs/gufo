@@ -7,7 +7,12 @@ edition.workspace = true
 rust-version.workspace = true
 repository.workspace = true
 
+[features]
+default = []
+chrono = ["dep:chrono", "gufo-xmp/chrono", "gufo-exif/chrono"]
+
 [dependencies]
+chrono = { workspace = true, optional = true }
 gufo-common.workspace = true
 gufo-exif.workspace = true
 gufo-jpeg.workspace = true
@@ -18,3 +23,7 @@ thiserror.workspace = true
 
 [lints]
 workspace = true
+
+[[example]]
+name = "show-metadata"
+required-features = ["chrono"]

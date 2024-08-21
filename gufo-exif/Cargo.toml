@@ -13,7 +13,12 @@ exclude = ["tests"]
 [lints]
 workspace = true
 
+[features]
+default = []
+chrono = ["dep:chrono"]
+
 [dependencies]
+chrono = { workspace = true, optional = true }
 gufo-common.workspace = true
 tracing.workspace = true
 thiserror.workspace = true

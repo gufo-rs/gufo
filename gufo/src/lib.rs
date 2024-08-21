@@ -129,22 +129,38 @@ impl Metadata {
 
     // TODO: pub fn location
 
-    // TODO: originally created
+    #[cfg(feature = "chrono")]
+    pub fn date_time_original(&self) -> Option<chrono::DateTime<chrono::FixedOffset>> {
+        self.exif_xmp(Exif::date_time_original, Xmp::date_time_original)
+    }
 
     pub fn f_number(&self) -> Option<f32> {
         self.exif_xmp(Exif::f_number, Xmp::f_number)
     }
 
+    /// Exposure time in seconds
     pub fn exposure_time(&self) -> Option<(u32, u32)> {
         self.exif_xmp(Exif::exposure_time, Xmp::exposure_time)
     }
 
+    /// Camera model
     pub fn model(&self) -> Option<String> {
         self.exif_xmp(Exif::model, Xmp::model)
     }
 
+    /// Camera manifacturer
+    pub fn make(&self) -> Option<String> {
+        self.exif_xmp(Exif::make, Xmp::make)
+    }
+
+    /// ISO
     pub fn iso_speed_rating(&self) -> Option<u16> {
         self.exif_xmp(Exif::iso_speed_rating, Xmp::iso_speed_rating)
+    }
+
+    /// Focal length in millimeters
+    pub fn focal_length(&self) -> Option<f32> {
+        self.exif_xmp(Exif::focal_length, Xmp::focal_length)
     }
 
     pub fn creator(&self) -> Option<String> {

@@ -103,7 +103,8 @@ impl Exif {
             .ok()?
     }
 
-    pub fn date_time_original(&self) -> Option<String> {
+    #[cfg(feature = "chrono")]
+    pub fn date_time_original(&self) -> Option<chrono::DateTime<chrono::FixedOffset>> {
         let mut datetime = self
             .decoder
             .borrow_mut()
@@ -111,7 +112,7 @@ impl Exif {
                 field::DateTimeOriginal::TAG,
                 field::DateTimeOriginal::IFD,
             ))
-            .ok()?;
+            .ok()??;
 
         if let Some(offset) = self
             .decoder
@@ -123,12 +124,10 @@ impl Exif {
             .ok()
             .flatten()
         {
-            if let Some(datetime) = datetime.as_mut() {
-                datetime.push_str(&offset);
-            }
+            datetime.push_str(&offset);
         }
 
-        datetime
+        chrono::DateTime::parse_from_rfc3339(&datetime).ok()
     }
 
     pub fn debug_dump(&self) -> String {

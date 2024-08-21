@@ -6,7 +6,12 @@ edition.workspace = true
 rust-version.workspace = true
 repository.workspace = true
 
+[features]
+default = []
+chrono = ["dep:chrono"]
+
 [dependencies]
-xml-rs.workspace = true
-thiserror.workspace = true
+chrono = { workspace = true, optional = true }
 gufo-common.workspace = true
+thiserror.workspace = true
+xml-rs.workspace = true
