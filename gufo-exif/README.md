@@ -10,7 +10,7 @@ The high level API in `Exif` provides simple access to commonly used metadata.
 
 ```
 let data = std::fs::read("tests/example.jpg").unwrap();
-let jpeg = gufo_jpeg::Jpeg::new(data);
+let jpeg = gufo_jpeg::Jpeg::new(data).unwrap();
 let raw_exif = jpeg.exif_data().next().unwrap().to_vec();
 
 eprintln!("{}", String::from_utf8_lossy(&raw_exif));

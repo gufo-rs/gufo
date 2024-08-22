@@ -11,8 +11,10 @@ repository.workspace = true
 workspace = true
 
 [dependencies]
+chrono = { workspace = true, optional = true }
 paste.workspace = true
 serde = { workspace = true, optional = true }
 
 [features]
 serde = ["dep:serde"]
+chrono = ["dep:chrono"]

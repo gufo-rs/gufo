@@ -104,30 +104,55 @@ impl Exif {
     }
 
     #[cfg(feature = "chrono")]
-    pub fn date_time_original(&self) -> Option<chrono::DateTime<chrono::FixedOffset>> {
+    pub fn date_time_original(&self) -> Option<gufo_common::datetime::DateTime> {
         let mut datetime = self
             .decoder
             .borrow_mut()
-            .lookup_datetime(TagIfd::new(
-                field::DateTimeOriginal::TAG,
-                field::DateTimeOriginal::IFD,
-            ))
+            .lookup_datetime(field::DateTimeOriginal)
             .ok()??;
 
+        // Add sub-seconds
+        if let Some(subsec) = self
+            .decoder
+            .borrow_mut()
+            .lookup_string(field::SubSecTimeOriginal)
+            .ok()
+            .flatten()
+        {
+            // Remove NULL as well since iPhone 15 and HTC ONE have a leading NULL in this
+            // field
+            let subsec = subsec.trim().replace('\0', "");
+            if !subsec.is_empty() {
+                datetime.push('.');
+                datetime.push_str(&subsec);
+            }
+        }
+
+        let use_offset;
+
+        // Add offset (timezone)
         if let Some(offset) = self
             .decoder
             .borrow_mut()
-            .lookup_datetime(TagIfd::new(
-                field::OffsetTimeOriginal::TAG,
-                field::OffsetTimeOriginal::IFD,
-            ))
+            .lookup_string(field::OffsetTimeOriginal)
             .ok()
             .flatten()
         {
             datetime.push_str(&offset);
+            use_offset = true;
+        } else {
+            // Add a offset to allow parser to work
+            datetime.push('Z');
+            use_offset = false;
         }
 
-        chrono::DateTime::parse_from_rfc3339(&datetime).ok()
+        let x = chrono::DateTime::parse_from_rfc3339(&datetime).ok()?;
+
+        Some(if use_offset {
+            gufo_common::datetime::DateTime::FixedOffset(x)
+        } else {
+            gufo_common::datetime::DateTime::Naive(x.naive_utc())
+        })
     }
 
     pub fn debug_dump(&self) -> String {

@@ -23,8 +23,8 @@ fn xmp() {
     let xmp = gufo_xmp::Xmp::new(jpeg.xmp_data().next().unwrap().to_vec()).unwrap();
 
     assert_eq!(
-        xmp.get(&gufo_xmp::Tag::new(
-            gufo_xmp::Namespace::Xmp,
+        xmp.get(gufo_xmp::Tag::new(
+            gufo_common::xmp::Namespace::Xmp,
             "CreatorTool".into()
         )),
         Some("GIMP 2.10")

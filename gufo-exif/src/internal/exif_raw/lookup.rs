@@ -121,7 +121,7 @@ impl super::ExifRaw {
         Ok(Some((x, y)))
     }
 
-    pub fn lookup_datetime(&mut self, tagifd: TagIfd) -> Result<Option<String>> {
+    pub fn lookup_datetime(&mut self, tagifd: impl Into<TagIfd>) -> Result<Option<String>> {
         let Some(s) = self.lookup_string(tagifd)? else {
             return Ok(None);
         };

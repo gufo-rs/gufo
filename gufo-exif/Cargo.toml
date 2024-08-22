@@ -15,7 +15,7 @@ workspace = true
 
 [features]
 default = []
-chrono = ["dep:chrono"]
+chrono = ["dep:chrono", "gufo-common/chrono"]
 
 [dependencies]
 chrono = { workspace = true, optional = true }
@@ -25,3 +25,7 @@ thiserror.workspace = true
 
 [dev-dependencies]
 gufo-jpeg.workspace = true
+
+[[test]]
+name = "high_level"
+required-features = ["chrono"]

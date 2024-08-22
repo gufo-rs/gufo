@@ -130,7 +130,7 @@ impl Metadata {
     // TODO: pub fn location
 
     #[cfg(feature = "chrono")]
-    pub fn date_time_original(&self) -> Option<chrono::DateTime<chrono::FixedOffset>> {
+    pub fn date_time_original(&self) -> Option<gufo_common::datetime::DateTime> {
         self.exif_xmp(Exif::date_time_original, Xmp::date_time_original)
     }
 

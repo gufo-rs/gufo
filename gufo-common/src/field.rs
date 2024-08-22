@@ -25,6 +25,7 @@ macros::make_tags![
     (0x8827, PhotographicSensitivity, Ifd::Exif, xmp = ExifEX),
     (0x9003, DateTimeOriginal, Ifd::Exif, xmp = Exif),
     (0x9011, OffsetTimeOriginal, Ifd::Exif),
+    (0x9291, SubSecTimeOriginal, Ifd::Exif),
     /// Lens aperture with unit APEX
     (0x9202, Aperture, Ifd::Exif, xmp = Exif),
     (0x920A, FocalLength, Ifd::Exif, xmp = Exif),

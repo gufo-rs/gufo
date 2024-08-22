@@ -15,7 +15,10 @@ fn canon() {
     assert_eq!(exif.f_number().unwrap(), 5.6);
     assert_eq!(exif.focal_length().unwrap(), 53.);
     assert_eq!(exif.exposure_time().unwrap(), (1, 60));
-    assert_eq!(exif.date_time_original().unwrap(), "2007-10-19T19:57:06");
+    assert_eq!(
+        exif.date_time_original().unwrap().to_string(),
+        "2007-10-19 19:57:06",
+    );
 }
 
 #[test]
@@ -29,5 +32,8 @@ fn apple() {
     assert_eq!(exif.f_number().unwrap(), 2.2);
     assert_eq!(exif.focal_length().unwrap(), 4.15);
     assert_eq!(exif.exposure_time().unwrap(), (1, 682));
-    assert_eq!(exif.date_time_original().unwrap(), "2021-02-13T14:12:20");
+    assert_eq!(
+        exif.date_time_original().unwrap().to_string(),
+        "2021-02-13 14:12:20.422"
+    );
 }

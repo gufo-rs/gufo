@@ -9,7 +9,12 @@ repository.workspace = true
 
 [features]
 default = []
-chrono = ["dep:chrono", "gufo-xmp/chrono", "gufo-exif/chrono"]
+chrono = [
+    "dep:chrono",
+    "gufo-common/chrono",
+    "gufo-exif/chrono",
+    "gufo-xmp/chrono",
+]
 
 [dependencies]
 chrono = { workspace = true, optional = true }

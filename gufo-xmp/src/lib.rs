@@ -123,16 +123,15 @@ impl Xmp {
     }
 
     #[cfg(feature = "chrono")]
-    pub fn get_date_time(
-        &self,
-        tag: impl Into<Tag>,
-    ) -> Option<chrono::DateTime<chrono::FixedOffset>> {
-        self.get(tag)
-            .and_then(|x| chrono::DateTime::parse_from_rfc3339(x).ok())
+    pub fn get_date_time(&self, tag: impl Into<Tag>) -> Option<gufo_common::datetime::DateTime> {
+        Some(gufo_common::datetime::DateTime::FixedOffset(
+            self.get(tag)
+                .and_then(|x| chrono::DateTime::parse_from_rfc3339(x).ok())?,
+        ))
     }
 
     #[cfg(feature = "chrono")]
-    pub fn date_time_original(&self) -> Option<chrono::DateTime<chrono::FixedOffset>> {
+    pub fn date_time_original(&self) -> Option<gufo_common::datetime::DateTime> {
         self.get_date_time(field::DateTimeOriginal)
     }
 

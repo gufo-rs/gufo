@@ -1,3 +1,5 @@
+#[cfg(feature = "chrono")]
+pub mod datetime;
 pub mod error;
 pub mod exif;
 pub mod field;
