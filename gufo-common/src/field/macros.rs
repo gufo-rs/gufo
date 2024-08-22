@@ -28,6 +28,22 @@ macro_rules! make_tags {
     };
 }
 
+macro_rules! make_exif_tags {
+    ($($(#[$($attrss:tt)*])*($tag:literal, $id:ident, $ifd:expr)),*$(,)?) => {
+        $(
+            $(#[$($attrss)*])*
+            #[derive(Copy, Clone, Debug)]
+            pub struct $id;
+
+            impl $crate::exif::Field for $id {
+                const NAME: &'static str = stringify!($id);
+                const TAG: crate::exif::Tag = crate::exif::Tag($tag);
+                const IFD: Ifd = $ifd;
+            }
+        )*
+    };
+}
+
 macro_rules! make_xmp_tags {
     ($($(#[$($attrss:tt)*])*($id:ident, $namespace:ident)),*$(,)?) => {
         $(
@@ -58,4 +74,4 @@ macro_rules! make_xmp_tags {
     };
 }
 
-pub(crate) use {make_tags, make_xmp_tags};
+pub(crate) use {make_exif_tags, make_tags, make_xmp_tags};

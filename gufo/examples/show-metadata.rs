@@ -30,6 +30,7 @@ pub fn main() {
     );
 
     p("Creator", metadata.creator());
+    p("Camera Owner", metadata.camera_owner());
 }
 
 pub fn p(label: &str, s: Option<impl Display>) {

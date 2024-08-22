@@ -155,6 +155,23 @@ impl Exif {
         })
     }
 
+    pub fn camera_owner(&self) -> Option<String> {
+        let mut decoder = self.decoder.borrow_mut();
+
+        if let Some(s) = decoder.lookup_string(field::CameraOwnerName).ok().flatten() {
+            Some(s)
+        } else if let Some(s) = decoder.lookup_string(field::CanonOwnerName).ok().flatten() {
+            let s = s.chars().take_while(|x| *x != '\0').collect();
+            Some(s)
+        } else {
+            None
+        }
+    }
+
+    pub fn decoder(&mut self) -> std::cell::RefMut<ExifRaw> {
+        self.decoder.borrow_mut()
+    }
+
     pub fn debug_dump(&self) -> String {
         self.decoder.borrow_mut().debug_dump()
     }

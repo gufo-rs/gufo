@@ -99,7 +99,8 @@ impl Metadata {
     }
 
     pub fn add_raw_exif(&mut self, data: Vec<u8>) -> Result<(), Error> {
-        let exif = Exif::new(data).map_err(Error::Exif)?;
+        let mut exif = Exif::new(data).map_err(Error::Exif)?;
+        let _ = exif.decoder().makernote_register();
         self.exif.push(exif);
         Ok(())
     }
@@ -161,6 +162,10 @@ impl Metadata {
     /// Focal length in millimeters
     pub fn focal_length(&self) -> Option<f32> {
         self.exif_xmp(Exif::focal_length, Xmp::focal_length)
+    }
+
+    pub fn camera_owner(&self) -> Option<String> {
+        self.exif(Exif::camera_owner)
     }
 
     pub fn creator(&self) -> Option<String> {

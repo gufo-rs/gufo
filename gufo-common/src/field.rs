@@ -29,9 +29,12 @@ macros::make_tags![
     /// Lens aperture with unit APEX
     (0x9202, Aperture, Ifd::Exif, xmp = Exif),
     (0x920A, FocalLength, Ifd::Exif, xmp = Exif),
+    (0xA430, CameraOwnerName, Ifd::Exif, xmp = ExifEX),
     (0xA433, LensMake, Ifd::Exif, xmp = Exif),
     (0xA434, LensModel, Ifd::Exif, xmp = Exif),
 ];
+
+macros::make_exif_tags!((0x9, CanonOwnerName, Ifd::MakerNote),);
 
 macros::make_xmp_tags![
     /// Legacy XMP Exif (till Exif 2.21)
