@@ -10,7 +10,7 @@ impl super::ExifRaw {
 
         self.decode_header()?;
 
-        self.add_ifd_offset(Ifd::Primary, 4);
+        self.add_ifd_offset_location(Ifd::Primary, 4);
 
         self.decode_ifds()?;
 
@@ -51,19 +51,30 @@ impl super::ExifRaw {
     }
 
     pub fn decode_ifds(&mut self) -> Result<()> {
-        let ifd_offset = self.decode_entries(Ifd::Primary)?;
+        let ifd_offset = self.decode_ifd_entries(Ifd::Primary)?;
+
         if ifd_offset != 0 {
-            self.raw().seek_start(ifd_offset)?;
-            self.decode_entries(Ifd::Thumbnail)?;
+            self.decode_ifd_entries_error_silenced(Ifd::Thumbnail, ifd_offset);
         }
 
         Ok(())
     }
 
-    pub fn decode_entries(&mut self, ifd: Ifd) -> Result<u32> {
-        let n_entries: u16 = self.raw().read_u16().e(Error::NumerEntriesEof)?;
+    /// Sometimes, not all IFD locations are actually valid
+    pub fn decode_ifd_entries_error_silenced(&mut self, ifd: Ifd, ifd_offset: u32) {
+        if let Err(err) = self.raw().seek_start(ifd_offset) {
+            tracing::info!("Location for IFD '{ifd:?}' does not exist: {err}");
+        }
+        if let Err(err) = self.decode_ifd_entries(Ifd::Thumbnail) {
+            tracing::info!("Failed to load IFD '{ifd:?}': {err}");
+        }
+    }
+
+    pub fn decode_ifd_entries(&mut self, ifd: Ifd) -> Result<u32> {
+        tracing::debug!("Reading number of entries in IFD '{ifd:?}'");
+        let n_entries: u16 = self.raw().read_u16().e(Error::IfdNumEntriesEof)?;
         tracing::debug!(
-            "Reading {ifd:?} with {n_entries} entries at {}",
+            "Reading IFD '{ifd:?}' with {n_entries} entries at byte {}",
             self.raw().position()?
         );
 
@@ -81,27 +92,39 @@ impl super::ExifRaw {
                 .push(location);
         }
 
+        tracing::debug!("All entries in IFD '{ifd:?}' read");
+
         let offset_location = self.raw().position()?;
         let ifd_offset = self.raw().read_u32()?;
+        dbg!(ifd_offset);
         if ifd_offset > 0 && ifd == Ifd::Primary {
-            self.add_ifd_offset(Ifd::Thumbnail, offset_location);
+            self.add_ifd_offset_location(Ifd::Thumbnail, offset_location);
         }
 
+        // Load entries for every found Exif specific IFD
         for (ifd, entry) in exif_specific_ifd_offsets {
             let offset = entry.value_offset.u32();
-            self.add_ifd_offset(ifd, entry.value_offset_position());
-            self.raw().seek_start(offset)?;
-            self.decode_entries(ifd)?;
+            let ifd_listed = self.add_ifd_offset_location(ifd, entry.value_offset_position());
+
+            if ifd_listed {
+                tracing::info!("Ignoring duplicate IFD entry");
+            } else {
+                tracing::debug!("Reading Exif specific IFD '{ifd:?}");
+                self.decode_ifd_entries_error_silenced(ifd, offset);
+            }
         }
 
         Ok(ifd_offset)
     }
 
-    pub fn add_ifd_offset(&mut self, ifd: Ifd, location: u32) {
+    /// Adds location of IFD offset
+    pub fn add_ifd_offset_location(&mut self, ifd: Ifd, location: u32) -> bool {
         let exists = self.ifd_locations.insert(ifd, location).is_some();
 
         if exists {
-            tracing::warn!("Exif: Warning: Ifd exists twice {ifd:?}");
+            tracing::info!("IFD '{ifd:?}' exists twice");
         }
+
+        exists
     }
 }

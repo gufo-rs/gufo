@@ -29,8 +29,8 @@ pub enum Error {
     MagicBytesEof,
     #[error("MagicBytesEof")]
     EntryEof,
-    #[error("EntryEof")]
-    NumerEntriesEof,
+    #[error("IfdNumEntriesEof")]
+    IfdNumEntriesEof,
     #[error("NumerEntriesEof")]
     InvalidLookupOffset,
     #[error("InvalidLookupOffset")]

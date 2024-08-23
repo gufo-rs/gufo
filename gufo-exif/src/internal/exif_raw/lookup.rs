@@ -31,6 +31,7 @@ impl super::ExifRaw {
         }
     }
 
+    /// Read a single entry from IFD
     pub fn read_entry(&mut self) -> Result<(Tag, EntryRef)> {
         let position = self.raw().position()?;
         let tag_id = self.raw().read_u16().e(Error::EntryEof)?;
