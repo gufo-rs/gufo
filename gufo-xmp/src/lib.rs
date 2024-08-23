@@ -148,7 +148,7 @@ impl Xmp {
             Some(fnumer)
         } else {
             let aperture_apex = self.get_frac_f32(field::Aperture)?;
-            Some(gufo_common::utils::apex_to_f_number(aperture_apex))
+            Some(gufo_common::math::apex_to_f_number(aperture_apex))
         }
     }
 

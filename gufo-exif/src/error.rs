@@ -1,8 +1,6 @@
 use std::sync::Arc;
 
-use gufo_common::utils::{
-    AdditionOverflowError, ConversionOverflowError, SubstractionOverflowError,
-};
+use gufo_common::math::MathError;
 
 use crate::internal::{Ifd, TagIfd, Type};
 
@@ -62,6 +60,8 @@ pub enum Error {
     ConversionOverflowError,
     #[error("EntryNotFound")]
     EntryNotFound,
+    #[error("Math operation error: {0}")]
+    Math(MathError),
 }
 
 impl From<std::io::Error> for Error {
@@ -70,21 +70,9 @@ impl From<std::io::Error> for Error {
     }
 }
 
-impl From<AdditionOverflowError> for Error {
-    fn from(_: AdditionOverflowError) -> Self {
-        Self::AdditionOverflow
-    }
-}
-
-impl From<SubstractionOverflowError> for Error {
-    fn from(_: SubstractionOverflowError) -> Self {
-        Self::SubstractionOverflowError
-    }
-}
-
-impl From<ConversionOverflowError> for Error {
-    fn from(_: ConversionOverflowError) -> Self {
-        Self::ConversionOverflowError
+impl From<MathError> for Error {
+    fn from(err: MathError) -> Self {
+        Self::Math(err)
     }
 }
 

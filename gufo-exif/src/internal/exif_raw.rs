@@ -10,7 +10,7 @@ use std::io::{Cursor, Read};
 use std::rc::Rc;
 
 pub use gufo_common::exif::{Ifd, Tag, TagIfd};
-use gufo_common::utils::*;
+use gufo_common::math::*;
 
 pub use super::*;
 use crate::error::{Error, Result, ResultExt};
