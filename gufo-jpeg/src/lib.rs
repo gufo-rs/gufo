@@ -88,7 +88,7 @@ impl Jpeg {
             let marker = Marker::from(buf[1]);
             let pos = source.stream_position().unwrap();
 
-            // Read len
+            // Read length. The length includes the two length bytes, but not the marker.
             source.read_exact(buf).map_err(|_| Error::UnexpectedEof)?;
             let len: u16 = u16::from_be_bytes(*buf);
 
@@ -107,6 +107,42 @@ impl Jpeg {
 
         Ok(segments)
     }
+
+    pub fn replace_segment(
+        &mut self,
+        old_segment: RawSegment,
+        new_segment: NewSegment,
+    ) -> Result<(), Error> {
+        let old_range = old_segment.complete_data();
+
+        let mut new = Vec::new();
+        new.extend_from_slice(&self.data[..old_range.start]);
+        new_segment.write_to(&mut new);
+        new.extend_from_slice(&self.data[old_range.end..]);
+
+        self.data = new;
+        self.segments = Self::find_segments(&self.data)?;
+        Ok(())
+    }
+}
+
+#[derive(Debug)]
+pub struct NewSegment<'a> {
+    marker: Marker,
+    data: &'a [u8],
+}
+
+impl<'a> NewSegment<'a> {
+    pub fn new(marker: Marker, data: &'a [u8]) -> Self {
+        Self { marker, data }
+    }
+
+    pub fn write_to(&self, vec: &mut Vec<u8>) {
+        vec.push(MARKER_START);
+        vec.push(self.marker.into());
+        vec.extend_from_slice(&(self.data.len() as u16 + 2).to_be_bytes());
+        vec.extend_from_slice(self.data);
+    }
 }
 
 #[derive(Debug)]
@@ -122,6 +158,10 @@ impl RawSegment {
             data: self.data.clone(),
             jpeg,
         }
+    }
+
+    pub fn complete_data(&self) -> Range<usize> {
+        self.data.start.checked_sub(4).unwrap()..self.data.end
     }
 }
 
@@ -149,6 +189,13 @@ impl<'a> Segment<'a> {
 
     pub fn data(&self) -> &'a [u8] {
         self.jpeg.data.get(self.data.clone()).unwrap()
+    }
+
+    pub fn unsafe_raw_segment(self) -> RawSegment {
+        RawSegment {
+            data: self.data,
+            marker: self.marker,
+        }
     }
 }
 
