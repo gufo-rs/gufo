@@ -160,8 +160,12 @@ impl RawSegment {
         }
     }
 
+    /// Complete segment including marker and length
     pub fn complete_data(&self) -> Range<usize> {
-        self.data.start.checked_sub(4).unwrap()..self.data.end
+        self.data
+            .start
+            .checked_sub(4)
+            .expect("Unreachable: Marker and length fields always exist")..self.data.end
     }
 }
 

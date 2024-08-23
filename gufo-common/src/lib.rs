@@ -3,6 +3,7 @@ pub mod datetime;
 pub mod error;
 pub mod exif;
 pub mod field;
+pub mod math;
 pub mod orientation;
 pub mod utils;
 pub mod xmp;
