@@ -1,9 +1,10 @@
 use core::panic;
 use std::ops::Range;
 
+use gufo_common::math::U32Ext;
+
 use super::{EntryRef, Ifd, Tag, TagIfd, ValueOffset};
 use crate::error::{Error, Result, ResultExt};
-use gufo_common::math::U32Ext;
 
 impl super::ExifRaw {
     pub fn makernote_entry(&mut self) -> Option<EntryRef> {

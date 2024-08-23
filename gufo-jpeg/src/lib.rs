@@ -1,7 +1,8 @@
-use std::io::{Cursor, Read, Seek, SeekFrom};
+use std::io::{Cursor, Read};
 use std::ops::Range;
 
 use gufo_common::error::ErrorWithData;
+use gufo_common::math::*;
 
 pub const EXIF_IDENTIFIER_STRING: &[u8] = b"Exif\0\0";
 pub const XMP_IDENTIFIER_STRING: &[u8] = b"http://ns.adobe.com/xap/1.0/\0";
@@ -66,10 +67,10 @@ impl Jpeg {
     }
 
     fn find_segments(data: &[u8]) -> Result<Vec<RawSegment>, Error> {
-        let mut source = Cursor::new(data);
+        let mut cur = Cursor::new(data);
 
         let buf = &mut [0; 2];
-        source.read_exact(buf).map_err(|_| Error::UnexpectedEof)?;
+        cur.read_exact(buf).map_err(|_| Error::UnexpectedEof)?;
 
         if data.get(..MAGIC_BYTES.len()) != Some(MAGIC_BYTES) {
             return Err(Error::InvalidMagicBytes(*buf));
@@ -78,7 +79,7 @@ impl Jpeg {
         let mut segments = Vec::new();
         loop {
             // Read tag
-            source.read_exact(buf).map_err(|_| Error::UnexpectedEof)?;
+            cur.read_exact(buf).map_err(|_| Error::UnexpectedEof)?;
             tracing::debug!("Found tag {buf:x?}");
 
             if buf[0] != MARKER_START {
@@ -86,15 +87,18 @@ impl Jpeg {
             }
 
             let marker = Marker::from(buf[1]);
-            let pos = source.stream_position().unwrap();
+            let len_start = cur.position();
 
             // Read length. The length includes the two length bytes, but not the marker.
-            source.read_exact(buf).map_err(|_| Error::UnexpectedEof)?;
+            cur.read_exact(buf).map_err(|_| Error::UnexpectedEof)?;
             let len: u16 = u16::from_be_bytes(*buf);
+
+            let data_start = len_start.usize()?.safe_add(2)?;
+            let data_end = len_start.usize()?.safe_add(len.into())?;
 
             let segment = RawSegment {
                 marker,
-                data: (pos + 2) as usize..(pos as usize + len as usize),
+                data: data_start..data_end,
             };
 
             segments.push(segment);
@@ -102,7 +106,8 @@ impl Jpeg {
             if marker == Marker::SOS {
                 break;
             }
-            source.seek(SeekFrom::Current(len as i64 - 2)).unwrap();
+
+            cur.set_position(len_start.safe_add(len.into())?);
         }
 
         Ok(segments)
@@ -130,17 +135,24 @@ impl Jpeg {
 pub struct NewSegment<'a> {
     marker: Marker,
     data: &'a [u8],
+    total_len: u16,
 }
 
 impl<'a> NewSegment<'a> {
-    pub fn new(marker: Marker, data: &'a [u8]) -> Self {
-        Self { marker, data }
+    pub fn new(marker: Marker, data: &'a [u8]) -> Result<Self, Error> {
+        let total_len = data.len().u16()?.safe_add(2)?;
+
+        Ok(Self {
+            marker,
+            data,
+            total_len,
+        })
     }
 
     pub fn write_to(&self, vec: &mut Vec<u8>) {
         vec.push(MARKER_START);
         vec.push(self.marker.into());
-        vec.extend_from_slice(&(self.data.len() as u16 + 2).to_be_bytes());
+        vec.extend_from_slice(&self.total_len.to_be_bytes());
         vec.extend_from_slice(self.data);
     }
 }
@@ -192,7 +204,10 @@ impl<'a> Segment<'a> {
     }
 
     pub fn data(&self) -> &'a [u8] {
-        self.jpeg.data.get(self.data.clone()).unwrap()
+        self.jpeg
+            .data
+            .get(self.data.clone())
+            .expect("Unreachable: This data must exist after successful loading")
     }
 
     pub fn unsafe_raw_segment(self) -> RawSegment {
@@ -211,6 +226,14 @@ pub enum Error {
     UnexpectedEof,
     #[error("Expected marker start: {0:x}")]
     ExpectedMarkerStart(u8),
+    #[error("Math error: {0}")]
+    Math(MathError),
+}
+
+impl From<MathError> for Error {
+    fn from(value: MathError) -> Self {
+        Self::Math(value)
+    }
 }
 
 gufo_common::utils::convertible_enum!(
