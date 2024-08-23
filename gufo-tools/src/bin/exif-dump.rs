@@ -1,8 +1,14 @@
 use gufo_exif::internal::ExifRaw;
 use gufo_jpeg::Jpeg;
+use tracing_subscriber::prelude::*;
 
 fn main() {
     let path = std::env::args().nth(1).unwrap();
+
+    tracing_subscriber::registry()
+        .with(tracing_subscriber::EnvFilter::builder().from_env_lossy())
+        .with(tracing_subscriber::fmt::Layer::default().compact())
+        .init();
 
     let image_data = std::fs::read(path).unwrap();
     let image = Jpeg::new(image_data).unwrap();

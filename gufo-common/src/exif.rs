@@ -42,6 +42,8 @@ impl Tag {
     pub const GPS_INFO_IFD_POINTER: Self = Self(0x8825);
     pub const INTEROPERABILITY_IFD_POINTER: Self = Self(0xA005);
 
+    /// Returns the IFD if the tag stores the location of that IFD
+    ///
     /// See 4.6.3 in v3.0 standard
     pub fn exif_specific_ifd(&self) -> Option<Ifd> {
         match *self {
