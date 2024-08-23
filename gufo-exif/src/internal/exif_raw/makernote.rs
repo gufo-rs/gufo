@@ -1,7 +1,7 @@
 use core::panic;
 use std::ops::Range;
 
-use gufo_common::math::U32Ext;
+use gufo_common::math::*;
 
 use super::{EntryRef, Ifd, Tag, TagIfd, ValueOffset};
 use crate::error::{Error, Result, ResultExt};
@@ -29,8 +29,8 @@ impl super::ExifRaw {
                     .buffer
                     .borrow_mut()
                     .get_mut()
-                    .drain(last_position.usize()..last_position.safe_add(len)?.usize());
-                self.inserted_at(last_position, -len.i64())?;
+                    .drain(last_position.usize()?..last_position.safe_add(len)?.usize()?);
+                self.inserted_at(last_position, -len.i64()?)?;
             }
         }
 
@@ -140,11 +140,11 @@ impl super::ExifRaw {
         new_position_u32: u32,
         overwrite: bool,
     ) -> Result<()> {
-        let new_position = new_position_u32.usize();
+        let new_position = new_position_u32.usize()?;
         let len = range.end.safe_sub(range.start)?;
-        let len_usize = len.usize();
+        let len_usize = len.usize()?;
 
-        let old_range = range.start.usize()..range.end.usize();
+        let old_range = range.start.usize()?..range.end.usize()?;
         let new_range = new_position
             ..(new_position
                 .checked_add(len_usize)
@@ -185,7 +185,7 @@ impl super::ExifRaw {
         }
 
         if !overwrite {
-            self.inserted_at(new_position_u32.safe_add(len)?, len.i64())?;
+            self.inserted_at(new_position_u32.safe_add(len)?, len.i64()?)?;
         }
 
         Ok(())

@@ -14,7 +14,7 @@ impl super::ExifRaw {
             let value = match entry.value_offset {
                 ValueOffset::Offset(offset) => {
                     self.raw().seek_start(offset)?;
-                    let mut buf = vec![0; entry.data_len()?.usize()];
+                    let mut buf = vec![0; entry.data_len()?.usize()?];
                     self.raw
                         .buffer
                         .borrow_mut()

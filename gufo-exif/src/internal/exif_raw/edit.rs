@@ -78,14 +78,14 @@ impl super::ExifRaw {
         for vec in self.locations.values_mut() {
             for entry in vec {
                 let new_position = if entry.position >= insert_position {
-                    (entry.position.i64().safe_add(len)?).u32()?
+                    (entry.position.i64()?.safe_add(len)?).u32()?
                 } else {
                     entry.position
                 };
                 entry.position = new_position;
                 if let ValueOffset::Offset(offset) = &mut entry.value_offset {
                     if *offset >= insert_position {
-                        let new_offset = (offset.i64().safe_add(len)?).u32()?;
+                        let new_offset = (offset.i64()?.safe_add(len)?).u32()?;
                         *offset = new_offset;
                         raw.seek_start(new_position.safe_add(8)?)?;
                         raw.write_u32(new_offset)?;
@@ -97,7 +97,7 @@ impl super::ExifRaw {
         // Shift ifd offset
         for location in self.ifd_locations.values_mut() {
             let offset_location = if *location >= insert_position {
-                (location.i64().safe_add(len)?).u32()?
+                (location.i64()?.safe_add(len)?).u32()?
             } else {
                 *location
             };
@@ -107,7 +107,7 @@ impl super::ExifRaw {
 
             if current_offset >= insert_position {
                 raw.seek_start(offset_location)?;
-                raw.write_u32((current_offset.i64().safe_add(len)?).u32()?)?;
+                raw.write_u32((current_offset.i64()?.safe_add(len)?).u32()?)?;
                 *location = offset_location;
             }
         }
