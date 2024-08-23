@@ -68,6 +68,7 @@ impl ToUsize for u32 {}
 impl ToUsize for i64 {}
 impl ToUsize for u64 {}
 
+/// Same as `checked_add` functions but returns an error
 pub trait SafeAdd: Sized {
     fn safe_add(self, rhs: Self) -> Result<Self, MathError>;
 }
@@ -107,6 +108,7 @@ impl SafeAdd for usize {
     }
 }
 
+/// Same as `checked_sub` functions but returns an error
 pub trait SafeSub: Sized {
     fn safe_sub(self, rhs: Self) -> Result<Self, MathError>;
 }
@@ -125,6 +127,29 @@ impl SafeSub for i64 {
     }
 }
 
+/// Same as `checked_mul` functions but returns an error
+pub trait SafeMul: Sized {
+    fn safe_mul(self, rhs: Self) -> Result<Self, MathError>;
+}
+
+impl SafeMul for u32 {
+    fn safe_mul(self, rhs: Self) -> Result<Self, MathError> {
+        self.checked_mul(rhs)
+            .ok_or(MathError::MultiplicationOverflowError)
+    }
+}
+
+/// Same as `checked_neg` functions but returns an error
+pub trait SafeNeg: Sized {
+    fn safe_neg(self) -> Result<Self, MathError>;
+}
+
+impl SafeNeg for i64 {
+    fn safe_neg(self) -> Result<Self, MathError> {
+        self.checked_neg().ok_or(MathError::NegationOverflowError)
+    }
+}
+
 #[derive(Debug, Clone, thiserror::Error)]
 pub enum MathError {
     #[error("Addition overflowed")]
@@ -133,8 +158,15 @@ pub enum MathError {
     ConversionOverflowError,
     #[error("Substraction overflowed")]
     SubstractionOverflowError,
+    #[error("Multiplication overflowed")]
+    MultiplicationOverflowError,
+    #[error("Negation overflowed")]
+    NegationOverflowError,
 }
 
+/// Converts and APEX value to an F-Number
+///
+/// <https://en.wikipedia.org/wiki/APEX_system>
 pub fn apex_to_f_number(apex: f32) -> f32 {
     f32::sqrt(1.4).powf(apex)
 }

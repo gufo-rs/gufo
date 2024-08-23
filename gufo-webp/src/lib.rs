@@ -128,10 +128,6 @@ impl RawChunk {
             webp,
         }
     }
-
-    pub fn total_len(&self) -> usize {
-        self.payload.len().checked_add(8).unwrap()
-    }
 }
 
 #[derive(Debug, Clone)]
@@ -147,7 +143,10 @@ impl<'a> Chunk<'a> {
     }
 
     pub fn payload(&self) -> &[u8] {
-        self.webp.data.get(self.payload.clone()).unwrap()
+        self.webp
+            .data
+            .get(self.payload.clone())
+            .expect("Unreachable: Chunk must be part of the data")
     }
 }
 

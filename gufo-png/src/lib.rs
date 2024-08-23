@@ -46,18 +46,6 @@ impl Png {
         self.chunks.iter().map(|x| x.chunk(self)).collect()
     }
 
-    pub fn chunks_with_position(&self) -> Vec<(usize, Chunk)> {
-        let mut pos = MAGIC_BYTES.len();
-
-        let mut chunks = Vec::new();
-        for chunk in &self.chunks {
-            chunks.push((pos, chunk.chunk(self)));
-            pos = pos.checked_add(chunk.total_len()).unwrap();
-        }
-
-        chunks
-    }
-
     pub fn remove_chunk(&mut self, chunk: RawChunk) -> Result<(), Error> {
         self.data.drain(chunk.complete_data());
         self.chunks = Self::find_chunks(&self.data)?;
@@ -155,8 +143,16 @@ impl RawChunk {
     }
 
     pub fn complete_data(&self) -> Range<usize> {
-        (self.chunk_data.start.checked_sub(8).unwrap())
-            ..(self.chunk_data.end.checked_add(4).unwrap())
+        (self
+            .chunk_data
+            .start
+            .checked_sub(8)
+            .expect("Unreachable: The chunk type and size must be part of the data"))
+            ..(self
+                .chunk_data
+                .end
+                .checked_add(4)
+                .expect("Unreachable: The CBC musst be part of the data"))
     }
 
     pub fn total_len(&self) -> usize {
@@ -173,16 +169,15 @@ pub struct Chunk<'a> {
 }
 
 impl<'a> Chunk<'a> {
-    pub fn total_len(&self) -> usize {
-        self.chunk_data_location.len().checked_add(8).unwrap()
-    }
-
     pub fn chunk_type(&self) -> ChunkType {
         self.chunk_type
     }
 
     pub fn chunk_data(&self) -> &[u8] {
-        self.png.data.get(self.chunk_data_location.clone()).unwrap()
+        self.png
+            .data
+            .get(self.chunk_data_location.clone())
+            .expect("Unreachable: The chunk must be part of the data")
     }
 
     pub fn crc(&self) -> &[u8] {

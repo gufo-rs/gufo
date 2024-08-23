@@ -2,6 +2,8 @@ use gufo_common::error::ErrorWithData;
 use gufo_exif::Exif;
 use gufo_xmp::Xmp;
 
+const INFLATE_LIMIT: usize = 10_usize.pow(6) * 100;
+
 #[derive(Debug, Default)]
 pub struct RawMetadata {
     pub exif: Vec<Vec<u8>>,
@@ -26,7 +28,7 @@ impl RawMetadata {
 
         raw_metadata
             .exif
-            .extend(png.exif(10_usize.pow(6) * 100).map(|x| x.to_vec()));
+            .extend(png.exif(INFLATE_LIMIT).map(|x| x.to_vec()));
 
         raw_metadata
     }

@@ -34,7 +34,10 @@ impl super::ExifRaw {
         let n_entries_position = self.raw().position()?;
         let n_entries = self.raw().read_u16()?;
 
-        let entries_end = self.raw().position()?.safe_add(u32::from(n_entries) * 12)?;
+        let entries_end = self
+            .raw()
+            .position()?
+            .safe_add(n_entries.u32()?.safe_mul(12)?)?;
         let entries_index: usize = entries_end.try_into().map_err(|_| Error::OffsetTooLarge)?;
 
         self.makernote_handle_insert(entries_end, 12)?;

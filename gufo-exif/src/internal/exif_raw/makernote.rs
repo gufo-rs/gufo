@@ -30,7 +30,7 @@ impl super::ExifRaw {
                     .borrow_mut()
                     .get_mut()
                     .drain(last_position.usize()?..last_position.safe_add(len)?.usize()?);
-                self.inserted_at(last_position, -len.i64()?)?;
+                self.inserted_at(last_position, len.i64()?.safe_neg()?)?;
             }
         }
 
@@ -56,7 +56,7 @@ impl super::ExifRaw {
     pub fn free_space_before(&self, offset: u32) -> Result<u32> {
         let end = self.last_data_end_before(offset)?;
 
-        offset.safe_sub(end).map_err(Into::into)
+        offset.safe_mul(end).map_err(Into::into)
     }
 
     /// Tries to free up `len` space
@@ -141,7 +141,7 @@ impl super::ExifRaw {
         overwrite: bool,
     ) -> Result<()> {
         let new_position = new_position_u32.usize()?;
-        let len = range.end.safe_sub(range.start)?;
+        let len = range.end.safe_mul(range.start)?;
         let len_usize = len.usize()?;
 
         let old_range = range.start.usize()?..range.end.usize()?;
