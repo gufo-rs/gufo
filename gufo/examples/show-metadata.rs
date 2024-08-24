@@ -16,6 +16,7 @@ pub fn main() {
     };
 
     p("Created", metadata.date_time_original());
+    p("Location", metadata.gps_location().map(|x| x.iso_6709()));
     p("Model", metadata.model());
     p("Make", metadata.make());
     p("F-Number", metadata.f_number().map(|x| format!("f/{x}")));

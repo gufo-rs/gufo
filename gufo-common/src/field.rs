@@ -9,6 +9,18 @@ use crate::exif::Ifd;
 
 // Exif
 macros::make_tags![
+    // GPS
+    (0x1, GPSLatitudeRef, Ifd::Gps),
+    (0x2, GPSLatitude, Ifd::Gps),
+    (0x3, GPSLongitudeRef, Ifd::Gps),
+    (0x4, GPSLongitude, Ifd::Gps),
+    (0x5, GPSAltitudeRef, Ifd::Gps),
+    (0x6, GPSAltitude, Ifd::Gps),
+    (0x10, GPSImgDirectionRef, Ifd::Gps),
+    (0x11, GPSImgDirection, Ifd::Gps),
+    (0x12, GPSSpeedRef, Ifd::Gps),
+    (0x13, GPSSpeed, Ifd::Gps),
+
     // Primary
     (0x10F, Make, Ifd::Primary, xmp = Tiff),
     (0x110, Model, Ifd::Primary, xmp = Tiff),

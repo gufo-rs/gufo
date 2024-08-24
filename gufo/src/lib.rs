@@ -1,4 +1,5 @@
 use gufo_common::error::ErrorWithData;
+use gufo_common::geography;
 use gufo_exif::Exif;
 use gufo_xmp::Xmp;
 
@@ -130,7 +131,9 @@ impl Metadata {
         self.exif(exif_op).or_else(|| self.xmp(xmp_op))
     }
 
-    // TODO: pub fn location
+    pub fn gps_location(&self) -> Option<geography::Location> {
+        self.exif(Exif::gps_location)
+    }
 
     #[cfg(feature = "chrono")]
     pub fn date_time_original(&self) -> Option<gufo_common::datetime::DateTime> {

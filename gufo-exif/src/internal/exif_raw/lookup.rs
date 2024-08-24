@@ -54,17 +54,34 @@ impl super::ExifRaw {
         Ok(self.lookup_data(tagifd.into())?.map(|(_, data)| data))
     }
 
+    /// Returns a field of [`Type::Ascii`] or [`Type::Utf8`]
+    ///
+    /// This lookup deviates from the standard in that it removes all NULL bytes
+    /// instead of just the last byte that should be NULL. This is due to many
+    /// Exif implementations writing NULL bytes at the end or beginning of the
+    /// data.
     pub fn lookup_string(&mut self, tagifd: impl Into<TagIfd>) -> Result<Option<String>> {
-        let mut data = self.lookup_data(tagifd)?;
-        if let Some((data_type, ref mut data)) = data {
+        let Some(data) = self.lookup_string_raw(tagifd)? else {
+            return Ok(None);
+        };
+
+        // Strip all NULL bytes.
+        let data = data.iter().cloned().filter(|x| *x != 0).collect::<Vec<_>>();
+
+        Ok(Some(String::from_utf8_lossy(&data).to_string()))
+    }
+
+    /// Returns a field of [`Type::Ascii`] or [`Type::Utf8`]
+    ///
+    /// In contrast to [`Self::lookup_string`], this function leaves all NULL bytes in place.
+    pub fn lookup_string_raw(&mut self, tagifd: impl Into<TagIfd>) -> Result<Option<Vec<u8>>> {
+        let data = self.lookup_data(tagifd)?;
+        if let Some((data_type, data)) = data {
             if data_type != Type::Ascii && data_type != Type::Utf8 {
                 return Err(Error::WrongTypeGeneric);
             }
 
-            if data.last() == Some(&b'\0') {
-                data.pop();
-            }
-            Ok(Some(String::from_utf8_lossy(data).to_string()))
+            Ok(Some(data))
         } else {
             Ok(None)
         }
@@ -120,6 +137,50 @@ impl super::ExifRaw {
         let y = raw.read_u32()?;
 
         Ok(Some((x, y)))
+    }
+
+    pub fn lookup_rationals<const N: usize>(
+        &mut self,
+        tagifd: impl Into<TagIfd>,
+    ) -> Result<Option<[(u32, u32); N]>> {
+        let mut raw = self.raw();
+
+        let Some(entry) = self.lookup_entry(tagifd) else {
+            return Ok(None);
+        };
+
+        Self::check_type(&entry, N.u32()?, Type::Rational)?;
+
+        let offset = entry.offset()?;
+        raw.seek_start(offset)?;
+
+        let mut rationals = [(0, 0); N];
+
+        for i in 0..N {
+            let x = raw.read_u32()?;
+            let y = raw.read_u32()?;
+
+            rationals[i] = (x, y);
+        }
+
+        Ok(Some(rationals))
+    }
+
+    pub fn lookup_rationals_f64<const N: usize>(
+        &mut self,
+        tagifd: impl Into<TagIfd>,
+    ) -> Result<Option<[f64; N]>> {
+        let Some(rationals): Option<[_; N]> = self.lookup_rationals(tagifd)? else {
+            return Ok(None);
+        };
+
+        let mut floats = [0.; N];
+
+        for (i, (x, y)) in rationals.into_iter().enumerate() {
+            floats[i] = (x as f64).safe_div(y as f64)?;
+        }
+
+        Ok(Some(floats))
     }
 
     pub fn lookup_datetime(&mut self, tagifd: impl Into<TagIfd>) -> Result<Option<String>> {

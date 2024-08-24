@@ -25,9 +25,12 @@ impl super::ExifRaw {
                 if tagifd.ifd == ifd {
                     let tag = tagifd.tag.0;
                     for entry in entries {
-                        let name = gufo_common::exif::lookup_tag_name(tagifd).unwrap_or("Unknown");
+                        let name = gufo_common::exif::lookup_tag_name(tagifd)
+                            .map(ToString::to_string)
+                            .unwrap_or_else(|| format!("0x{tag:X}"));
+
                         out.push_str(&format!(
-                            "{name} {tag} (0x{tag:X}) {:?} ({}x): {:?}\n",
+                            "{name} {:?}({}): {:?}\n",
                             entry.data_type, entry.count, entry.value_offset
                         ));
                         out.push_str(&self.debug_dump_entry(tagifd));

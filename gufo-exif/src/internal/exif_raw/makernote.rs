@@ -198,8 +198,10 @@ impl super::ExifRaw {
                     let offset_location = entry.value_offset_position();
                     self.add_ifd_offset_location(Ifd::MakerNote, offset_location);
 
-                    self.raw().seek_start(offset.safe_add(internal_offset)?)?;
-                    self.decode_ifd_entries(Ifd::MakerNote)?;
+                    self.decode_ifd_entries_error_silenced(
+                        Ifd::MakerNote,
+                        offset.safe_add(internal_offset)?,
+                    );
 
                     if self.validate_ifd(Ifd::MakerNote).is_ok() {
                         self.makernote = true;

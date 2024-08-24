@@ -139,6 +139,22 @@ impl SafeMul for u32 {
     }
 }
 
+pub trait SafeDiv: Sized {
+    fn safe_div(self, rhs: Self) -> Result<Self, MathError>;
+}
+
+impl SafeDiv for f64 {
+    fn safe_div(self, rhs: Self) -> Result<Self, MathError> {
+        let value = self / rhs;
+
+        if value.is_infinite() {
+            Err(MathError::DivisionNotFinite)
+        } else {
+            Ok(value)
+        }
+    }
+}
+
 /// Same as `checked_neg` functions but returns an error
 pub trait SafeNeg: Sized {
     fn safe_neg(self) -> Result<Self, MathError>;
@@ -162,6 +178,8 @@ pub enum MathError {
     MultiplicationOverflowError,
     #[error("Negation overflowed")]
     NegationOverflowError,
+    #[error("Division gave non-finite float")]
+    DivisionNotFinite,
 }
 
 /// Converts and APEX value to an F-Number

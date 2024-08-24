@@ -65,7 +65,7 @@ impl super::ExifRaw {
         if let Err(err) = self.raw().seek_start(ifd_offset) {
             tracing::info!("Location for IFD '{ifd:?}' does not exist: {err}");
         }
-        if let Err(err) = self.decode_ifd_entries(Ifd::Thumbnail) {
+        if let Err(err) = self.decode_ifd_entries(ifd) {
             tracing::info!("Failed to load IFD '{ifd:?}': {err}");
         }
     }
@@ -96,7 +96,7 @@ impl super::ExifRaw {
 
         let offset_location = self.raw().position()?;
         let ifd_offset = self.raw().read_u32()?;
-        dbg!(ifd_offset);
+
         if ifd_offset > 0 && ifd == Ifd::Primary {
             self.add_ifd_offset_location(Ifd::Thumbnail, offset_location);
         }
@@ -109,7 +109,7 @@ impl super::ExifRaw {
             if ifd_listed {
                 tracing::info!("Ignoring duplicate IFD entry");
             } else {
-                tracing::debug!("Reading Exif specific IFD '{ifd:?}");
+                tracing::debug!("Reading Exif specific IFD '{ifd:?}'");
                 self.decode_ifd_entries_error_silenced(ifd, offset);
             }
         }
