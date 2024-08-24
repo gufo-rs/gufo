@@ -61,6 +61,10 @@ impl super::ExifRaw {
                     self.lookup_rational(tagifd)
                         .map(|x: Option<(u32, u32)>| x.map(|(x, y)| format!("{x}/{y}"))),
                 ),
+                Type::Rational if entry.count == 3 => show(
+                    self.lookup_rationals::<3>(tagifd)
+                        .map(|x| x.map(|x| format!("{x:?}"))),
+                ),
                 _ => format!("Unknown type {:?}", entry.data_type),
             }
         } else {

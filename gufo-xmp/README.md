@@ -1,6 +1,8 @@
-# gufo-xmp
+# Gufo XMP
 
-Gufo exif is a native Rust crate to read and edit XMP metadata.
+Gufo XMP is a native Rust crate to read and edit XMP metadata.
+
+**This implementation is currently experimental.**
 
 ## Relevant Standards
 

@@ -1,4 +1,4 @@
-# gufo-exif
+# Gufo Exif
 
 Gufo exif is a native Rust crate to read and edit EXIF metadata.
 

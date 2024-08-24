@@ -1,3 +1,5 @@
+#![doc = include_str!("../README.md")]
+
 use std::io::{Cursor, Read, Seek};
 use std::ops::Range;
 use std::slice::SliceIndex;

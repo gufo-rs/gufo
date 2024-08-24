@@ -1,3 +1,5 @@
+#![doc = include_str!("../README.md")]
+
 use std::io::{Cursor, Read};
 use std::ops::Range;
 
