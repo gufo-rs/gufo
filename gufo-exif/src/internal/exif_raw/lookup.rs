@@ -157,11 +157,11 @@ impl super::ExifRaw {
 
         let mut rationals = [(0, 0); N];
 
-        for i in 0..N {
+        for rational in rationals.iter_mut() {
             let x = raw.read_u32()?;
             let y = raw.read_u32()?;
 
-            rationals[i] = (x, y);
+            *rational = (x, y);
         }
 
         Ok(Some(rationals))
