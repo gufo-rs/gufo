@@ -21,10 +21,10 @@ impl Tag {
     }
 
     fn from_name(name: &OwnedName) -> Option<Self> {
-        if let Some(namespace_url) = get_namespace(name) {
+        if let Some(namespace_url) = &name.namespace {
             let namespace = Namespace::from_url(namespace_url);
 
-            let name = local_name(name).to_owned();
+            let name = name.local_name.to_owned();
             Some(Self::new(namespace, name))
         } else {
             None
@@ -70,7 +70,7 @@ impl From<xml::writer::Error> for Error {
 
 impl Xmp {
     pub fn new(data: Vec<u8>) -> Result<Self, Error> {
-        let (entries, _) = Self::lookup(&data, Default::default())?;
+        let entries = Self::lookup(&data)?;
 
         Ok(Self {
             inner: data,
@@ -79,7 +79,7 @@ impl Xmp {
     }
 
     pub fn update(&mut self, updates: BTreeMap<Tag, String>) -> Result<(), Error> {
-        let (entries, data) = Self::lookup(&self.inner, updates)?;
+        let (entries, data) = Self::lookup_and_update(&self.inner, updates)?;
         self.entries = entries;
         self.inner = data;
 
@@ -128,12 +128,4 @@ impl Xmp {
     pub fn into_inner(self) -> Vec<u8> {
         self.inner
     }
-}
-
-fn local_name(OwnedName { local_name, .. }: &OwnedName) -> &str {
-    local_name.as_str()
-}
-
-fn get_namespace(OwnedName { namespace, .. }: &OwnedName) -> Option<&str> {
-    namespace.as_ref().map(|x| x.as_str())
 }
