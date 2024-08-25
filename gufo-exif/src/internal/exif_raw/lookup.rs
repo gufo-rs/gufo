@@ -73,7 +73,8 @@ impl super::ExifRaw {
 
     /// Returns a field of [`Type::Ascii`] or [`Type::Utf8`]
     ///
-    /// In contrast to [`Self::lookup_string`], this function leaves all NULL bytes in place.
+    /// In contrast to [`Self::lookup_string`], this function leaves all NULL
+    /// bytes in place.
     pub fn lookup_string_raw(&mut self, tagifd: impl Into<TagIfd>) -> Result<Option<Vec<u8>>> {
         let data = self.lookup_data(tagifd)?;
         if let Some((data_type, data)) = data {

@@ -19,6 +19,9 @@ impl RawMetadata {
         } else if gufo_jpeg::Jpeg::is_filetype(&data) {
             let jpeg = gufo_jpeg::Jpeg::new(data).map_err(|x| x.map_err(Error::Jpeg))?;
             Ok(Self::for_jpeg(&jpeg))
+        } else if gufo_webp::WebP::is_filetype(&data) {
+            let webp = gufo_webp::WebP::new(data).map_err(|x| x.map_err(Error::WebP))?;
+            Ok(Self::for_webp(&webp))
         } else {
             Err(ErrorWithData::new(Error::NoSupportedFiletypeFound, data))
         }
@@ -42,6 +45,14 @@ impl RawMetadata {
             .extend(jpeg.exif_data().map(|x| x.to_vec()));
 
         raw_metadata.xmp.extend(jpeg.xmp_data().map(|x| x.to_vec()));
+
+        raw_metadata
+    }
+
+    pub fn for_webp(jpeg: &gufo_webp::WebP) -> Self {
+        let mut raw_metadata = Self::default();
+
+        raw_metadata.exif.extend(jpeg.exif().map(|x| x.to_vec()));
 
         raw_metadata
     }
@@ -82,6 +93,8 @@ pub enum Error {
     Exif(gufo_exif::error::Error),
     #[error("XMP: {0}")]
     Xmp(gufo_xmp::Error),
+    #[error["WebP: {0}"]]
+    WebP(gufo_webp::Error),
 }
 
 impl Metadata {

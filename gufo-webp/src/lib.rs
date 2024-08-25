@@ -4,6 +4,8 @@ use std::io::{Cursor, Read, Seek};
 use std::ops::Range;
 use std::slice::SliceIndex;
 
+use gufo_common::error::ErrorWithData;
+
 pub const RIFF_MAGIC_BYTES: &[u8] = b"RIFF";
 pub const WEBP_MAGIC_BYTES: &[u8] = b"WEBP";
 
@@ -18,10 +20,15 @@ impl WebP {
     /// Returns WEBP image representation
     ///
     /// * `data`: WEBP image data starting with RIFF magic byte
-    pub fn new(data: Vec<u8>) -> Result<Self, Error> {
-        let chunks = Self::find_chunks(&data)?;
+    pub fn new(data: Vec<u8>) -> Result<Self, ErrorWithData<Error>> {
+        match Self::find_chunks(&data) {
+            Ok(chunks) => Ok(Self { chunks, data }),
+            Err(err) => Err(ErrorWithData::new(err, data)),
+        }
+    }
 
-        Ok(Self { chunks, data })
+    pub fn is_filetype(data: &[u8]) -> bool {
+        data.starts_with(RIFF_MAGIC_BYTES) && data.get(8..12) == Some(WEBP_MAGIC_BYTES)
     }
 
     pub fn into_inner(self) -> Vec<u8> {
@@ -152,11 +159,15 @@ impl<'a> Chunk<'a> {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, thiserror::Error)]
 pub enum Error {
+    #[error("RIFF magic bytes missing: {0:?}")]
     RiffMagicBytesMissing([u8; 4]),
+    #[error("WEBP magic bytes missing: {0:?}")]
     WebpMagicBytesMissing([u8; 4]),
+    #[error("Unexpected end of file")]
     UnexpectedEof,
+    #[error("Position too large")]
     PositionTooLarge,
 }
 
