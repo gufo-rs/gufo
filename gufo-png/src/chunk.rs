@@ -1,7 +1,7 @@
-pub use crate::*;
-
 use std::io::{Cursor, Read, Seek};
 use std::ops::Range;
+
+pub use crate::*;
 
 pub const LEGACY_EXIF_KEYWORD: &[u8] = b"Raw profile type exif";
 
@@ -22,6 +22,14 @@ impl<'a> Chunk<'a> {
         self.png
             .data
             .get(self.chunk_data_location.clone())
+            .expect("Unreachable: The chunk must be part of the data")
+    }
+
+    pub fn complete_data(&self) -> &[u8] {
+        let range = complete_data_range(&self.chunk_data_location);
+        self.png
+            .data
+            .get(range)
             .expect("Unreachable: The chunk must be part of the data")
     }
 
@@ -175,4 +183,15 @@ impl RawChunk {
     pub fn total_len(&self) -> usize {
         self.complete_data().len()
     }
+}
+
+pub(crate) fn complete_data_range(data_range: &Range<usize>) -> Range<usize> {
+    (data_range
+        .start
+        .checked_sub(8)
+        .expect("Unreachable: The chunk type and size must be part of the data"))
+        ..(data_range
+            .end
+            .checked_add(4)
+            .expect("Unreachable: The CBC musst be part of the data"))
 }

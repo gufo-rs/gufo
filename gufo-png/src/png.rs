@@ -1,13 +1,15 @@
-pub use super::*;
-
 use std::io::{Cursor, Read};
 use std::slice::SliceIndex;
+
+pub use super::*;
 
 pub const MAGIC_BYTES: &[u8] = &[137, 80, 78, 71, 13, 10, 26, 10];
 
 #[derive(Debug, Clone)]
 pub struct Png {
+    /// Raw data
     pub(crate) data: Vec<u8>,
+    /// Chunks in the order in which they appear in the data
     pub(crate) chunks: Vec<RawChunk>,
 }
 
@@ -23,14 +25,17 @@ impl Png {
         }
     }
 
+    /// Checks if passed data have PNG magic bytes
     pub fn is_filetype(data: &[u8]) -> bool {
         data.starts_with(MAGIC_BYTES)
     }
 
+    /// Convert into raw data
     pub fn into_inner(self) -> Vec<u8> {
         self.data
     }
 
+    /// Get part of the raw data
     pub fn get(&mut self, index: impl SliceIndex<[u8], Output = [u8]>) -> Option<&[u8]> {
         self.data.get(index)
     }
@@ -116,5 +121,58 @@ impl Png {
         }
 
         Ok(chunks)
+    }
+
+    pub fn replace_idat_from(&mut self, png: &Self) -> Result<(), Error> {
+        let Some(last_idat) = self
+            .chunks
+            .iter()
+            .rev()
+            .find(|x| x.chunk_type == ChunkType::IDAT)
+        else {
+            return Err(Error::NoIdatChunk);
+        };
+
+        let mut buf = Vec::with_capacity(png.data.len());
+        buf.extend_from_slice(MAGIC_BYTES);
+
+        for chunk in &self.chunks {
+            match chunk.chunk_type {
+                ChunkType::IHDR => {
+                    let Some(new_header) =
+                        png.chunks.iter().find(|x| x.chunk_type == ChunkType::IHDR)
+                    else {
+                        todo!()
+                    };
+
+                    let index = complete_data_range(&new_header.chunk_data);
+                    buf.extend_from_slice(png.data.get(index).expect("TODO"));
+                }
+                ChunkType::iDOT => {
+                    // Drop
+                }
+                ChunkType::IDAT => {
+                    if chunk.chunk_data == last_idat.chunk_data {
+                        for idat_chunk in png
+                            .chunks
+                            .iter()
+                            .filter(|x| x.chunk_type == ChunkType::IDAT)
+                        {
+                            let index = complete_data_range(&idat_chunk.chunk_data);
+                            buf.extend_from_slice(&png.data.get(index).expect("TODO"));
+                        }
+                    }
+                }
+                _ => {
+                    let index = complete_data_range(&chunk.chunk_data);
+                    buf.extend_from_slice(self.data.get(index).expect("TODO"));
+                }
+            }
+        }
+
+        self.chunks = dbg!(Self::find_chunks(&buf))?;
+        self.data = buf;
+
+        Ok(())
     }
 }

@@ -12,4 +12,6 @@ pub enum Error {
     UnexpectedEndOfChunkData,
     #[error("Zlib decompression error: {0}")]
     Zlib(DecompressError),
+    #[error("Data don't contain a signle IDAT chunk.")]
+    NoIdatChunk,
 }
