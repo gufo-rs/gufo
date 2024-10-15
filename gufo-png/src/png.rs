@@ -1,4 +1,5 @@
 use std::io::{Cursor, Read};
+use std::ops::Range;
 use std::slice::SliceIndex;
 
 pub use super::*;
@@ -59,7 +60,7 @@ impl Png {
     pub fn exif(&self, inflate_limit: usize) -> Option<Vec<u8>> {
         let chunks = self.chunks();
 
-        if let Some(exif) = chunks.iter().find(|x| x.chunk_type == ChunkType::eXIf) {
+        if let Some(exif) = chunks.iter().find(|x| x.chunk_type() == ChunkType::eXIf) {
             Some(exif.chunk_data().to_vec())
         } else {
             chunks.iter().find_map(|x| x.legacy_exif(inflate_limit))
@@ -80,6 +81,10 @@ impl Png {
 
         let mut chunks = Vec::new();
         loop {
+            let chunk_start = cur
+                .position()
+                .try_into()
+                .map_err(|_| Error::PositionTooLarge)?;
             // First 4 bytes are length
             let length_data = &mut [0; 4];
             cur.read_exact(length_data)
@@ -107,9 +112,17 @@ impl Png {
             let crc = &mut [0; 4];
             cur.read_exact(crc).map_err(|_| Error::UnexpectedEof)?;
 
+            let chunk_end = cur
+                .position()
+                .try_into()
+                .map_err(|_| Error::PositionTooLarge)?;
+
+            let chunk_complete = chunk_start..chunk_end;
+
             let chunk = RawChunk {
                 chunk_type,
                 chunk_data,
+                chunk_complete,
                 crc: *crc,
             };
 
@@ -123,7 +136,11 @@ impl Png {
         Ok(chunks)
     }
 
-    pub fn replace_idat_from(&mut self, png: &Self) -> Result<(), Error> {
+    /// Replaces this PNG's image data with those from another
+    ///
+    /// Keeps all the metadata from this image but replaces the `IHDR` and
+    /// `IDAT` chunks with the ones from `other`.
+    pub fn replace_image_data(&mut self, other: &Self) -> Result<(), Error> {
         let Some(last_idat) = self
             .chunks
             .iter()
@@ -133,39 +150,42 @@ impl Png {
             return Err(Error::NoIdatChunk);
         };
 
-        let mut buf = Vec::with_capacity(png.data.len());
+        let mut buf = Vec::with_capacity(other.data.len());
         buf.extend_from_slice(MAGIC_BYTES);
 
         for chunk in &self.chunks {
             match chunk.chunk_type {
                 ChunkType::IHDR => {
-                    let Some(new_header) =
-                        png.chunks.iter().find(|x| x.chunk_type == ChunkType::IHDR)
+                    let Some(new_header) = other
+                        .chunks
+                        .iter()
+                        .find(|x| x.chunk_type == ChunkType::IHDR)
                     else {
-                        todo!()
+                        return Err(Error::NoIhdrChunk);
                     };
 
-                    let index = complete_data_range(&new_header.chunk_data);
-                    buf.extend_from_slice(png.data.get(index).expect("TODO"));
+                    buf.extend_from_slice(other.get_result(new_header.chunk_complete.clone())?);
                 }
                 ChunkType::iDOT => {
-                    // Drop
+                    // Drop apples proprietary iDOT chunk since it depends on
+                    // the IDAT data and IHDR and we neither know how to rewrite
+                    // nor do we care.
                 }
                 ChunkType::IDAT => {
                     if chunk.chunk_data == last_idat.chunk_data {
-                        for idat_chunk in png
+                        for idat_chunk in other
                             .chunks
                             .iter()
                             .filter(|x| x.chunk_type == ChunkType::IDAT)
                         {
-                            let index = complete_data_range(&idat_chunk.chunk_data);
-                            buf.extend_from_slice(&png.data.get(index).expect("TODO"));
+                            buf.extend_from_slice(
+                                other.get_result(idat_chunk.chunk_complete.clone())?,
+                            );
                         }
                     }
                 }
                 _ => {
-                    let index = complete_data_range(&chunk.chunk_data);
-                    buf.extend_from_slice(self.data.get(index).expect("TODO"));
+                    buf.extend_from_slice(self.get_result(chunk.chunk_complete.clone())?);
                 }
             }
         }
@@ -174,5 +194,11 @@ impl Png {
         self.data = buf;
 
         Ok(())
+    }
+
+    fn get_result(&self, index: Range<usize>) -> Result<&[u8], Error> {
+        self.data
+            .get(index.clone())
+            .ok_or(Error::IndexNotInData(index))
     }
 }

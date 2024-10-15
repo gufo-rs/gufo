@@ -7,34 +7,31 @@ pub const LEGACY_EXIF_KEYWORD: &[u8] = b"Raw profile type exif";
 
 #[derive(Debug)]
 pub struct Chunk<'a> {
-    pub(crate) chunk_type: ChunkType,
-    pub(crate) chunk_data_location: Range<usize>,
-    pub(crate) crc: [u8; 4],
+    pub(crate) raw_chunk: RawChunk,
     pub(crate) png: &'a Png,
 }
 
 impl<'a> Chunk<'a> {
     pub fn chunk_type(&self) -> ChunkType {
-        self.chunk_type
+        self.raw_chunk.chunk_type
     }
 
     pub fn chunk_data(&self) -> &[u8] {
         self.png
             .data
-            .get(self.chunk_data_location.clone())
+            .get(self.raw_chunk.chunk_data.clone())
             .expect("Unreachable: The chunk must be part of the data")
     }
 
     pub fn complete_data(&self) -> &[u8] {
-        let range = complete_data_range(&self.chunk_data_location);
         self.png
             .data
-            .get(range)
+            .get(self.raw_chunk.chunk_complete.clone())
             .expect("Unreachable: The chunk must be part of the data")
     }
 
     pub fn crc(&self) -> &[u8] {
-        &self.crc
+        &self.raw_chunk.crc
     }
 
     pub fn keyword(&self) -> Result<&[u8], Error> {
@@ -122,11 +119,7 @@ impl<'a> Chunk<'a> {
     }
 
     pub fn unsafe_raw_chunk(self) -> RawChunk {
-        RawChunk {
-            chunk_type: self.chunk_type,
-            chunk_data: self.chunk_data_location,
-            crc: self.crc,
-        }
+        self.raw_chunk
     }
 }
 
@@ -154,15 +147,14 @@ fn skip_while(
 pub struct RawChunk {
     pub(crate) chunk_type: ChunkType,
     pub(crate) chunk_data: Range<usize>,
+    pub(crate) chunk_complete: Range<usize>,
     pub(crate) crc: [u8; 4],
 }
 
 impl RawChunk {
     pub(crate) fn chunk<'a>(&self, png: &'a Png) -> Chunk<'a> {
         Chunk {
-            chunk_type: self.chunk_type,
-            chunk_data_location: self.chunk_data.clone(),
-            crc: self.crc,
+            raw_chunk: self.clone(),
             png,
         }
     }
@@ -183,15 +175,4 @@ impl RawChunk {
     pub fn total_len(&self) -> usize {
         self.complete_data().len()
     }
-}
-
-pub(crate) fn complete_data_range(data_range: &Range<usize>) -> Range<usize> {
-    (data_range
-        .start
-        .checked_sub(8)
-        .expect("Unreachable: The chunk type and size must be part of the data"))
-        ..(data_range
-            .end
-            .checked_add(4)
-            .expect("Unreachable: The CBC musst be part of the data"))
 }

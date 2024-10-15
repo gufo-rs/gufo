@@ -1,3 +1,5 @@
+use std::ops::Range;
+
 use miniz_oxide::inflate::DecompressError;
 
 #[derive(Debug, thiserror::Error)]
@@ -12,6 +14,10 @@ pub enum Error {
     UnexpectedEndOfChunkData,
     #[error("Zlib decompression error: {0}")]
     Zlib(DecompressError),
-    #[error("Data don't contain a signle IDAT chunk.")]
+    #[error("Data don't contain a single IDAT (image data) chunk.")]
     NoIdatChunk,
+    #[error("Data don't contain a IHDR (header) chunk.")]
+    NoIhdrChunk,
+    #[error("The requested range '{0:?}' is not part of the image data")]
+    IndexNotInData(Range<usize>),
 }
