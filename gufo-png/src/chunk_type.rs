@@ -18,6 +18,8 @@ gufo_common::utils::convertible_enum!(
 
         /// Background Color
         bKGD = b(b"bKGD"),
+        /// Primary chromaticities
+        cHRM = b(b"cHRM"),
         /// Exif
         eXIf = b(b"eXIf"),
         /// Embedded ICC profile

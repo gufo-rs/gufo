@@ -15,6 +15,15 @@ pub struct Png {
 }
 
 /// Representation of a PNG image
+///
+/// ```
+/// let data = std::fs::read("../test-images/images/exif/exif.png").unwrap();
+/// let png = gufo_png::Png::new(data).unwrap();
+///
+/// assert_eq!(png.chunks()[0].chunk_type(), gufo_png::ChunkType::IHDR);
+/// assert_eq!(png.chunks().len(), 43);
+/// assert_eq!(png.exif(10000).unwrap().len(), 7646);
+/// ```
 impl Png {
     /// Returns PNG image representation
     ///

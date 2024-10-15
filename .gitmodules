@@ -1,3 +1,6 @@
 [submodule "gufo-exif/tests/test-images"]
 	path = gufo-exif/tests/test-images
 	url = https://gitlab.gnome.org/sophie-h/test-images.git
+[submodule "test-images"]
+	path = test-images
+	url = https://gitlab.gnome.org/sophie-h/test-images.git
