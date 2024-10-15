@@ -199,7 +199,7 @@ impl Png {
             }
         }
 
-        self.chunks = dbg!(Self::find_chunks(&buf))?;
+        self.chunks = Self::find_chunks(&buf)?;
         self.data = buf;
 
         Ok(())
