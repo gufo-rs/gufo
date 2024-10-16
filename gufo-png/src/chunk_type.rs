@@ -15,6 +15,8 @@ gufo_common::utils::convertible_enum!(
         IDAT = b(b"IDAT"),
         /// End of file
         IEND = b(b"IEND"),
+        /// Color palette used in this image
+        PLTE = b(b"PLTE"),
 
         /// Background Color
         bKGD = b(b"bKGD"),

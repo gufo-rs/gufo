@@ -9,6 +9,7 @@ repository.workspace = true
 [dependencies]
 gufo-exif.workspace = true
 gufo-jpeg.workspace = true
+gufo.workspace = true
 tracing-subscriber = { version = "0.3", features = ["fmt", "env-filter"] }
 
 [lints]

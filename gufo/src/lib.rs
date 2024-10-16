@@ -1,3 +1,10 @@
+mod image;
+
+pub use image::Image;
+
+pub use gufo_jpeg as jpeg;
+pub use gufo_png as png;
+
 use gufo_common::error::ErrorWithData;
 use gufo_common::geography;
 use gufo_exif::Exif;
