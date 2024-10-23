@@ -1,10 +1,14 @@
 #![doc = include_str!("../README.md")]
 
+mod segments;
+
+use std::collections::BTreeMap;
 use std::io::{Cursor, Read};
 use std::ops::Range;
 
 use gufo_common::error::ErrorWithData;
 use gufo_common::math::*;
+pub use segments::*;
 
 pub const EXIF_IDENTIFIER_STRING: &[u8] = b"Exif\0\0";
 pub const XMP_IDENTIFIER_STRING: &[u8] = b"http://ns.adobe.com/xap/1.0/\0";
@@ -48,6 +52,74 @@ impl Jpeg {
             .map(|x| x.segment(self))
     }
 
+    /// Quantization tables with `Tq` value as key
+    pub fn dqts(&self) -> Result<BTreeMap<u8, Dqt>, Error> {
+        let segments = self.segments();
+
+        let mut dqts = Vec::new();
+        for i in segments.into_iter().filter(|x| x.marker == Marker::DQT) {
+            let data = i.data();
+            dqts.push(Dqt::from_data(data)?);
+        }
+
+        let mut map = BTreeMap::new();
+        for dqt in dqts.into_iter().flatten() {
+            map.insert(dqt.tq(), dqt);
+        }
+
+        Ok(map)
+    }
+
+    pub fn sof(&self) -> Result<Sof, Error> {
+        let segment = self
+            .segments()
+            .into_iter()
+            .find(|x| x.marker.is_sof())
+            .ok_or(Error::NoSofSegmentFound)?;
+
+        Sof::from_data(segment.data())
+    }
+
+    pub fn sos(&self) -> Result<Sos, Error> {
+        let segment = self
+            .segment_by_marker(&Marker::SOS)
+            .ok_or(Error::NoSosSegmentFound)?;
+
+        Sos::from_data(segment.data())
+    }
+
+    pub fn color_model(&self) -> Result<ColorModel, Error> {
+        let sos = self.sos()?;
+        let n_components = sos.components_specifications.len();
+
+        if let Some(app14) = self.segment_by_marker(&Marker::APP14) {
+            if app14.data().starts_with(b"Adobe\0") {
+                if let Some(color_model) = app14.data().get(11) {
+                    return match *color_model {
+                        0 if n_components == 4 => Ok(ColorModel::Cmyk),
+                        0 if n_components == 3 => Ok(ColorModel::Rgb),
+                        1 => Ok(ColorModel::YCbCr),
+                        2 => Ok(ColorModel::Ycck),
+                        _ => Err(Error::UnknownColorModel),
+                    };
+                }
+            }
+        }
+
+        match n_components {
+            1 => Ok(ColorModel::Grayscale),
+            3 => Ok(ColorModel::YCbCr),
+            _ => Err(Error::UnknownColorModel),
+        }
+    }
+
+    pub fn segment_by_marker(&self, marker: &Marker) -> Option<Segment> {
+        self.segments
+            .iter()
+            .find(|x| x.marker == *marker)
+            .map(|x| x.segment(&self))
+    }
+
     pub fn exif(&self) -> impl Iterator<Item = Segment> {
         self.segments_marker(Marker::APP1)
             .filter(|x| x.data().starts_with(EXIF_IDENTIFIER_STRING))
@@ -79,21 +151,52 @@ impl Jpeg {
         }
 
         let mut segments = Vec::new();
-        loop {
-            // Read tag
-            cur.read_exact(buf).map_err(|_| Error::UnexpectedEof)?;
-            tracing::debug!("Found tag {buf:x?}");
+        segments.push(RawSegment {
+            marker: Marker::SOI,
+            data: 2..2,
+        });
 
-            if buf[0] != MARKER_START {
-                return Err(Error::ExpectedMarkerStart(buf[0]));
+        let mut sos = false;
+        let byte = &mut [0; 1];
+        loop {
+            if sos {
+                loop {
+                    cur.read_exact(byte).map_err(|_| Error::UnexpectedEof)?;
+                    if byte == &[MARKER_START] {
+                        cur.read_exact(byte).map_err(|_| Error::UnexpectedEof)?;
+
+                        if byte == &[0] {
+                            continue;
+                        } else {
+                            break;
+                        }
+                    }
+                }
+            } else {
+                // Read tag
+                cur.read_exact(byte).map_err(|_| Error::UnexpectedEof)?;
+
+                if byte != &[MARKER_START] {
+                    return Err(Error::ExpectedMarkerStart(buf[0]));
+                }
+
+                cur.read_exact(byte).map_err(|_| Error::UnexpectedEof)?;
+
+                tracing::debug!("Found tag {byte:0>2X?}");
             }
 
-            let marker = Marker::from(buf[1]);
+            let marker = Marker::from(byte[0]);
             let len_start = cur.position();
 
-            // Read length. The length includes the two length bytes, but not the marker.
-            cur.read_exact(buf).map_err(|_| Error::UnexpectedEof)?;
-            let len: u16 = u16::from_be_bytes(*buf);
+            let len;
+
+            if marker.is_standalone() {
+                len = 2;
+            } else {
+                // Read length. The length includes the two length bytes, but not the marker.
+                cur.read_exact(buf).map_err(|_| Error::UnexpectedEof)?;
+                len = u16::from_be_bytes(*buf);
+            }
 
             let data_start = len_start.usize()?.safe_add(2)?;
             let data_end = len_start.usize()?.safe_add(len.into())?;
@@ -103,10 +206,14 @@ impl Jpeg {
                 data: data_start..data_end,
             };
 
+            tracing::debug!("Found segment {segment:?}");
+
             segments.push(segment);
 
-            if marker == Marker::SOS {
+            if marker == Marker::EOI {
                 break;
+            } else if marker == Marker::SOS {
+                sos = true;
             }
 
             cur.set_position(len_start.safe_add(len.into())?);
@@ -230,6 +337,14 @@ pub enum Error {
     ExpectedMarkerStart(u8),
     #[error("Math error: {0}")]
     Math(MathError),
+    #[error("Unknown uantization table element precision {0}")]
+    UnknownPq(u8),
+    #[error("No SOS segment found")]
+    NoSosSegmentFound,
+    #[error("No SOF segment found")]
+    NoSofSegmentFound,
+    #[error("Couldn't detemine a color model")]
+    UnknownColorModel,
 }
 
 impl From<MathError> for Error {
@@ -243,16 +358,30 @@ gufo_common::utils::convertible_enum!(
     #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
     #[non_exhaustive]
     pub enum Marker {
+        TEM = 0x01,
+
         SOF0 = 0xC0,
         SOF1 = 0xC1,
         SOF2 = 0xC2,
         /// Define Huffman table
         DHT = 0xC4,
+        RST0 = 0xD0,
+        RST1 = 0xD1,
+        RST2 = 0xD2,
+        RST3 = 0xD3,
+        RST4 = 0xD4,
+        RST5 = 0xD5,
+        RST6 = 0xD6,
+        RST7 = 0xD7,
+        /// Start of image
+        SOI = 0xD8,
+        /// End of image
+        EOI = 0xD9,
         /// Start of scan
         SOS = 0xDA,
+        /// Define quantization table(s)
         DQT = 0xDB,
-        /// Start of image
-        SOI = 0xd8,
+
         APP0 = 0xE0,
         /// Exif, XMP
         APP1 = 0xE1,
@@ -273,7 +402,53 @@ gufo_common::utils::convertible_enum!(
         APP15 = 0xEF,
         /// Define Restart Interval
         DRI = 0xDD,
+
+        JPG0 = 0xF0,
+        JPG1 = 0xF1,
+        JPG2 = 0xF2,
+        JPG3 = 0xF3,
+        JPG4 = 0xF4,
+        JPG5 = 0xF5,
+        JPG6 = 0xF6,
+        JPG7 = 0xF7,
+        JPG8 = 0xF8,
+        JPG9 = 0xF9,
+        JPG10 = 0xFA,
+        JPG11 = 0xFB,
+        JPG12 = 0xFC,
+        JPG13 = 0xFD,
         /// Comment
         COM = 0xFE,
     }
 );
+
+impl Marker {
+    pub fn is_standalone(&self) -> bool {
+        matches!(
+            self,
+            Self::RST0
+                | Self::RST1
+                | Self::RST2
+                | Self::RST3
+                | Self::RST4
+                | Self::RST5
+                | Self::RST6
+                | Self::RST7
+                | Self::SOI
+                | Self::EOI
+        )
+    }
+
+    pub fn is_sof(&self) -> bool {
+        matches!(self, Self::SOF0 | Self::SOF1 | Self::SOF2)
+    }
+}
+
+#[derive(Debug)]
+pub enum ColorModel {
+    Grayscale,
+    YCbCr,
+    Cmyk,
+    Rgb,
+    Ycck,
+}

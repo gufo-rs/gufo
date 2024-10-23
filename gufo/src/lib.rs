@@ -1,14 +1,11 @@
 mod image;
 
-pub use image::Image;
-
-pub use gufo_jpeg as jpeg;
-pub use gufo_png as png;
-
 use gufo_common::error::ErrorWithData;
 use gufo_common::geography;
 use gufo_exif::Exif;
 use gufo_xmp::Xmp;
+pub use image::Image;
+pub use {gufo_jpeg as jpeg, gufo_png as png};
 
 const INFLATE_LIMIT: usize = 10_usize.pow(6) * 100;
 

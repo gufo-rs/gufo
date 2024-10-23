@@ -47,4 +47,9 @@ fn show_jpeg(jpeg: gufo::jpeg::Jpeg) {
     for segment in jpeg.segments() {
         println!(" - {:?}", segment.marker());
     }
+    println!("DQT:");
+    for (i, _) in jpeg.dqts().unwrap() {
+        println!(" - Tq: {i}");
+    }
+    println!("Color Model: {:?}", jpeg.color_model().unwrap());
 }
