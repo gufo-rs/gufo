@@ -1,3 +1,198 @@
+#[derive(Debug, thiserror::Error, Clone, Copy)]
+pub enum MathError2 {
+    #[error("Operation {0:?} + {1:?} failed")]
+    AddFailed(Option<i128>, Option<i128>),
+    #[error("Operation {0:?} - {1:?} failed")]
+    SubFailed(Option<i128>, Option<i128>),
+    #[error("Operation {0:?} * {1:?} failed")]
+    MulFailed(Option<i128>, Option<i128>),
+    #[error("Operation {0:?} / {1:?} failed")]
+    DivFailed(Option<i128>, Option<i128>),
+    #[error("Conversion failed for value {0:?}")]
+    ConversionFailed(Option<i128>),
+}
+
+/// Container for safe integers operators
+///
+/// ```
+/// # gufo_common::math::Checked;
+/// let x = Checked::new(2);
+/// let y = Checked::new(3);
+///
+/// assert_eq!((x + y).unwrap(), 5);
+/// ```
+#[derive(Debug, Clone, Copy)]
+pub struct Checked<T>(Result<T, MathError2>);
+
+impl<T> Checked<T> {
+    pub fn new(val: T) -> Self {
+        Self(Ok(val))
+    }
+
+    pub fn check(self) -> Result<T, MathError2> {
+        self.0
+    }
+}
+
+impl<T> From<T> for Checked<T> {
+    fn from(val: T) -> Self {
+        Self(Ok(val))
+    }
+}
+
+impl<T> std::ops::Deref for Checked<T> {
+    type Target = Result<T, MathError2>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+#[macro_export]
+/**
+ * Rederines variables as [`Checked`].
+ *
+ * ```
+ * use gufo_common::math::checked;
+ *
+ * let x = 1_u32;
+ * let y = 2_u32;
+ * checked![x];
+ *
+ * assert_eq!((x + y).unwrap(), 3);
+ *
+ * let x = 1_u32;
+ * let y = 2_u32;
+ * checked![y];
+ *
+ * assert_eq!((x + y).unwrap(), 3);
+ *
+ * let x = 1_u32;
+ * let y = 2_u32;
+ * checked![x, y,];
+ *
+ * assert_eq!((x + y).unwrap(), 3);
+ *
+ * let x = u32::MAX;
+ * let y = 1;
+ * checked![x, y,];
+ *
+ * assert!((x + y).is_err());
+ * ```
+ */
+macro_rules! checked [
+    ($($v:ident$(,)?)*) => {
+        $( let $v = $crate::math::Checked::new($v); )*
+    };
+];
+
+#[doc(hidden)]
+#[macro_export]
+macro_rules! mut_checked [
+    ($v:ident) => {
+        let mut $v = $crate::math::Checked::new($v);
+    };
+    ($($v:ident,)*) => {
+        $( let mut $v = $crate::math::Checked::new($v); )*
+    };
+];
+
+pub use {checked, mut_checked};
+
+macro_rules! impl_operator {
+    ($op:ident, $f:ident, $t:ty) => {
+        impl<R: Into<Self> + Copy> std::ops::$op<R> for Checked<$t>
+        {
+            type Output = Self;
+
+            #[inline]
+            fn $f(self, rhs: R) -> Self::Output {
+                let Checked(Ok(x)) = self else { return self };
+                let Checked(Ok(y)) = rhs.into() else { return rhs.into() };
+                paste::paste! {
+                let err = || MathError2:: [< $op Failed >] (x.try_into().ok(), y.try_into().ok());
+                let res = x
+                    .[< checked_ $f >](y)
+                    .ok_or_else(err);
+                }
+                Checked(res)
+            }
+        }
+
+        impl std::ops::$op<Checked<$t>> for $t
+        {
+            type Output = Checked<$t>;
+
+            #[inline]
+            fn $f(self, rhs: Checked<$t>) -> Self::Output {
+                let y = match rhs.0 {
+                    Err(err) => return Checked(Err(err)),
+                    Ok(y) => y.try_into(),
+                };
+                let y: $t = match y {
+                    Err(_) => return Checked(Err(MathError2::ConversionFailed(Some(0)))),
+                    Ok(y) => y,
+                };
+                paste::paste! {
+                let err = || MathError2:: [< $op Failed >] (self.try_into().ok(), y.try_into().ok());
+                let res = self
+                    .[< checked_ $f >](y)
+                    .ok_or_else(err);
+                }
+                Checked(res)
+            }
+        }
+    };
+}
+
+macro_rules! impl_binary_operators {
+    ($t:ty) => {
+        impl_operator!(Add, add, $t);
+        impl_operator!(Sub, sub, $t);
+        impl_operator!(Mul, mul, $t);
+        impl_operator!(Div, div, $t);
+    };
+}
+
+macro_rules! impl_cast {
+    ($t:ty, $target:ident) => {
+        impl Checked<$t> {
+            pub fn $target(self) -> Checked<$target> {
+                let x = match self.0 {
+                    Err(err) => return Checked(Err(err)),
+                    Ok(v) => v,
+                };
+                Checked(
+                    x.try_into()
+                        .map_err(|_| MathError2::ConversionFailed(x.try_into().ok())),
+                )
+            }
+        }
+    };
+}
+
+macro_rules! impl_casts {
+    ($t:ty) => {
+        impl_cast!($t, u32);
+        impl_cast!($t, u64);
+        impl_cast!($t, i32);
+        impl_cast!($t, i64);
+        impl_cast!($t, usize);
+    };
+}
+
+impl_binary_operators!(u32);
+impl_binary_operators!(u64);
+impl_binary_operators!(i32);
+impl_binary_operators!(i64);
+impl_binary_operators!(usize);
+
+impl_casts!(u32);
+impl_casts!(u64);
+impl_casts!(i32);
+impl_casts!(i64);
+impl_casts!(usize);
+
 pub trait ToU16: Sized + TryInto<u16> {
     fn u16(self) -> Result<u16, MathError> {
         self.try_into()
