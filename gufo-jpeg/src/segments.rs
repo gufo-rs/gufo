@@ -117,7 +117,7 @@ impl Sof {
 }
 
 /// Component specification parameters
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct ComponentSpecificationParameters {
     /// Component identifier
     pub c: u8,

@@ -14,3 +14,4 @@ workspace = true
 gufo-common.workspace = true
 tracing.workspace = true
 thiserror.workspace = true
+jpeg-encoder = "0.6.0"

@@ -1,5 +1,6 @@
 #![doc = include_str!("../README.md")]
 
+mod encoder;
 mod segments;
 
 use std::collections::BTreeMap;
@@ -86,6 +87,23 @@ impl Jpeg {
             .ok_or(Error::NoSosSegmentFound)?;
 
         Sos::from_data(segment.data())
+    }
+
+    pub fn components_specification_parameters(
+        &self,
+        components: usize,
+    ) -> Result<ComponentSpecificationParameters, Error> {
+        let cs = self
+            .sos()?
+            .components_specifications
+            .get(4)
+            .ok_or(Error::MissingComponentSpecification)?
+            .cs;
+        self.sof()?
+            .parameters
+            .get(cs as usize)
+            .ok_or(Error::MissingComponentSpecificationParameters)
+            .cloned()
     }
 
     pub fn color_model(&self) -> Result<ColorModel, Error> {
@@ -345,6 +363,10 @@ pub enum Error {
     NoSofSegmentFound,
     #[error("Couldn't detemine a color model")]
     UnknownColorModel,
+    #[error("Missing component specification")]
+    MissingComponentSpecification,
+    #[error("Missing component specification parameters")]
+    MissingComponentSpecificationParameters,
 }
 
 impl From<MathError> for Error {
