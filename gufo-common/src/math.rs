@@ -71,11 +71,11 @@ impl<T> std::ops::Deref for Checked<T> {
  *
  * assert_eq!((x + y).unwrap(), 3);
  *
- * let x = 1_u32;
+ * let x = 5_u32;
  * let y = 2_u32;
  * checked![x, y,];
  *
- * assert_eq!((x + y).unwrap(), 3);
+ * assert_eq!((x * y).unwrap(), 10);
  *
  * let x = u32::MAX;
  * let y = 1;
@@ -109,7 +109,7 @@ macro_rules! impl_operator {
             impl [< Safe $op >] for $t {
                 fn [< safe_ $f >](self, rhs: $t) -> Result<$t, MathError> {
                     let err = || MathError:: [< $op Failed >] (self.try_into().ok(), rhs.try_into().ok());
-                    self.checked_add(rhs)
+                    self.[< checked_ $f >](rhs)
                         .ok_or_else(err)
                 }
             }
