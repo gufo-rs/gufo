@@ -36,10 +36,10 @@ impl Location {
     /// <https://en.wikipedia.org/wiki/ISO_6709>
     ///
     /// ```
-    /// # use gufo_common::gps::*;
+    /// # use gufo_common::geography::*;
     /// let lat = Coord::from_deg_min_sec((-46., 14., 6.));
     /// let lon = Coord::from_deg_min_sec((126., 4., 6.70234));
-    /// let loc = GeographicLocation::new_from_coord(lat, lon);
+    /// let loc = Location::new_from_coord(lat, lon);
     /// assert_eq!(loc.iso_6709(), r#"46°14'06"S 126°04'06.7"E"#);
     pub fn iso_6709(&self) -> String {
         let (lat_ref, (lat_deg, lat_min, lat_sec)) = self.lat_ref_deg_min_sec();
@@ -71,7 +71,7 @@ impl Coord {
     /// Return coordinate as degrees, minutes, seconds
     ///
     /// ```
-    /// # use gufo_common::gps::*;
+    /// # use gufo_common::geography::*;
     /// let ang = Coord::from_deg_min_sec((-46., 14., 6.70));
     /// assert_eq!(ang.as_deg_min_sec(), (-46., 14., 6.70));
     /// ```
@@ -86,7 +86,7 @@ impl Coord {
     ///
     ///
     /// ```
-    /// # use gufo_common::gps::*;
+    /// # use gufo_common::geography::*;
     /// let ang = Coord::from_deg_min_sec((-89., 24., 2.2));
     /// assert_eq!((ang.0 * 100_000.).round() / 100_000., -89.40061);
     /// ```
@@ -98,7 +98,7 @@ impl Coord {
     ///
     ///
     /// ```
-    /// # use gufo_common::gps::*;
+    /// # use gufo_common::geography::*;
     /// let ang = Coord::from_sign_deg_min_sec(LatRef::South.as_sign(), (89., 24., 2.2));
     /// assert_eq!((ang.0 * 100_000.).round() / 100_000., -89.40061);
     /// ```

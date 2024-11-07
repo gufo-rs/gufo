@@ -61,18 +61,12 @@ pub enum Error {
     #[error("EntryNotFound")]
     EntryNotFound,
     #[error("Math operation error: {0}")]
-    Math(MathError),
+    Math(#[from] MathError),
 }
 
 impl From<std::io::Error> for Error {
     fn from(value: std::io::Error) -> Self {
         Self::Io(Arc::new(value))
-    }
-}
-
-impl From<MathError> for Error {
-    fn from(err: MathError) -> Self {
-        Self::Math(err)
     }
 }
 

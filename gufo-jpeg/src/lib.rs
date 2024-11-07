@@ -354,7 +354,7 @@ pub enum Error {
     #[error("Expected marker start: {0:x}")]
     ExpectedMarkerStart(u8),
     #[error("Math error: {0}")]
-    Math(MathError),
+    Math(#[from] MathError),
     #[error("Unknown uantization table element precision {0}")]
     UnknownPq(u8),
     #[error("No SOS segment found")]
@@ -367,12 +367,6 @@ pub enum Error {
     MissingComponentSpecification,
     #[error("Missing component specification parameters")]
     MissingComponentSpecificationParameters,
-}
-
-impl From<MathError> for Error {
-    fn from(value: MathError) -> Self {
-        Self::Math(value)
-    }
 }
 
 gufo_common::utils::convertible_enum!(
