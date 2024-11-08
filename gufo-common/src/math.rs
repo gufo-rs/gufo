@@ -1,3 +1,5 @@
+//! Math utils
+
 #[derive(Debug, thiserror::Error, Clone, Copy)]
 pub enum MathError {
     #[error("Operation {0:?} + {1:?} failed")]
@@ -10,10 +12,10 @@ pub enum MathError {
     DivFailed(Option<i128>, Option<i128>),
     #[error("Conversion failed for value {0:?}")]
     ConversionFailed(Option<i128>),
-    #[error("Division Not Finite")]
-    DivisionNotFinite,
-    #[error("Negation overflowed")]
-    NegationOverflow,
+    #[error("Division {0:?} / {1:?} not finite")]
+    DivisionNotFinite(Option<f64>, Option<f64>),
+    #[error("Negation overflowed for {0:?}")]
+    NegationOverflow(Option<i128>),
 }
 
 /// Container for safe integers operators
@@ -21,9 +23,10 @@ pub enum MathError {
 /// ```
 /// # use gufo_common::math::Checked;
 /// let x = Checked::new(2_u32);
-/// let y = Checked::new(3_u32);
 ///
-/// assert_eq!((x + y).unwrap(), 5);
+/// assert_eq!((x + 3).unwrap(), 5);
+/// assert!(matches!((x + 4).check(), Ok(6)));
+/// assert!((x + u32::MAX).is_err());
 /// ```
 #[derive(Debug, Clone, Copy)]
 pub struct Checked<T>(Result<T, MathError>);
@@ -33,6 +36,7 @@ impl<T> Checked<T> {
         Self(Ok(val))
     }
 
+    /// Returns the result of the calculation
     pub fn check(self) -> Result<T, MathError> {
         self.0
     }
@@ -54,7 +58,7 @@ impl<T> std::ops::Deref for Checked<T> {
 
 #[macro_export]
 /**
- * Rederines variables as [`Checked`].
+ * Redefines variables as [`Checked`].
  *
  * ```
  * use gufo_common::math::checked;
@@ -90,6 +94,7 @@ macro_rules! checked [
     };
 ];
 
+/// Redefines variables as mutable [`Checked`].
 #[doc(hidden)]
 #[macro_export]
 macro_rules! mut_checked [
@@ -188,6 +193,12 @@ macro_rules! impl_casts {
         impl_cast!($t, i32);
         impl_cast!($t, i64);
         impl_cast!($t, usize);
+
+        impl ToU16 for $t {}
+        impl ToU32 for $t {}
+        impl ToU64 for $t {}
+        impl ToI64 for $t {}
+        impl ToUsize for $t {}
     };
 }
 
@@ -214,40 +225,12 @@ pub trait ToU16: Sized + TryInto<u16> + TryInto<i128> + Copy {
     }
 }
 
-impl ToU16 for i16 {}
-impl ToU16 for i32 {}
-impl ToU16 for u32 {}
-impl ToU16 for i64 {}
-impl ToU16 for u64 {}
-impl ToU16 for usize {}
-
 pub trait ToU32: Sized + TryInto<u32> + TryInto<i128> + Copy {
     fn u32(self) -> Result<u32, MathError> {
         self.try_into()
             .map_err(|_| MathError::ConversionFailed(self.try_into().ok()))
     }
 }
-
-impl ToU32 for i16 {}
-impl ToU32 for u16 {}
-impl ToU32 for i32 {}
-impl ToU32 for i64 {}
-impl ToU32 for u64 {}
-impl ToU32 for usize {}
-
-pub trait ToI64: Sized + TryInto<i64> + TryInto<i128> + Copy {
-    fn i64(self) -> Result<i64, MathError> {
-        self.try_into()
-            .map_err(|_| MathError::ConversionFailed(self.try_into().ok()))
-    }
-}
-
-impl ToI64 for i16 {}
-impl ToI64 for u16 {}
-impl ToI64 for i32 {}
-impl ToI64 for u32 {}
-impl ToI64 for u64 {}
-impl ToI64 for usize {}
 
 pub trait ToU64: Sized + TryInto<u64> + TryInto<i128> + Copy {
     fn u64(self) -> Result<u64, MathError> {
@@ -256,12 +239,26 @@ pub trait ToU64: Sized + TryInto<u64> + TryInto<i128> + Copy {
     }
 }
 
-impl ToU64 for i16 {}
-impl ToU64 for u16 {}
-impl ToU64 for i32 {}
-impl ToU64 for u32 {}
-impl ToU64 for i64 {}
-impl ToU64 for usize {}
+pub trait ToI16: Sized + TryInto<i16> + TryInto<i128> + Copy {
+    fn i16(self) -> Result<i16, MathError> {
+        self.try_into()
+            .map_err(|_| MathError::ConversionFailed(self.try_into().ok()))
+    }
+}
+
+pub trait ToI32: Sized + TryInto<i32> + TryInto<i128> + Copy {
+    fn i32(self) -> Result<i32, MathError> {
+        self.try_into()
+            .map_err(|_| MathError::ConversionFailed(self.try_into().ok()))
+    }
+}
+
+pub trait ToI64: Sized + TryInto<i64> + TryInto<i128> + Copy {
+    fn i64(self) -> Result<i64, MathError> {
+        self.try_into()
+            .map_err(|_| MathError::ConversionFailed(self.try_into().ok()))
+    }
+}
 
 pub trait ToUsize: Sized + TryInto<usize> + TryInto<i128> + Copy {
     fn usize(self) -> Result<usize, MathError> {
@@ -269,13 +266,6 @@ pub trait ToUsize: Sized + TryInto<usize> + TryInto<i128> + Copy {
             .map_err(|_| MathError::ConversionFailed(self.try_into().ok()))
     }
 }
-
-impl ToUsize for i16 {}
-impl ToUsize for u16 {}
-impl ToUsize for i32 {}
-impl ToUsize for u32 {}
-impl ToUsize for i64 {}
-impl ToUsize for u64 {}
 
 /// Same as `checked_add` functions but returns an error
 pub trait SafeAdd: Sized {
@@ -292,6 +282,7 @@ pub trait SafeMul: Sized {
     fn safe_mul(self, rhs: Self) -> Result<Self, MathError>;
 }
 
+/// Same as `checked_dev` functions but returns an error
 pub trait SafeDiv: Sized {
     fn safe_div(self, rhs: Self) -> Result<Self, MathError>;
 }
@@ -301,7 +292,7 @@ impl SafeDiv for f64 {
         let value = self / rhs;
 
         if value.is_infinite() {
-            Err(MathError::DivisionNotFinite)
+            Err(MathError::DivisionNotFinite(Some(self), Some(rhs)))
         } else {
             Ok(value)
         }
@@ -315,24 +306,9 @@ pub trait SafeNeg: Sized {
 
 impl SafeNeg for i64 {
     fn safe_neg(self) -> Result<Self, MathError> {
-        self.checked_neg().ok_or(MathError::NegationOverflow)
+        self.checked_neg()
+            .ok_or_else(|| MathError::NegationOverflow(self.try_into().ok()))
     }
-}
-
-#[derive(Debug, Clone, thiserror::Error)]
-pub enum MathError12 {
-    #[error("Addition overflowed")]
-    AdditionOverflowError,
-    #[error("Type conversion overflowed")]
-    ConversionOverflowError,
-    #[error("Substraction overflowed")]
-    SubstractionOverflowError,
-    #[error("Multiplication overflowed")]
-    MultiplicationOverflowError,
-    #[error("Negation overflowed")]
-    NegationOverflowError,
-    #[error("Division gave non-finite float")]
-    DivisionNotFinite,
 }
 
 /// Converts and APEX value to an F-Number
