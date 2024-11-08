@@ -373,6 +373,7 @@ gufo_common::utils::convertible_enum!(
     #[repr(u8)]
     #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
     #[non_exhaustive]
+    /// Segment marker
     pub enum Marker {
         TEM = 0x01,
 

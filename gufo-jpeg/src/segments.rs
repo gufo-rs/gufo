@@ -4,14 +4,18 @@ use super::Error;
 
 #[derive(Debug)]
 pub struct Dqt_<T> {
+    /// Quantization table destination identifier
     tq: u8,
+    /// Quantization table elements
     qk: [T; 64],
 }
 
 /// Quantization Table
 #[derive(Debug)]
 pub enum Dqt {
+    /// Table definition with 8 bit elements
     Dqt8(Dqt_<u8>),
+    /// Table definition with 16 bit elements
     Dqt16(Dqt_<u16>),
 }
 
@@ -23,6 +27,9 @@ impl Dqt {
         }
     }
 
+    /// Quantization table elements in 16 bit
+    ///
+    /// This resturns the data in 16 bit, even if defined as 8 bit.
     pub fn qk(&self) -> [u16; 64] {
         match self {
             Self::Dqt8(dqt) => {
@@ -50,6 +57,7 @@ impl Dqt {
 
             tracing::debug!("Loading DQT entry with Pq={pq}, Tq={tq}");
 
+            // Matrix entries can be 8bit and 16bit precision
             match pq {
                 0 => {
                     let mut qk = [0; 64];
@@ -80,7 +88,7 @@ impl Dqt {
     }
 }
 
-/// Frame
+/// Frame Header / Start of Frame
 #[derive(Debug)]
 pub struct Sof {
     /// Sample precision
@@ -158,12 +166,18 @@ pub trait ReadExt: Read {
 
 impl<T: Read> ReadExt for T {}
 
+/// Scan Header / Start of Scan
 #[derive(Debug)]
 pub struct Sos {
+    /// List of components (channels)
     pub components_specifications: Vec<ComponentSpecification>,
+    /// Start of spectral or predictor selection
     pub ss: u8,
+    /// End of spectral selection
     pub se: u8,
+    /// Successive approximation bit position high
     pub ah: u8,
+    /// Successive approximation bit position low or point transform
     pub al: u8,
 }
 
@@ -198,7 +212,7 @@ impl Sos {
 pub struct ComponentSpecification {
     /// Scan component selector
     ///
-    /// References a [`c` value in
+    /// References a `c` value in
     /// `ComponentSpecificationParameters`](ComponentSpecificationParameters#
     /// structfield.c).
     pub cs: u8,
