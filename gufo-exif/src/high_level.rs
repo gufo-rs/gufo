@@ -26,7 +26,7 @@ impl Exif {
     ///
     /// Rotation and mirroring that have to be applied to show the image
     /// correctly
-    pub fn orientation(&self) -> orientation::Orientation {
+    pub fn orientation(&self) -> Option<orientation::Orientation> {
         self.decoder
             .borrow_mut()
             .lookup_short(TagIfd::new(
@@ -36,7 +36,6 @@ impl Exif {
             .ok()
             .flatten()
             .and_then(|x| orientation::Orientation::try_from(x).ok())
-            .unwrap_or(orientation::Orientation::Id)
     }
 
     pub fn gps_location(&self) -> Option<geography::Location> {
