@@ -127,6 +127,10 @@ impl Metadata {
         Ok(())
     }
 
+    pub fn exif(&self) -> &[Exif] {
+        &self.exif
+    }
+
     pub fn add_raw_xmp(&mut self, data: Vec<u8>) -> Result<(), Error> {
         let xmp = Xmp::new(data).map_err(Error::Xmp)?;
         self.xmp.push(xmp);
@@ -134,11 +138,19 @@ impl Metadata {
         Ok(())
     }
 
-    fn exif<T>(&self, exif_op: impl Fn(&Exif) -> Option<T>) -> Option<T> {
+    pub fn xmp(&self) -> &[Xmp] {
+        &self.xmp
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.xmp.is_empty() && self.exif.is_empty()
+    }
+
+    fn get_exif<T>(&self, exif_op: impl Fn(&Exif) -> Option<T>) -> Option<T> {
         self.exif.iter().find_map(exif_op)
     }
 
-    fn xmp<T>(&self, xmp_op: impl Fn(&Xmp) -> Option<T>) -> Option<T> {
+    fn get_xmp<T>(&self, xmp_op: impl Fn(&Xmp) -> Option<T>) -> Option<T> {
         self.xmp.iter().find_map(xmp_op)
     }
 
@@ -147,11 +159,11 @@ impl Metadata {
         exif_op: impl Fn(&Exif) -> Option<T>,
         xmp_op: impl Fn(&Xmp) -> Option<T>,
     ) -> Option<T> {
-        self.exif(exif_op).or_else(|| self.xmp(xmp_op))
+        self.get_exif(exif_op).or_else(|| self.get_xmp(xmp_op))
     }
 
     pub fn gps_location(&self) -> Option<geography::Location> {
-        self.exif(Exif::gps_location)
+        self.get_exif(Exif::gps_location)
     }
 
     #[cfg(feature = "chrono")]
@@ -189,15 +201,15 @@ impl Metadata {
     }
 
     pub fn camera_owner(&self) -> Option<String> {
-        self.exif(Exif::camera_owner)
+        self.get_exif(Exif::camera_owner)
     }
 
     pub fn creator(&self) -> Option<String> {
-        self.xmp(Xmp::creator)
+        self.get_xmp(Xmp::creator)
     }
 
     pub fn orientation(&self) -> Option<Orientation> {
         // TODO: Should work from XMP as well
-        self.exif(Exif::orientation)
+        self.get_exif(Exif::orientation)
     }
 }
