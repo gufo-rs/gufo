@@ -1,7 +1,7 @@
 mod image;
 
-use gufo_common::error::ErrorWithData;
 use gufo_common::geography;
+use gufo_common::{error::ErrorWithData, orientation::Orientation};
 use gufo_exif::Exif;
 use gufo_xmp::Xmp;
 pub use image::Image;
@@ -192,5 +192,10 @@ impl Metadata {
 
     pub fn creator(&self) -> Option<String> {
         self.xmp(Xmp::creator)
+    }
+
+    pub fn oprientation(&self) -> Option<Orientation> {
+        // TODO: Should work from XMP as well
+        self.exif(Exif::orientation)
     }
 }
