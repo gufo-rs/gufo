@@ -5,7 +5,7 @@ use gufo_common::geography;
 use gufo_exif::Exif;
 use gufo_xmp::Xmp;
 pub use image::Image;
-pub use {gufo_jpeg as jpeg, gufo_png as png};
+pub use {gufo_common as common, gufo_jpeg as jpeg, gufo_png as png};
 
 const INFLATE_LIMIT: usize = 10_usize.pow(6) * 100;
 
