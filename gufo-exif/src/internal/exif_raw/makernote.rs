@@ -27,7 +27,8 @@ impl super::ExifRaw {
 
                 self.raw
                     .buffer
-                    .borrow_mut()
+                    .lock()
+                    .unwrap()
                     .get_mut()
                     .drain(last_position.usize()?..last_position.safe_add(len)?.usize()?);
                 self.inserted_at(last_position, len.i64()?.safe_neg()?)?;
@@ -153,7 +154,8 @@ impl super::ExifRaw {
         let data = self
             .raw
             .buffer
-            .borrow_mut()
+            .lock()
+            .unwrap()
             .get_ref()
             .get(old_range.clone())
             .e(Error::EntryEof)?
@@ -162,7 +164,8 @@ impl super::ExifRaw {
         // Overwrite old data with zeros
         self.raw
             .buffer
-            .borrow_mut()
+            .lock()
+            .unwrap()
             .get_mut()
             .get_mut(old_range)
             .e(Error::EntryEof)?
@@ -171,7 +174,8 @@ impl super::ExifRaw {
         if overwrite {
             self.raw
                 .buffer
-                .borrow_mut()
+                .lock()
+                .unwrap()
                 .get_mut()
                 .get_mut(new_range)
                 .e(Error::EntryEof)?
@@ -179,7 +183,8 @@ impl super::ExifRaw {
         } else {
             self.raw
                 .buffer
-                .borrow_mut()
+                .lock()
+                .unwrap()
                 .get_mut()
                 .splice(new_position..new_position, data);
         }

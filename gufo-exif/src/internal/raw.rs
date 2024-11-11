@@ -1,19 +1,19 @@
-use std::cell::RefCell;
 use std::io::{Cursor, Read, Seek, SeekFrom, Write};
-use std::rc::Rc;
+use std::sync::{Arc, Mutex};
 
 use crate::error::{Error, Result, ResultExt};
 
 #[derive(Debug, Clone)]
 pub struct Raw {
     pub big_endian: bool,
-    pub buffer: Rc<RefCell<Cursor<Vec<u8>>>>,
+    pub buffer: Arc<Mutex<Cursor<Vec<u8>>>>,
 }
 
 impl Raw {
     pub fn position(&self) -> Result<u32> {
         self.buffer
-            .borrow()
+            .lock()
+            .unwrap()
             .position()
             .try_into()
             .e(Error::OffsetTooLarge)
@@ -21,7 +21,8 @@ impl Raw {
 
     pub fn seek_start(&mut self, seek: u32) -> Result<()> {
         self.buffer
-            .borrow_mut()
+            .lock()
+            .unwrap()
             .seek(SeekFrom::Start(seek.into()))?;
 
         Ok(())
@@ -29,7 +30,7 @@ impl Raw {
 
     pub fn read_exact<const N: usize>(&mut self) -> Result<[u8; N]> {
         let mut bytes: [u8; N] = [0; N];
-        self.buffer.borrow_mut().read_exact(&mut bytes)?;
+        self.buffer.lock().unwrap().read_exact(&mut bytes)?;
         Ok(bytes)
     }
 
@@ -53,7 +54,8 @@ impl Raw {
 
     pub fn write_all(&mut self, bytes: &[u8]) -> Result<()> {
         self.buffer
-            .borrow_mut()
+            .lock()
+            .unwrap()
             .write_all(bytes)
             .map_err(Into::into)
     }

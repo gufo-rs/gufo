@@ -4,10 +4,9 @@ mod edit;
 mod lookup;
 mod makernote;
 
-use std::cell::RefCell;
 use std::collections::BTreeMap;
 use std::io::{Cursor, Read};
-use std::rc::Rc;
+use std::sync::{Arc, Mutex};
 
 pub use gufo_common::exif::{Ifd, Tag, TagIfd};
 use gufo_common::math::*;
@@ -93,7 +92,7 @@ impl ExifRaw {
     pub fn new(raw: Vec<u8>) -> Self {
         let raw = Raw {
             big_endian: false,
-            buffer: Rc::new(RefCell::new(Cursor::new(raw))),
+            buffer: Arc::new(Mutex::new(Cursor::new(raw))),
         };
         Self {
             raw,

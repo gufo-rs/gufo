@@ -24,6 +24,7 @@ gufo-jpeg.workspace = true
 gufo-png.workspace = true
 gufo-webp.workspace = true
 gufo-xmp.workspace = true
+static_assertions.workspace = true
 thiserror.workspace = true
 
 [lints]

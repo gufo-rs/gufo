@@ -68,7 +68,8 @@ impl super::ExifRaw {
     fn add_empty_space(&mut self, index: usize, len: usize) -> Result<()> {
         self.raw
             .buffer
-            .borrow_mut()
+            .lock()
+            .unwrap()
             .get_mut()
             .splice(index..index, vec![0; len]);
         Ok(())

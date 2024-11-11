@@ -1,4 +1,4 @@
-use std::cell::RefCell;
+use std::sync::Mutex;
 
 use gufo_common::exif::Field;
 use gufo_common::field::{self};
@@ -9,7 +9,7 @@ use crate::internal::*;
 
 #[derive(Debug)]
 pub struct Exif {
-    decoder: RefCell<ExifRaw>,
+    decoder: Mutex<ExifRaw>,
 }
 
 impl Exif {
@@ -18,7 +18,7 @@ impl Exif {
         decoder.decode()?;
 
         Ok(Self {
-            decoder: RefCell::new(decoder),
+            decoder: Mutex::new(decoder),
         })
     }
 
@@ -28,7 +28,8 @@ impl Exif {
     /// correctly
     pub fn orientation(&self) -> Option<orientation::Orientation> {
         self.decoder
-            .borrow_mut()
+            .lock()
+            .unwrap()
             .lookup_short(TagIfd::new(
                 field::Orientation::TAG,
                 field::Orientation::IFD,
@@ -41,7 +42,8 @@ impl Exif {
     pub fn gps_location(&self) -> Option<geography::Location> {
         let lat_ref = geography::LatRef::try_from(
             self.decoder
-                .borrow_mut()
+                .lock()
+                .unwrap()
                 .lookup_string(field::GPSLatitudeRef)
                 .ok()
                 .flatten()?
@@ -51,14 +53,16 @@ impl Exif {
 
         let [lat_ang, lat_min, lat_sec] = self
             .decoder
-            .borrow_mut()
+            .lock()
+            .unwrap()
             .lookup_rationals_f64(field::GPSLatitude)
             .ok()
             .flatten()?;
 
         let lon_ref = geography::LonRef::try_from(
             self.decoder
-                .borrow_mut()
+                .lock()
+                .unwrap()
                 .lookup_string(field::GPSLongitudeRef)
                 .ok()
                 .flatten()?
@@ -68,7 +72,8 @@ impl Exif {
 
         let [lon_ang, lon_min, lon_sec] = self
             .decoder
-            .borrow_mut()
+            .lock()
+            .unwrap()
             .lookup_rationals_f64(field::GPSLongitude)
             .ok()
             .flatten()?;
@@ -83,13 +88,18 @@ impl Exif {
 
     /// Camera manifacturer
     pub fn make(&self) -> Option<String> {
-        self.decoder.borrow_mut().lookup_string(field::Make).ok()?
+        self.decoder
+            .lock()
+            .unwrap()
+            .lookup_string(field::Make)
+            .ok()?
     }
 
     /// Camera model
     pub fn model(&self) -> Option<String> {
         self.decoder
-            .borrow_mut()
+            .lock()
+            .unwrap()
             .lookup_string(TagIfd::new(field::Model::TAG, field::Model::IFD))
             .ok()?
     }
@@ -97,7 +107,8 @@ impl Exif {
     /// ISO
     pub fn iso_speed_rating(&self) -> Option<u16> {
         self.decoder
-            .borrow_mut()
+            .lock()
+            .unwrap()
             .lookup_short(TagIfd::new(
                 field::PhotographicSensitivity::TAG,
                 field::PhotographicSensitivity::IFD,
@@ -109,7 +120,8 @@ impl Exif {
     pub fn f_number(&self) -> Option<f32> {
         let (x, y) = self
             .decoder
-            .borrow_mut()
+            .lock()
+            .unwrap()
             .lookup_rational(TagIfd::new(field::FNumber::TAG, field::FNumber::IFD))
             .ok()??;
 
@@ -120,7 +132,8 @@ impl Exif {
     pub fn focal_length(&self) -> Option<f32> {
         let (x, y) = self
             .decoder
-            .borrow_mut()
+            .lock()
+            .unwrap()
             .lookup_rational(TagIfd::new(
                 field::FocalLength::TAG,
                 field::FocalLength::IFD,
@@ -137,7 +150,8 @@ impl Exif {
     /// "1/60 sec".
     pub fn exposure_time(&self) -> Option<(u32, u32)> {
         self.decoder
-            .borrow_mut()
+            .lock()
+            .unwrap()
             .lookup_rational(TagIfd::new(
                 field::ExposureTime::TAG,
                 field::ExposureTime::IFD,
@@ -149,14 +163,16 @@ impl Exif {
     pub fn date_time_original(&self) -> Option<gufo_common::datetime::DateTime> {
         let mut datetime = self
             .decoder
-            .borrow_mut()
+            .lock()
+            .unwrap()
             .lookup_datetime(field::DateTimeOriginal)
             .ok()??;
 
         // Add sub-seconds
         if let Some(subsec) = self
             .decoder
-            .borrow_mut()
+            .lock()
+            .unwrap()
             .lookup_string(field::SubSecTimeOriginal)
             .ok()
             .flatten()
@@ -175,7 +191,8 @@ impl Exif {
         // Add offset (timezone)
         if let Some(offset) = self
             .decoder
-            .borrow_mut()
+            .lock()
+            .unwrap()
             .lookup_string(field::OffsetTimeOriginal)
             .ok()
             .flatten()
@@ -198,7 +215,7 @@ impl Exif {
     }
 
     pub fn camera_owner(&self) -> Option<String> {
-        let mut decoder = self.decoder.borrow_mut();
+        let mut decoder = self.decoder.lock().unwrap();
 
         if let Some(s) = decoder.lookup_string(field::CameraOwnerName).ok().flatten() {
             Some(s)
@@ -215,11 +232,11 @@ impl Exif {
         }
     }
 
-    pub fn decoder(&mut self) -> std::cell::RefMut<ExifRaw> {
-        self.decoder.borrow_mut()
+    pub fn decoder(&mut self) -> std::sync::MutexGuard<ExifRaw> {
+        self.decoder.lock().unwrap()
     }
 
     pub fn debug_dump(&self) -> String {
-        self.decoder.borrow_mut().debug_dump()
+        self.decoder.lock().unwrap().debug_dump()
     }
 }

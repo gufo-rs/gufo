@@ -17,7 +17,8 @@ impl super::ExifRaw {
                     let mut buf = vec![0; entry.data_len()?.usize()?];
                     self.raw
                         .buffer
-                        .borrow_mut()
+                        .lock()
+                        .unwrap()
                         .read_exact(&mut buf)
                         .e(Error::LookupEof)?;
                     buf
