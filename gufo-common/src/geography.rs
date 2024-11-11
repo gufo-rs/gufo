@@ -62,6 +62,16 @@ impl Location {
 
         format!("{lat_deg}°{lat_min:02}'{lat_sec}\"{lat_ref} {lon_deg}°{lon_min:02}'{lon_sec}\"{lon_ref}")
     }
+
+    /// Locations as `geo:` URI
+    ///
+    /// The precision of the coordinates is limited to six decimal places.
+    pub fn geo_uri(&self) -> String {
+        let lat = self.lat.0;
+        let lon = self.lon.0;
+        // six decimal places gives as more than a meter accuracy
+        format!("geo:{lat:.6},{lon:.6}")
+    }
 }
 
 #[derive(Debug, Clone, Copy)]
