@@ -194,7 +194,7 @@ impl Metadata {
         self.xmp(Xmp::creator)
     }
 
-    pub fn oprientation(&self) -> Option<Orientation> {
+    pub fn orientation(&self) -> Option<Orientation> {
         // TODO: Should work from XMP as well
         self.exif(Exif::orientation)
     }
