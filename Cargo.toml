@@ -44,6 +44,7 @@ hex = "0.4.0"
 miniz_oxide = "0.8.0"
 paste = "1.0.15"
 serde = { version = "1.0.202", features = ["derive"] }
+static_assertions = "1.1.0"
 thiserror = "1.0.61"
 tracing = "0.1"
 xml-rs = "0.8.19"
