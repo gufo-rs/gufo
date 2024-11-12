@@ -1,12 +1,20 @@
 mod image;
 
+pub use gufo_common as common;
+use gufo_common::error::ErrorWithData;
 use gufo_common::geography;
-use gufo_common::{error::ErrorWithData, orientation::Orientation};
+use gufo_common::orientation::Orientation;
 use gufo_exif::Exif;
+#[cfg(feature = "jpeg")]
+pub use gufo_jpeg as jpeg;
+#[cfg(feature = "png")]
+pub use gufo_png as png;
+#[cfg(feature = "webp")]
+pub use gufo_webp as webp;
 use gufo_xmp::Xmp;
 pub use image::Image;
-pub use {gufo_common as common, gufo_jpeg as jpeg, gufo_png as png};
 
+#[allow(dead_code)]
 const INFLATE_LIMIT: usize = 10_usize.pow(6) * 100;
 
 #[derive(Debug, Default)]
@@ -16,21 +24,30 @@ pub struct RawMetadata {
 }
 
 impl RawMetadata {
+    #[cfg(any(feature = "jpeg", feature = "png", feature = "webp"))]
     pub fn for_guessed(data: Vec<u8>) -> Result<Self, ErrorWithData<Error>> {
+        #[cfg(feature = "png")]
         if gufo_png::Png::is_filetype(&data) {
             let png = gufo_png::Png::new(data).map_err(|x| x.map_err(Error::Png))?;
-            Ok(Self::for_png(&png))
-        } else if gufo_jpeg::Jpeg::is_filetype(&data) {
-            let jpeg = gufo_jpeg::Jpeg::new(data).map_err(|x| x.map_err(Error::Jpeg))?;
-            Ok(Self::for_jpeg(&jpeg))
-        } else if gufo_webp::WebP::is_filetype(&data) {
-            let webp = gufo_webp::WebP::new(data).map_err(|x| x.map_err(Error::WebP))?;
-            Ok(Self::for_webp(&webp))
-        } else {
-            Err(ErrorWithData::new(Error::NoSupportedFiletypeFound, data))
+            return Ok(Self::for_png(&png));
         }
+
+        #[cfg(feature = "jpeg")]
+        if gufo_jpeg::Jpeg::is_filetype(&data) {
+            let jpeg = gufo_jpeg::Jpeg::new(data).map_err(|x| x.map_err(Error::Jpeg))?;
+            return Ok(Self::for_jpeg(&jpeg));
+        }
+
+        #[cfg(feature = "webp")]
+        if gufo_webp::WebP::is_filetype(&data) {
+            let webp = gufo_webp::WebP::new(data).map_err(|x| x.map_err(Error::WebP))?;
+            return Ok(Self::for_webp(&webp));
+        }
+
+        Err(ErrorWithData::new(Error::NoSupportedFiletypeFound, data))
     }
 
+    #[cfg(feature = "png")]
     pub fn for_png(png: &gufo_png::Png) -> Self {
         let mut raw_metadata = Self::default();
 
@@ -41,6 +58,7 @@ impl RawMetadata {
         raw_metadata
     }
 
+    #[cfg(feature = "jpeg")]
     pub fn for_jpeg(jpeg: &gufo_jpeg::Jpeg) -> Self {
         let mut raw_metadata = Self::default();
 
@@ -53,6 +71,7 @@ impl RawMetadata {
         raw_metadata
     }
 
+    #[cfg(feature = "webp")]
     pub fn for_webp(jpeg: &gufo_webp::WebP) -> Self {
         let mut raw_metadata = Self::default();
 
@@ -91,14 +110,17 @@ pub enum Error {
     GenericError,
     #[error("NoSupportedFiletypeFound")]
     NoSupportedFiletypeFound,
+    #[cfg(feature = "png")]
     #[error("PNG: {0}")]
     Png(gufo_png::Error),
+    #[cfg(feature = "jpeg")]
     #[error("JPEG: {0}")]
     Jpeg(gufo_jpeg::Error),
     #[error("Exif: {0}")]
     Exif(gufo_exif::error::Error),
     #[error("XMP: {0}")]
     Xmp(gufo_xmp::Error),
+    #[cfg(feature = "webp")]
     #[error["WebP: {0}"]]
     WebP(gufo_webp::Error),
 }
@@ -108,14 +130,17 @@ impl Metadata {
         Self::default()
     }
 
+    #[cfg(any(feature = "jpeg", feature = "png", feature = "webp"))]
     pub fn for_guessed(data: Vec<u8>) -> Result<Self, ErrorWithData<Error>> {
         RawMetadata::for_guessed(data).map(|x| x.into_metadata())
     }
 
+    #[cfg(feature = "png")]
     pub fn for_png(png: &gufo_png::Png) -> Self {
         RawMetadata::for_png(png).into_metadata()
     }
 
+    #[cfg(feature = "jpeg")]
     pub fn for_jpeg(jpeg: &gufo_jpeg::Jpeg) -> Self {
         RawMetadata::for_jpeg(jpeg).into_metadata()
     }

@@ -200,7 +200,7 @@ impl Exif {
             datetime.push_str(&offset);
             use_offset = true;
         } else {
-            // Add a offset to allow parser to work
+            // Add an offset to allow parser to work
             datetime.push('Z');
             use_offset = false;
         }

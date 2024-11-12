@@ -15,14 +15,18 @@ chrono = [
     "gufo-exif/chrono",
     "gufo-xmp/chrono",
 ]
+jpeg = ["dep:gufo-jpeg"]
+png = ["dep:gufo-png"]
+webp = ["dep:gufo-webp"]
+all-image-formats = ["jpeg", "png", "webp"]
 
 [dependencies]
 chrono = { workspace = true, optional = true }
 gufo-common.workspace = true
 gufo-exif.workspace = true
-gufo-jpeg.workspace = true
-gufo-png.workspace = true
-gufo-webp.workspace = true
+gufo-jpeg = { workspace = true, optional = true }
+gufo-png = { workspace = true, optional = true }
+gufo-webp = { workspace = true, optional = true }
 gufo-xmp.workspace = true
 static_assertions.workspace = true
 thiserror.workspace = true

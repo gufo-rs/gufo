@@ -58,6 +58,6 @@ fn basic_high_level() {
     let exif = Exif::new(data()).unwrap();
     assert_eq!(
         exif.orientation(),
-        orientation::Orientation::MirroredRotation270
+        Some(orientation::Orientation::MirroredRotation270)
     );
 }
