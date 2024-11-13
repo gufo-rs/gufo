@@ -22,16 +22,20 @@ macros::make_tags![
     (0x13, GPSSpeed, Ifd::Gps),
 
     // Primary
+    (0x100, ImageWidth, Ifd::Primary, xmp = Exif),
+    (0x10E, ImageDescription, Ifd::Primary),
     (0x10F, Make, Ifd::Primary, xmp = Tiff),
     (0x110, Model, Ifd::Primary, xmp = Tiff),
     /// Image orientation and mirroring
     (0x112, Orientation, Ifd::Primary, xmp = Exif),
     (0x112, ThumbnailOrientation, Ifd::Thumbnail),
     (0x11A, XResolution, Ifd::Primary, xmp = Exif),
-    (0x0100, ImageWidth, Ifd::Primary, xmp = Exif),
-    (0x0100, ThumbnailImageWidth, Ifd::Thumbnail, xmp = Exif),
-    // Exif
+    (0x131, Software, Ifd::Primary),
 
+    // Thumbnail
+    (0x100, ThumbnailImageWidth, Ifd::Thumbnail, xmp = Exif),
+
+    // Exif
     (0x829A, ExposureTime, Ifd::Exif, xmp = Exif),
     (0x829D, FNumber, Ifd::Exif, xmp = Exif),
     /// Also called ISOSpeedRatings (new xmp value since Exif 2.3 or later)

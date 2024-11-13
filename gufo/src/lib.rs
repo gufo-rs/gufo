@@ -9,6 +9,8 @@ use gufo_exif::Exif;
 pub use gufo_jpeg as jpeg;
 #[cfg(feature = "png")]
 pub use gufo_png as png;
+#[cfg(feature = "tiff")]
+pub use gufo_tiff as tiff;
 #[cfg(feature = "webp")]
 pub use gufo_webp as webp;
 use gufo_xmp::Xmp;
@@ -26,16 +28,22 @@ pub struct RawMetadata {
 impl RawMetadata {
     #[cfg(any(feature = "jpeg", feature = "png", feature = "webp"))]
     pub fn for_guessed(data: Vec<u8>) -> Result<Self, ErrorWithData<Error>> {
+        #[cfg(feature = "jpeg")]
+        if gufo_jpeg::Jpeg::is_filetype(&data) {
+            let jpeg = gufo_jpeg::Jpeg::new(data).map_err(|x| x.map_err(Error::Jpeg))?;
+            return Ok(Self::for_jpeg(&jpeg));
+        }
+
         #[cfg(feature = "png")]
         if gufo_png::Png::is_filetype(&data) {
             let png = gufo_png::Png::new(data).map_err(|x| x.map_err(Error::Png))?;
             return Ok(Self::for_png(&png));
         }
 
-        #[cfg(feature = "jpeg")]
-        if gufo_jpeg::Jpeg::is_filetype(&data) {
-            let jpeg = gufo_jpeg::Jpeg::new(data).map_err(|x| x.map_err(Error::Jpeg))?;
-            return Ok(Self::for_jpeg(&jpeg));
+        #[cfg(feature = "tiff")]
+        if gufo_tiff::Tiff::is_filetype(&data) {
+            let tiff = gufo_tiff::Tiff::new(data).map_err(|x| x.map_err(Error::Tiff))?;
+            return Ok(Self::for_tiff(&tiff));
         }
 
         #[cfg(feature = "webp")]
@@ -45,17 +53,6 @@ impl RawMetadata {
         }
 
         Err(ErrorWithData::new(Error::NoSupportedFiletypeFound, data))
-    }
-
-    #[cfg(feature = "png")]
-    pub fn for_png(png: &gufo_png::Png) -> Self {
-        let mut raw_metadata = Self::default();
-
-        raw_metadata
-            .exif
-            .extend(png.exif(INFLATE_LIMIT).map(|x| x.to_vec()));
-
-        raw_metadata
     }
 
     #[cfg(feature = "jpeg")]
@@ -71,11 +68,31 @@ impl RawMetadata {
         raw_metadata
     }
 
-    #[cfg(feature = "webp")]
-    pub fn for_webp(jpeg: &gufo_webp::WebP) -> Self {
+    #[cfg(feature = "png")]
+    pub fn for_png(png: &gufo_png::Png) -> Self {
         let mut raw_metadata = Self::default();
 
-        raw_metadata.exif.extend(jpeg.exif().map(|x| x.to_vec()));
+        raw_metadata
+            .exif
+            .extend(png.exif(INFLATE_LIMIT).map(|x| x.to_vec()));
+
+        raw_metadata
+    }
+
+    #[cfg(feature = "tiff")]
+    pub fn for_tiff(tiff: &gufo_tiff::Tiff) -> Self {
+        let mut raw_metadata = Self::default();
+
+        raw_metadata.exif.extend(tiff.exif().map(|x| x.to_vec()));
+
+        raw_metadata
+    }
+
+    #[cfg(feature = "webp")]
+    pub fn for_webp(webp: &gufo_webp::WebP) -> Self {
+        let mut raw_metadata = Self::default();
+
+        raw_metadata.exif.extend(webp.exif().map(|x| x.to_vec()));
 
         raw_metadata
     }
@@ -110,16 +127,20 @@ pub enum Error {
     GenericError,
     #[error("NoSupportedFiletypeFound")]
     NoSupportedFiletypeFound,
-    #[cfg(feature = "png")]
-    #[error("PNG: {0}")]
-    Png(gufo_png::Error),
-    #[cfg(feature = "jpeg")]
-    #[error("JPEG: {0}")]
-    Jpeg(gufo_jpeg::Error),
     #[error("Exif: {0}")]
     Exif(gufo_exif::error::Error),
     #[error("XMP: {0}")]
     Xmp(gufo_xmp::Error),
+
+    #[cfg(feature = "jpeg")]
+    #[error("JPEG: {0}")]
+    Jpeg(gufo_jpeg::Error),
+    #[cfg(feature = "png")]
+    #[error("PNG: {0}")]
+    Png(gufo_png::Error),
+    #[cfg(feature = "tiff")]
+    #[error["TIFF: {0}"]]
+    Tiff(gufo_tiff::Error),
     #[cfg(feature = "webp")]
     #[error["WebP: {0}"]]
     WebP(gufo_webp::Error),
@@ -130,19 +151,19 @@ impl Metadata {
         Self::default()
     }
 
-    #[cfg(any(feature = "jpeg", feature = "png", feature = "webp"))]
+    #[cfg(any(feature = "jpeg", feature = "png", feature = "tiff", feature = "webp"))]
     pub fn for_guessed(data: Vec<u8>) -> Result<Self, ErrorWithData<Error>> {
         RawMetadata::for_guessed(data).map(|x| x.into_metadata())
-    }
-
-    #[cfg(feature = "png")]
-    pub fn for_png(png: &gufo_png::Png) -> Self {
-        RawMetadata::for_png(png).into_metadata()
     }
 
     #[cfg(feature = "jpeg")]
     pub fn for_jpeg(jpeg: &gufo_jpeg::Jpeg) -> Self {
         RawMetadata::for_jpeg(jpeg).into_metadata()
+    }
+
+    #[cfg(feature = "png")]
+    pub fn for_png(png: &gufo_png::Png) -> Self {
+        RawMetadata::for_png(png).into_metadata()
     }
 
     pub fn add_raw_exif(&mut self, data: Vec<u8>) -> Result<(), Error> {
