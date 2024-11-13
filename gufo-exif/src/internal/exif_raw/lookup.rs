@@ -81,6 +81,12 @@ impl super::ExifRaw {
             return Ok(None);
         };
 
+        let data = data.iter().cloned().filter(|x| *x != 0).collect::<Vec<_>>();
+
+        if data.len() <= 8 {
+            return Ok(None);
+        }
+
         Ok(if let Some(ascii) = data.strip_prefix(b"ASCII\0\0\0") {
             Some(String::from_utf8_lossy(ascii).to_string())
         } else if let Some(utf8) = data.strip_prefix(b"UNICODE\0") {
