@@ -237,4 +237,8 @@ impl Metadata {
         // TODO: Should work from XMP as well
         self.get_exif(Exif::orientation)
     }
+
+    pub fn user_comment(&self) -> Option<String> {
+        self.get_exif(Exif::user_comment)
+    }
 }

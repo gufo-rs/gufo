@@ -72,6 +72,27 @@ impl super::ExifRaw {
         Ok(Some(String::from_utf8_lossy(&data).to_string()))
     }
 
+    /// Exif 3.0: 4.6.4. Character Identifier Code
+    pub fn lookup_character_identified_code_string(
+        &mut self,
+        tagifd: impl Into<TagIfd>,
+    ) -> Result<Option<String>> {
+        let Some(data) = self.lookup_data(tagifd)?.map(|x| x.1) else {
+            return Ok(None);
+        };
+
+        Ok(if let Some(ascii) = data.strip_prefix(b"ASCII\0\0\0") {
+            Some(String::from_utf8_lossy(ascii).to_string())
+        } else if let Some(utf8) = data.strip_prefix(b"UNICODE\0") {
+            Some(String::from_utf8_lossy(utf8).to_string())
+        } else if let Some(unknown) = data.get(8..) {
+            // "Unfedined text" that contains UTF-8 seems common in practice
+            Some(String::from_utf8_lossy(unknown).to_string())
+        } else {
+            None
+        })
+    }
+
     /// Returns a field of [`Type::Ascii`] or [`Type::Utf8`]
     ///
     /// In contrast to [`Self::lookup_string`], this function leaves all NULL

@@ -232,6 +232,15 @@ impl Exif {
         }
     }
 
+    pub fn user_comment(&self) -> Option<String> {
+        self.decoder
+            .lock()
+            .unwrap()
+            .lookup_character_identified_code_string(field::UserComment)
+            .ok()
+            .flatten()
+    }
+
     pub fn decoder(&mut self) -> std::sync::MutexGuard<ExifRaw> {
         self.decoder.lock().unwrap()
     }

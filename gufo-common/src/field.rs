@@ -31,12 +31,14 @@ macros::make_tags![
     (0x0100, ImageWidth, Ifd::Primary, xmp = Exif),
     (0x0100, ThumbnailImageWidth, Ifd::Thumbnail, xmp = Exif),
     // Exif
+
     (0x829A, ExposureTime, Ifd::Exif, xmp = Exif),
     (0x829D, FNumber, Ifd::Exif, xmp = Exif),
     /// Also called ISOSpeedRatings (new xmp value since Exif 2.3 or later)
     (0x8827, PhotographicSensitivity, Ifd::Exif, xmp = ExifEX),
     (0x9003, DateTimeOriginal, Ifd::Exif, xmp = Exif),
     (0x9011, OffsetTimeOriginal, Ifd::Exif),
+    (0x9286, UserComment, Ifd::Exif, xmp = Exif),
     (0x9291, SubSecTimeOriginal, Ifd::Exif),
     /// Lens aperture with unit APEX
     (0x9202, Aperture, Ifd::Exif, xmp = Exif),
