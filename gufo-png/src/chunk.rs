@@ -74,13 +74,24 @@ impl<'a> Chunk<'a> {
         Ok((keyword, data))
     }
 
+    /// Returns the content of a [`tEXt`](ChunkType::tEXt) or [`zTXt`](ChunkType::zTXt) chunk
+    ///
+    /// The first value is the keyword, the second is the decompressed data.
+    pub fn textual(&self, inflate_limit: usize) -> Result<(&[u8], Vec<u8>), Error> {
+        match self.chunk_type() {
+            ChunkType::tEXt => self.text().map(|(k, v)| (k, v.to_vec())),
+            ChunkType::zTXt => self.ztxt(inflate_limit),
+            _ => Err(Error::NotTextualChunk),
+        }
+    }
+
     /// Returns the Exif data stored in a [`zTXt`](ChunkType::zTXt) chunk
     pub fn legacy_exif(&self, inflate_limit: usize) -> Option<Vec<u8>> {
         if self.keyword().ok()? != LEGACY_EXIF_KEYWORD {
             return None;
         }
 
-        let (_, raw) = self.ztxt(inflate_limit).ok()?;
+        let (_, raw) = self.textual(inflate_limit).ok()?;
         let mut cur = Cursor::new(&raw);
 
         // Skip whitespaces

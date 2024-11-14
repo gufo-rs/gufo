@@ -20,4 +20,6 @@ pub enum Error {
     NoIhdrChunk,
     #[error("The requested range '{0:?}' is not part of the image data")]
     IndexNotInData(Range<usize>),
+    #[error("The chunk is not of type zTXt or tEXt")]
+    NotTextualChunk,
 }
