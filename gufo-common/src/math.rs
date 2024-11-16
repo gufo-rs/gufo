@@ -307,7 +307,7 @@ pub trait SafeNeg: Sized {
 impl SafeNeg for i64 {
     fn safe_neg(self) -> Result<Self, MathError> {
         self.checked_neg()
-            .ok_or_else(|| MathError::NegationOverflow(self.try_into().ok()))
+            .ok_or_else(|| MathError::NegationOverflow(Some(self.into())))
     }
 }
 

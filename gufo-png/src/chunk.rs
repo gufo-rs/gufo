@@ -1,9 +1,14 @@
+use std::borrow::Cow;
 use std::io::{Cursor, Read, Seek};
 use std::ops::Range;
+
+use gufo_common::read::{ReadExt, SliceExt};
 
 pub use crate::*;
 
 pub const LEGACY_EXIF_KEYWORD: &[u8] = b"Raw profile type exif";
+pub const LEGACY_XMP_KEYWORD: &[u8] = b"Raw profile type xmp";
+pub const XMP_KEYWORD: &[u8] = b"XML:com.adobe.xmp";
 
 #[derive(Debug)]
 pub struct Chunk<'a> {
@@ -16,7 +21,7 @@ impl<'a> Chunk<'a> {
         self.raw_chunk.chunk_type
     }
 
-    pub fn chunk_data(&self) -> &[u8] {
+    pub fn chunk_data(&self) -> &'a [u8] {
         self.png
             .data
             .get(self.raw_chunk.chunk_data.clone())
@@ -41,6 +46,37 @@ impl<'a> Chunk<'a> {
 
         data.get(..keyword_length)
             .ok_or(Error::UnexpectedEndOfChunkData)
+    }
+
+    /// Returns the contents of an [`iTXt`](ChunkType::iTXt) chunk
+    pub fn itxt(&self) -> Result<Itxt, Error> {
+        let mut cur = Cursor::new(self.chunk_data());
+
+        let keyword = cur.slice_until(b'\0')?;
+        let compression = cur.read_byte()?;
+        let _compression_method = cur.read_byte()?;
+        let language = cur.slice_until(b'\0')?;
+        let translated_keyword = String::from_utf8_lossy(cur.slice_until(b'\0')?);
+        let raw_text = cur.slice_to_end()?;
+
+        let text = if compression == 1 {
+            Cow::Owned(
+                String::from_utf8_lossy(
+                    &miniz_oxide::inflate::decompress_to_vec_zlib_with_limit(raw_text, 10000000)
+                        .map_err(Error::Zlib)?,
+                )
+                .to_string(),
+            )
+        } else {
+            String::from_utf8_lossy(raw_text)
+        };
+
+        Ok(Itxt {
+            keyword,
+            language,
+            translated_keyword,
+            text,
+        })
     }
 
     /// Returns keyword and value of a [`tEXt`](ChunkType::tEXt) chunk
@@ -74,7 +110,8 @@ impl<'a> Chunk<'a> {
         Ok((keyword, data))
     }
 
-    /// Returns the content of a [`tEXt`](ChunkType::tEXt) or [`zTXt`](ChunkType::zTXt) chunk
+    /// Returns the content of a [`tEXt`](ChunkType::tEXt) or
+    /// [`zTXt`](ChunkType::zTXt) chunk
     ///
     /// The first value is the keyword, the second is the decompressed data.
     pub fn textual(&self, inflate_limit: usize) -> Result<(&[u8], Vec<u8>), Error> {
@@ -85,7 +122,60 @@ impl<'a> Chunk<'a> {
         }
     }
 
-    /// Returns the Exif data stored in a [`zTXt`](ChunkType::zTXt) chunk
+    /// XMP data
+    ///
+    /// XMP data stored in accordance with XMP Specification Part 3: Storage in
+    /// Files, Section 1.1.5
+    pub fn xmp(&self) -> Result<Option<Cow<str>>, Error> {
+        if self.chunk_type() == ChunkType::iTXt && self.keyword()? == XMP_KEYWORD {
+            return Ok(Some(self.itxt()?.text));
+        }
+
+        Ok(None)
+    }
+
+    /// Returns the XMP data stored in a [`tEXt`](ChunkType::tEXt) or
+    /// [`zTXt`](ChunkType::zTXt) chunk
+    pub fn legacy_xmp(&self, inflate_limit: usize) -> Option<Vec<u8>> {
+        if self.keyword().ok()? != LEGACY_XMP_KEYWORD {
+            return None;
+        }
+
+        let (_, raw) = self.textual(inflate_limit).ok()?;
+        let mut cur = Cursor::new(&raw);
+
+        // Skip whitespaces
+        skip_while(&mut cur, |x| x.is_ascii_whitespace()).ok()?;
+
+        let xmp = &mut [0; 3];
+        cur.read_exact(xmp).ok()?;
+        if xmp != b"xmp" {
+            return None;
+        }
+
+        // Skip whitespaces
+        skip_while(&mut cur, |x| x.is_ascii_whitespace()).ok()?;
+
+        // Skip numbers (data length)
+        skip_while(&mut cur, |x| x.is_ascii_digit()).ok()?;
+
+        // Skip whitespaces
+        skip_while(&mut cur, |x| x.is_ascii_whitespace()).ok()?;
+
+        // Data without whitespaces
+        let data = raw
+            .iter()
+            .skip(cur.position().try_into().ok()?)
+            .filter(|c| !c.is_ascii_whitespace())
+            .cloned()
+            .collect::<Vec<u8>>();
+
+        // Decode data from hex
+        hex::decode(data).ok()
+    }
+
+    /// Returns the Exif data stored in a [`tEXt`](ChunkType::tEXt) or
+    /// [`zTXt`](ChunkType::zTXt) chunk
     pub fn legacy_exif(&self, inflate_limit: usize) -> Option<Vec<u8>> {
         if self.keyword().ok()? != LEGACY_EXIF_KEYWORD {
             return None;
@@ -186,4 +276,11 @@ impl RawChunk {
     pub fn total_len(&self) -> usize {
         self.complete_data().len()
     }
+}
+
+pub struct Itxt<'a> {
+    pub keyword: &'a [u8],
+    pub language: &'a [u8],
+    pub translated_keyword: Cow<'a, str>,
+    pub text: Cow<'a, str>,
 }

@@ -27,7 +27,14 @@ fn main() {
             }
 
             ChunkType::iTXt => {
-                println!(" {}\n", String::from_utf8_lossy(chunk.keyword().unwrap()));
+                let itxt = chunk.itxt().unwrap();
+                println!(
+                    " {} ({}: {}):\n{}\n",
+                    String::from_utf8_lossy(itxt.keyword),
+                    String::from_utf8_lossy(itxt.language),
+                    itxt.translated_keyword,
+                    itxt.text
+                );
             }
 
             ChunkType::zTXt => {

@@ -1,11 +1,14 @@
 use std::ops::Range;
 
+use gufo_common::read::ReadError;
 use miniz_oxide::inflate::DecompressError;
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
     #[error("Unexpected end of file")]
     UnexpectedEof,
+    #[error("Read Error: {0}")]
+    Read(#[from] ReadError),
     #[error("Invalid magic bytes: {0:x?}")]
     InvalidMagicBytes(Vec<u8>),
     #[error("Position too large")]
