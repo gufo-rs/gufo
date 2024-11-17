@@ -76,6 +76,8 @@ impl RawMetadata {
             .exif
             .extend(png.exif(INFLATE_LIMIT).map(|x| x.to_vec()));
 
+        raw_metadata.xmp.extend(png.xmp(INFLATE_LIMIT));
+
         raw_metadata
     }
 
@@ -105,7 +107,6 @@ impl RawMetadata {
         }
 
         for xmp in self.xmp {
-            eprintln!("{}", String::from_utf8_lossy(&xmp));
             let _ = metadata.add_raw_xmp(xmp);
         }
 
@@ -208,44 +209,6 @@ impl Metadata {
         self.get_exif(exif_op).or_else(|| self.get_xmp(xmp_op))
     }
 
-    pub fn gps_location(&self) -> Option<geography::Location> {
-        self.get_exif(Exif::gps_location)
-    }
-
-    #[cfg(feature = "chrono")]
-    pub fn date_time_original(&self) -> Option<gufo_common::datetime::DateTime> {
-        self.exif_xmp(Exif::date_time_original, Xmp::date_time_original)
-    }
-
-    pub fn f_number(&self) -> Option<f32> {
-        self.exif_xmp(Exif::f_number, Xmp::f_number)
-    }
-
-    /// Exposure time in seconds
-    pub fn exposure_time(&self) -> Option<(u32, u32)> {
-        self.exif_xmp(Exif::exposure_time, Xmp::exposure_time)
-    }
-
-    /// Camera model
-    pub fn model(&self) -> Option<String> {
-        self.exif_xmp(Exif::model, Xmp::model)
-    }
-
-    /// Camera manifacturer
-    pub fn make(&self) -> Option<String> {
-        self.exif_xmp(Exif::make, Xmp::make)
-    }
-
-    /// ISO
-    pub fn iso_speed_rating(&self) -> Option<u16> {
-        self.exif_xmp(Exif::iso_speed_rating, Xmp::iso_speed_rating)
-    }
-
-    /// Focal length in millimeters
-    pub fn focal_length(&self) -> Option<f32> {
-        self.exif_xmp(Exif::focal_length, Xmp::focal_length)
-    }
-
     pub fn camera_owner(&self) -> Option<String> {
         self.get_exif(Exif::camera_owner)
     }
@@ -254,9 +217,51 @@ impl Metadata {
         self.get_xmp(Xmp::creator)
     }
 
+    #[cfg(feature = "chrono")]
+    pub fn date_time_original(&self) -> Option<gufo_common::datetime::DateTime> {
+        self.exif_xmp(Exif::date_time_original, Xmp::date_time_original)
+    }
+
+    /// Exposure time in seconds
+    pub fn exposure_time(&self) -> Option<(u32, u32)> {
+        self.exif_xmp(Exif::exposure_time, Xmp::exposure_time)
+    }
+
+    pub fn f_number(&self) -> Option<f32> {
+        self.exif_xmp(Exif::f_number, Xmp::f_number)
+    }
+
+    /// Focal length in millimeters
+    pub fn focal_length(&self) -> Option<f32> {
+        self.exif_xmp(Exif::focal_length, Xmp::focal_length)
+    }
+
+    pub fn gps_location(&self) -> Option<geography::Location> {
+        self.get_exif(Exif::gps_location)
+    }
+
+    /// ISO
+    pub fn iso_speed_rating(&self) -> Option<u16> {
+        self.exif_xmp(Exif::iso_speed_rating, Xmp::iso_speed_rating)
+    }
+
+    /// Camera manifacturer
+    pub fn make(&self) -> Option<String> {
+        self.exif_xmp(Exif::make, Xmp::make)
+    }
+
+    /// Camera model
+    pub fn model(&self) -> Option<String> {
+        self.exif_xmp(Exif::model, Xmp::model)
+    }
+
     pub fn orientation(&self) -> Option<Orientation> {
         // TODO: Should work from XMP as well
         self.get_exif(Exif::orientation)
+    }
+
+    pub fn software(&self) -> Option<String> {
+        self.exif_xmp(Exif::software, Xmp::creator_tool)
     }
 
     pub fn user_comment(&self) -> Option<String> {

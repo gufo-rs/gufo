@@ -39,3 +39,6 @@ workspace = true
 [[example]]
 name = "show-metadata"
 required-features = ["chrono"]
+
+[dev-dependencies]
+gufo = { path = ".", features = ["all-image-formats", "chrono"] }

@@ -76,6 +76,16 @@ impl Png {
         }
     }
 
+    pub fn xmp(&self, inflate_limit: usize) -> Option<Vec<u8>> {
+        let chunks = self.chunks();
+
+        if let Some(xmp) = chunks.iter().find_map(|x| x.xmp().ok().flatten()) {
+            Some(xmp.as_bytes().to_vec())
+        } else {
+            chunks.iter().find_map(|x| x.legacy_xmp(inflate_limit))
+        }
+    }
+
     /// List all chunks in the data
     fn find_chunks(data: &[u8]) -> Result<Vec<RawChunk>, Error> {
         let mut cur = Cursor::new(data);

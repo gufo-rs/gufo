@@ -232,6 +232,15 @@ impl Exif {
         }
     }
 
+    /// Software used
+    pub fn software(&self) -> Option<String> {
+        self.decoder
+            .lock()
+            .unwrap()
+            .lookup_string(field::Software)
+            .ok()?
+    }
+
     pub fn user_comment(&self) -> Option<String> {
         let s = self
             .decoder
