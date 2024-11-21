@@ -38,11 +38,11 @@ macro_rules! convertible_enum {
             }
         }
 
-        impl std::convert::Into<$type> for $enum_name {
-            fn into(self) -> $type {
-                match self {
-                    $(Self::$variant_name => $variant_value,)*
-                    Self::Unknown(other) => other,
+        impl std::convert::From<$enum_name> for $type {
+            fn from(value: $enum_name) -> $type {
+                match value {
+                    $($enum_name::$variant_name => $variant_value,)*
+                    $enum_name::Unknown(other) => other,
                 }
             }
         }
