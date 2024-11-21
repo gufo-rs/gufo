@@ -5,6 +5,7 @@
 use crate::utils;
 
 /// Coding-independent code point
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Cicp {
     pub colour_primaries: ColourPrimaries,
     pub transfer_characteristics: TransferCharacteristics,
@@ -42,7 +43,7 @@ impl Cicp {
 
 utils::convertible_enum!(
     #[repr(u8)]
-    #[derive(Debug, PartialEq, Eq)]
+    #[derive(Debug, PartialEq, Eq, Clone, Copy)]
     pub enum ColourPrimaries {
         Srgb = 1,
         Unspecified = 2,
@@ -53,17 +54,19 @@ utils::convertible_enum!(
 
 utils::convertible_enum!(
     #[repr(u8)]
-    #[derive(Debug, PartialEq, Eq)]
+    #[derive(Debug, PartialEq, Eq, Clone, Copy)]
     pub enum TransferCharacteristics {
         /// Standard dynamic range
-        Sdr = 1,
+        Gamma22 = 1,
         Unspecified = 2,
         /// Standard dynamic range 10 bit
-        Sdr_ = 6,
+        Gamma22_ = 6,
+        /// Gamma=2.4 curve per IEC 61966-2-1 sRGB
+        Gamma24 = 13,
         /// Standard dynamic range 10 bit
-        Sdr10 = 14,
+        Gamma22Bit10 = 14,
         /// Standard dynamic range 12 bit
-        Sdr12 = 15,
+        Gamma22Bit12 = 15,
         /// Perceptual quantization (PQ) system
         Pq = 16,
         /// Hybrid log-gamma (HLG) system
@@ -73,7 +76,7 @@ utils::convertible_enum!(
 
 utils::convertible_enum!(
     #[repr(u8)]
-    #[derive(Debug, PartialEq, Eq)]
+    #[derive(Debug, PartialEq, Eq, Clone, Copy)]
     pub enum MatrixCoefficients {
         Identity = 0,
         Unspecified = 2,
@@ -83,7 +86,7 @@ utils::convertible_enum!(
 
 utils::maybe_convertible_enum!(
     #[repr(u8)]
-    #[derive(Debug, PartialEq, Eq)]
+    #[derive(Debug, PartialEq, Eq, Clone, Copy)]
     pub enum VideoRangeFlag {
         Narrow = 0,
         Full = 1,

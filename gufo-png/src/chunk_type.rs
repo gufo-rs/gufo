@@ -26,6 +26,9 @@ gufo_common::utils::convertible_enum!(
         eXIf = b(b"eXIf"),
         /// Embedded ICC profile
         iCCP = b(b"iCCP"),
+        /// Coding-independent code points
+        cICP = b(b"cICP"),
+
         /// Apple proprietary, information for faster image loading
         ///
         /// See <https://www.hackerfactor.com/blog/index.php?/archives/895-Connecting-the-iDOTs.html>

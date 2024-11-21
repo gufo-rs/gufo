@@ -2,6 +2,8 @@ use std::io::{Cursor, Read};
 use std::ops::Range;
 use std::slice::SliceIndex;
 
+use gufo_common::cicp::Cicp;
+
 pub use super::*;
 
 pub const MAGIC_BYTES: &[u8] = &[137, 80, 78, 71, 13, 10, 26, 10];
@@ -84,6 +86,15 @@ impl Png {
         } else {
             chunks.iter().find_map(|x| x.legacy_xmp(inflate_limit))
         }
+    }
+
+    pub fn cicp(&self) -> Option<Cicp> {
+        let cicp_raw = self
+            .chunks()
+            .into_iter()
+            .find(|x| x.chunk_type() == ChunkType::cICP)?;
+
+        Cicp::from_bytes(cicp_raw.chunk_data().get(0..4)?.try_into().ok()?).ok()
     }
 
     /// List all chunks in the data
@@ -219,5 +230,26 @@ impl Png {
         self.data
             .get(index.clone())
             .ok_or(Error::IndexNotInData(index))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use gufo_common::cicp::*;
+
+    #[test]
+    fn x() {
+        let data = std::fs::read("../test-images/images/cicp-p3/cicp-p3.png").unwrap();
+        let png = crate::Png::new(data).unwrap();
+        dbg!(png.cicp());
+        assert_eq!(
+            png.cicp(),
+            Some(Cicp {
+                colour_primaries: ColourPrimaries::DciP3,
+                transfer_characteristics: TransferCharacteristics::Gamma24,
+                matrix_coefficients: MatrixCoefficients::Identity,
+                video_full_range_flag: VideoRangeFlag::Full,
+            })
+        );
     }
 }
