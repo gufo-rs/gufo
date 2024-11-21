@@ -1,3 +1,4 @@
+pub mod cicp;
 #[cfg(feature = "chrono")]
 pub mod datetime;
 pub mod error;

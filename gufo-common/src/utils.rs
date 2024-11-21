@@ -82,7 +82,7 @@ macro_rules! maybe_convertible_enum {
 
         paste::paste! {
             #[derive(Debug, PartialEq, Eq)]
-            pub struct [<Unknown $enum_name ValueError>]($type);
+            pub struct [<Unknown $enum_name ValueError>](pub $type);
 
             impl std::fmt::Display for [<Unknown $enum_name ValueError>] {
                 fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
