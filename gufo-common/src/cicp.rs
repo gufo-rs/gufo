@@ -4,10 +4,10 @@
 
 use crate::utils;
 
-/// Coding-independent code point
+/// Coding-independent code points
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Cicp {
-    pub colour_primaries: ColourPrimaries,
+    pub color_primaries: ColorPrimaries,
     pub transfer_characteristics: TransferCharacteristics,
     pub matrix_coefficients: MatrixCoefficients,
     pub video_full_range_flag: VideoRangeFlag,
@@ -20,20 +20,20 @@ impl Cicp {
     /// # use gufo_common::cicp::*;
     /// let cicp = Cicp::from_bytes(&[0x09, 0x10, 0x00, 0x01]).unwrap();
     ///
-    /// assert_eq!(cicp.colour_primaries, ColourPrimaries::Rec2020);
+    /// assert_eq!(cicp.color_primaries, ColorPrimaries::Rec2020);
     /// assert_eq!(cicp.transfer_characteristics, TransferCharacteristics::Pq);
     /// assert_eq!(cicp.matrix_coefficients, MatrixCoefficients::Identity);
     /// assert_eq!(cicp.video_full_range_flag, VideoRangeFlag::Full);
     /// ```
     pub fn from_bytes(bytes: &[u8; 4]) -> Result<Self, CicpError> {
-        let colour_primaries = ColourPrimaries::from(bytes[0]);
+        let color_primaries = ColorPrimaries::from(bytes[0]);
         let transfer_characteristics = TransferCharacteristics::from(bytes[1]);
         let matrix_coefficients: MatrixCoefficients = MatrixCoefficients::from(bytes[2]);
         let video_full_range_flag = VideoRangeFlag::try_from(bytes[3])
             .map_err(|err| CicpError::InvalidVideoFullRangeFlag(err.0))?;
 
         Ok(Self {
-            colour_primaries,
+            color_primaries,
             transfer_characteristics,
             matrix_coefficients,
             video_full_range_flag,
@@ -44,7 +44,7 @@ impl Cicp {
 utils::convertible_enum!(
     #[repr(u8)]
     #[derive(Debug, PartialEq, Eq, Clone, Copy)]
-    pub enum ColourPrimaries {
+    pub enum ColorPrimaries {
         Srgb = 1,
         Unspecified = 2,
         Rec2020 = 9,
