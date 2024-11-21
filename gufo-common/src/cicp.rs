@@ -14,6 +14,20 @@ pub struct Cicp {
 }
 
 impl Cicp {
+    pub const SRGB: Cicp = Cicp {
+        color_primaries: ColorPrimaries::Srgb,
+        transfer_characteristics: TransferCharacteristics::Gamma22,
+        matrix_coefficients: MatrixCoefficients::Identity,
+        video_full_range_flag: VideoRangeFlag::Full,
+    };
+
+    pub const REC2020_LINEAR: Cicp = Cicp {
+        color_primaries: ColorPrimaries::Rec2020,
+        transfer_characteristics: TransferCharacteristics::Linear,
+        matrix_coefficients: MatrixCoefficients::Identity,
+        video_full_range_flag: VideoRangeFlag::Full,
+    };
+
     /// Get CICP from bytes in the order of struct definition
     ///
     /// ```
@@ -61,6 +75,8 @@ utils::convertible_enum!(
         Unspecified = 2,
         /// Standard dynamic range 10 bit
         Gamma22_ = 6,
+        /// Linear
+        Linear = 8,
         /// Gamma=2.4 curve per IEC 61966-2-1 sRGB
         Gamma24 = 13,
         /// Standard dynamic range 10 bit
