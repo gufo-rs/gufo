@@ -1,4 +1,6 @@
+use gufo_common::cicp::Cicp;
 use gufo_common::error::ErrorWithData;
+use gufo_common::prelude::*;
 
 use crate::Error;
 
@@ -27,5 +29,23 @@ impl Image {
         }
 
         Err(ErrorWithData::new(Error::NoSupportedFiletypeFound, data))
+    }
+
+    pub fn into_inner(self) -> Vec<u8> {
+        match self {
+            Self::Jpeg(jpeg) => jpeg.into_inner(),
+            Self::Png(png) => png.into_inner(),
+        }
+    }
+
+    pub fn dyn_metadata(&self) -> Box<&dyn ImageMetadata> {
+        match self {
+            Self::Png(png) => Box::new(png as &dyn ImageMetadata),
+            Self::Jpeg(jpeg) => Box::new(jpeg as &dyn ImageMetadata),
+        }
+    }
+
+    pub fn cicp(&self) -> Option<Cicp> {
+        self.dyn_metadata().cicp()
     }
 }

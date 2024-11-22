@@ -4,6 +4,7 @@ pub use gufo_common as common;
 use gufo_common::error::ErrorWithData;
 use gufo_common::geography;
 use gufo_common::orientation::Orientation;
+use gufo_common::prelude::*;
 use gufo_exif::Exif;
 #[cfg(feature = "jpeg")]
 pub use gufo_jpeg as jpeg;
@@ -15,9 +16,6 @@ pub use gufo_tiff as tiff;
 pub use gufo_webp as webp;
 use gufo_xmp::Xmp;
 pub use image::Image;
-
-#[allow(dead_code)]
-const INFLATE_LIMIT: usize = 10_usize.pow(6) * 100;
 
 #[derive(Debug, Default)]
 pub struct RawMetadata {
@@ -72,11 +70,9 @@ impl RawMetadata {
     pub fn for_png(png: &gufo_png::Png) -> Self {
         let mut raw_metadata = Self::default();
 
-        raw_metadata
-            .exif
-            .extend(png.exif(INFLATE_LIMIT).map(|x| x.to_vec()));
+        raw_metadata.exif.extend(png.exif());
 
-        raw_metadata.xmp.extend(png.xmp(INFLATE_LIMIT));
+        raw_metadata.xmp.extend(png.xmp());
 
         raw_metadata
     }

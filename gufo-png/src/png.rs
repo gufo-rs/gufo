@@ -3,10 +3,12 @@ use std::ops::Range;
 use std::slice::SliceIndex;
 
 use gufo_common::cicp::Cicp;
+use gufo_common::prelude::*;
 
 pub use super::*;
 
 pub const MAGIC_BYTES: &[u8] = &[137, 80, 78, 71, 13, 10, 26, 10];
+pub const DEFAULT_INFLATE_LIMIT: usize = 10_usize.pow(6) * 100;
 
 #[derive(Debug, Clone)]
 pub struct Png {
@@ -14,7 +16,70 @@ pub struct Png {
     pub(crate) data: Vec<u8>,
     /// Chunks in the order in which they appear in the data
     pub(crate) chunks: Vec<RawChunk>,
+    pub(crate) inflate_limit: usize,
 }
+
+impl ImageFormat for Png {
+    fn is_filetype(data: &[u8]) -> bool {
+        data.starts_with(MAGIC_BYTES)
+    }
+}
+
+impl ImageMetadata for Png {
+    fn cicp(&self) -> Option<Cicp> {
+        let cicp_raw = self
+            .chunks()
+            .into_iter()
+            .find(|x| x.chunk_type() == ChunkType::cICP)?;
+
+        Cicp::from_bytes(cicp_raw.chunk_data().get(0..4)?.try_into().ok()?).ok()
+    }
+
+    /// Returns raw exif data if available
+    ///
+    /// Prefers the newer [`eXIf`](ChunkType::eXIf) chunk if available and uses
+    /// the legacy [`zTXt`](ChunkType::zTXt) chunk with [`LEGACY_EXIF_KEYWORD`]
+    /// as fallback.
+    fn exif(&self) -> Vec<Vec<u8>> {
+        let chunks = self.chunks();
+
+        let mut result = Vec::new();
+
+        if let Some(exif) = chunks.iter().find(|x| x.chunk_type() == ChunkType::eXIf) {
+            result.push(exif.chunk_data().to_vec());
+        }
+
+        let mut legacy_exif = chunks
+            .iter()
+            .filter_map(|x| x.legacy_exif(self.inflate_limit))
+            .collect();
+
+        result.append(&mut legacy_exif);
+
+        result
+    }
+
+    fn xmp(&self) -> Vec<Vec<u8>> {
+        let chunks = self.chunks();
+
+        let mut result = Vec::new();
+
+        if let Some(xmp) = chunks.iter().find_map(|x| x.xmp().ok().flatten()) {
+            result.push(xmp.as_bytes().to_vec());
+        }
+
+        let mut legacy_xmp = chunks
+            .iter()
+            .filter_map(|x| x.legacy_xmp(self.inflate_limit))
+            .collect();
+
+        result.append(&mut legacy_xmp);
+
+        result
+    }
+}
+
+impl ImageComplete for Png {}
 
 /// Representation of a PNG image
 ///
@@ -24,7 +89,9 @@ pub struct Png {
 ///
 /// assert_eq!(png.chunks()[0].chunk_type(), gufo_png::ChunkType::IHDR);
 /// assert_eq!(png.chunks().len(), 43);
-/// assert_eq!(png.exif(10000).unwrap().len(), 7646);
+///
+/// use gufo_common::prelude::*;
+/// assert_eq!(png.exif().first().unwrap().len(), 7646);
 /// ```
 impl Png {
     /// Returns PNG image representation
@@ -32,14 +99,13 @@ impl Png {
     /// * `data`: PNG image data starting with magic byte
     pub fn new(data: Vec<u8>) -> Result<Self, ErrorWithData<Error>> {
         match Self::find_chunks(&data) {
-            Ok(chunks) => Ok(Self { chunks, data }),
+            Ok(chunks) => Ok(Self {
+                chunks,
+                data,
+                inflate_limit: DEFAULT_INFLATE_LIMIT,
+            }),
             Err(err) => Err(ErrorWithData::new(err, data)),
         }
-    }
-
-    /// Checks if passed data have PNG magic bytes
-    pub fn is_filetype(data: &[u8]) -> bool {
-        data.starts_with(MAGIC_BYTES)
     }
 
     /// Convert into raw data
@@ -61,40 +127,6 @@ impl Png {
         self.data.drain(chunk.complete_data());
         self.chunks = Self::find_chunks(&self.data)?;
         Ok(())
-    }
-
-    /// Returns raw exif data if available
-    ///
-    /// Prefers the newer [`eXIf`](ChunkType::eXIf) chunk if available and uses
-    /// the legacy [`zTXt`](ChunkType::zTXt) chunk with [`LEGACY_EXIF_KEYWORD`]
-    /// as fallback.
-    pub fn exif(&self, inflate_limit: usize) -> Option<Vec<u8>> {
-        let chunks = self.chunks();
-
-        if let Some(exif) = chunks.iter().find(|x| x.chunk_type() == ChunkType::eXIf) {
-            Some(exif.chunk_data().to_vec())
-        } else {
-            chunks.iter().find_map(|x| x.legacy_exif(inflate_limit))
-        }
-    }
-
-    pub fn xmp(&self, inflate_limit: usize) -> Option<Vec<u8>> {
-        let chunks = self.chunks();
-
-        if let Some(xmp) = chunks.iter().find_map(|x| x.xmp().ok().flatten()) {
-            Some(xmp.as_bytes().to_vec())
-        } else {
-            chunks.iter().find_map(|x| x.legacy_xmp(inflate_limit))
-        }
-    }
-
-    pub fn cicp(&self) -> Option<Cicp> {
-        let cicp_raw = self
-            .chunks()
-            .into_iter()
-            .find(|x| x.chunk_type() == ChunkType::cICP)?;
-
-        Cicp::from_bytes(cicp_raw.chunk_data().get(0..4)?.try_into().ok()?).ok()
     }
 
     /// List all chunks in the data
@@ -235,6 +267,7 @@ impl Png {
 
 #[cfg(test)]
 mod tests {
+    use super::*;
     use gufo_common::cicp::*;
 
     #[test]

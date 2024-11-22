@@ -9,6 +9,7 @@ use std::ops::Range;
 
 use gufo_common::error::ErrorWithData;
 use gufo_common::math::*;
+use gufo_common::prelude::*;
 pub use segments::*;
 
 pub const EXIF_IDENTIFIER_STRING: &[u8] = b"Exif\0\0";
@@ -24,16 +25,28 @@ pub struct Jpeg {
     data: Vec<u8>,
 }
 
+impl ImageFormat for Jpeg {
+    fn is_filetype(data: &[u8]) -> bool {
+        data.starts_with(MAGIC_BYTES)
+    }
+}
+
+impl ImageMetadata for Jpeg {
+    fn exif(&self) -> Vec<Vec<u8>> {
+        self.exif_data().map(|x| x.to_vec()).collect()
+    }
+
+    fn xmp(&self) -> Vec<Vec<u8>> {
+        self.exif_data().map(|x| x.to_vec()).collect()
+    }
+}
+
 impl Jpeg {
     pub fn new(data: Vec<u8>) -> Result<Self, ErrorWithData<Error>> {
         match Self::find_segments(&data) {
             Ok(segments) => Ok(Self { segments, data }),
             Err(err) => Err(ErrorWithData::new(err, data)),
         }
-    }
-
-    pub fn is_filetype(data: &[u8]) -> bool {
-        data.starts_with(MAGIC_BYTES)
     }
 
     pub fn into_inner(self) -> Vec<u8> {
@@ -91,17 +104,18 @@ impl Jpeg {
 
     pub fn components_specification_parameters(
         &self,
-        components: usize,
+        component: usize,
     ) -> Result<ComponentSpecificationParameters, Error> {
         let cs = self
             .sos()?
             .components_specifications
-            .get(4)
+            .get(component)
             .ok_or(Error::MissingComponentSpecification)?
             .cs;
         self.sof()?
             .parameters
-            .get(cs as usize)
+            .iter()
+            .find(|x| x.c == cs)
             .ok_or(Error::MissingComponentSpecificationParameters)
             .cloned()
     }
@@ -138,23 +152,23 @@ impl Jpeg {
             .map(|x| x.segment(&self))
     }
 
-    pub fn exif(&self) -> impl Iterator<Item = Segment> {
+    pub fn exif_segments(&self) -> impl Iterator<Item = Segment> {
         self.segments_marker(Marker::APP1)
             .filter(|x| x.data().starts_with(EXIF_IDENTIFIER_STRING))
     }
 
     pub fn exif_data(&self) -> impl Iterator<Item = &[u8]> {
-        self.exif()
+        self.exif_segments()
             .filter_map(|x| x.data().get(EXIF_IDENTIFIER_STRING.len()..))
     }
 
-    pub fn xmp(&self) -> impl Iterator<Item = Segment> {
+    pub fn xmp_segments(&self) -> impl Iterator<Item = Segment> {
         self.segments_marker(Marker::APP1)
             .filter(|x| x.data().starts_with(XMP_IDENTIFIER_STRING))
     }
 
     pub fn xmp_data(&self) -> impl Iterator<Item = &[u8]> {
-        self.xmp()
+        self.xmp_segments()
             .filter_map(|x| x.data().get(XMP_IDENTIFIER_STRING.len()..))
     }
 
@@ -367,6 +381,8 @@ pub enum Error {
     MissingComponentSpecification,
     #[error("Missing component specification parameters")]
     MissingComponentSpecificationParameters,
+    #[error("Missing quantization table")]
+    MissingDqt,
 }
 
 gufo_common::utils::convertible_enum!(

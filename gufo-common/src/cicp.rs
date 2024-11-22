@@ -16,7 +16,7 @@ pub struct Cicp {
 impl Cicp {
     pub const SRGB: Cicp = Cicp {
         color_primaries: ColorPrimaries::Srgb,
-        transfer_characteristics: TransferCharacteristics::Gamma22,
+        transfer_characteristics: TransferCharacteristics::Gamma24,
         matrix_coefficients: MatrixCoefficients::Identity,
         video_full_range_flag: VideoRangeFlag::Full,
     };
@@ -55,6 +55,17 @@ impl Cicp {
     }
 }
 
+impl From<Cicp> for Vec<u8> {
+    fn from(value: Cicp) -> Self {
+        vec![
+            value.color_primaries.into(),
+            value.transfer_characteristics.into(),
+            value.matrix_coefficients.into(),
+            value.video_full_range_flag.into(),
+        ]
+    }
+}
+
 utils::convertible_enum!(
     #[repr(u8)]
     #[derive(Debug, PartialEq, Eq, Clone, Copy)]
@@ -70,18 +81,18 @@ utils::convertible_enum!(
     #[repr(u8)]
     #[derive(Debug, PartialEq, Eq, Clone, Copy)]
     pub enum TransferCharacteristics {
-        /// Standard dynamic range
+        /// Gamma=2.2 curve
         Gamma22 = 1,
         Unspecified = 2,
-        /// Standard dynamic range 10 bit
+        /// Gamma=2.2 curve
         Gamma22_ = 6,
         /// Linear
         Linear = 8,
         /// Gamma=2.4 curve per IEC 61966-2-1 sRGB
         Gamma24 = 13,
-        /// Standard dynamic range 10 bit
+        /// Gamma=2.2 curve 10 bit
         Gamma22Bit10 = 14,
-        /// Standard dynamic range 12 bit
+        /// Gamma=2.2 curve 12 bit
         Gamma22Bit12 = 15,
         /// Perceptual quantization (PQ) system
         Pq = 16,
