@@ -1,5 +1,6 @@
 use std::io::{Cursor, Seek};
 use std::slice::SliceIndex;
+use std::sync::Arc;
 
 use crate::math::*;
 
@@ -97,12 +98,18 @@ impl<'a> SliceExt<'a> for Cursor<&'a [u8]> {
     }
 }
 
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug, thiserror::Error, Clone)]
 pub enum ReadError {
     #[error("Math: {0}")]
     Math(#[from] MathError),
     #[error("IO: {0}")]
-    Io(#[from] std::io::Error),
+    Io(#[from] Arc<std::io::Error>),
     #[error("Invalid index")]
     InvalidIndex,
+}
+
+impl From<std::io::Error> for ReadError {
+    fn from(value: std::io::Error) -> Self {
+        Arc::new(value).into()
+    }
 }
