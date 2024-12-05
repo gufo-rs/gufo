@@ -1,6 +1,35 @@
 use std::io::{Cursor, Seek};
+use std::slice::SliceIndex;
 
 use crate::math::*;
+
+pub trait GetExt<T> {
+    fn e_get<I: SliceIndex<[T]>>(
+        &self,
+        index: I,
+    ) -> Result<&<I as SliceIndex<[T]>>::Output, ReadError>;
+
+    fn e_get_mut<I: SliceIndex<[T]>>(
+        &mut self,
+        index: I,
+    ) -> Result<&mut <I as SliceIndex<[T]>>::Output, ReadError>;
+}
+
+impl<T> GetExt<T> for [T] {
+    fn e_get<I: SliceIndex<[T]>>(
+        &self,
+        index: I,
+    ) -> Result<&<I as SliceIndex<[T]>>::Output, ReadError> {
+        self.get(index).ok_or(ReadError::InvalidIndex)
+    }
+
+    fn e_get_mut<I: SliceIndex<[T]>>(
+        &mut self,
+        index: I,
+    ) -> Result<&mut <I as SliceIndex<[T]>>::Output, ReadError> {
+        self.get_mut(index).ok_or(ReadError::InvalidIndex)
+    }
+}
 
 pub trait ReadExt: std::io::BufRead + std::io::Seek {
     fn read_array<const T: usize>(&mut self) -> Result<[u8; T], ReadError> {
@@ -74,4 +103,6 @@ pub enum ReadError {
     Math(#[from] MathError),
     #[error("IO: {0}")]
     Io(#[from] std::io::Error),
+    #[error("Invalid index")]
+    InvalidIndex,
 }
