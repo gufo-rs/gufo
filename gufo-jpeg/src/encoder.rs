@@ -1,4 +1,5 @@
 use crate::Error;
+use gufo_common::math::*;
 
 impl crate::Jpeg {
     pub fn encoder<W: jpeg_encoder::JfifWrite>(
@@ -13,8 +14,11 @@ impl crate::Jpeg {
 
         encoder.set_quantization_tables(luma, chroma);
 
-        //encoder.set_progressive(false);
-        //encoder.set_progressive_scans(scans);
+        let progressive = self.is_progressive()?;
+        encoder.set_progressive(progressive);
+        if progressive {
+            encoder.set_progressive_scans(self.n_sos().u8().map_err(|x| Error::from(x))?);
+        }
 
         Ok(encoder)
     }

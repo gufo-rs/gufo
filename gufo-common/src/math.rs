@@ -186,6 +186,7 @@ macro_rules! impl_cast {
 
 macro_rules! impl_casts {
     ($t:ty) => {
+        impl_cast!($t, u8);
         impl_cast!($t, u16);
         impl_cast!($t, u32);
         impl_cast!($t, u64);
@@ -194,6 +195,7 @@ macro_rules! impl_casts {
         impl_cast!($t, i64);
         impl_cast!($t, usize);
 
+        impl ToU8 for $t {}
         impl ToU16 for $t {}
         impl ToU32 for $t {}
         impl ToU64 for $t {}
@@ -202,6 +204,7 @@ macro_rules! impl_casts {
     };
 }
 
+impl_binary_operators!(u8);
 impl_binary_operators!(u16);
 impl_binary_operators!(u32);
 impl_binary_operators!(u64);
@@ -210,6 +213,7 @@ impl_binary_operators!(i32);
 impl_binary_operators!(i64);
 impl_binary_operators!(usize);
 
+impl_casts!(u8);
 impl_casts!(u16);
 impl_casts!(u32);
 impl_casts!(u64);
@@ -217,6 +221,13 @@ impl_casts!(i16);
 impl_casts!(i32);
 impl_casts!(i64);
 impl_casts!(usize);
+
+pub trait ToU8: Sized + TryInto<u8> + TryInto<i128> + Copy {
+    fn u8(self) -> Result<u8, MathError> {
+        self.try_into()
+            .map_err(|_| MathError::ConversionFailed(self.try_into().ok()))
+    }
+}
 
 pub trait ToU16: Sized + TryInto<u16> + TryInto<i128> + Copy {
     fn u16(self) -> Result<u16, MathError> {

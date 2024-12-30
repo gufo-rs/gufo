@@ -95,6 +95,26 @@ impl Jpeg {
         Sof::from_data(segment.data())
     }
 
+    pub fn is_progressive(&self) -> Result<bool, Error> {
+        let sof = self
+            .segments()
+            .into_iter()
+            .find(|x| x.marker.is_sof())
+            .ok_or(Error::NoSofSegmentFound)?;
+
+        sof.marker().is_progressive_sof()
+    }
+
+    /// Number of SOS segments
+    ///
+    /// For `is_progressive()` being true, this is the number of scans.
+    pub fn n_sos(&self) -> usize {
+        self.segments()
+            .into_iter()
+            .filter(|x| matches!(x.marker, Marker::SOS))
+            .count()
+    }
+
     pub fn sos(&self) -> Result<Sos, Error> {
         let segment = self
             .segment_by_marker(&Marker::SOS)
@@ -221,15 +241,14 @@ impl Jpeg {
             let marker = Marker::from(byte[0]);
             let len_start = cur.position();
 
-            let len = if marker.is_standalone() {
-                2
+            let (data_start, len) = if marker.is_standalone() {
+                (len_start.usize()?, 0)
             } else {
                 // Read length. The length includes the two length bytes, but not the marker.
                 cur.read_exact(buf).map_err(|_| Error::UnexpectedEof)?;
-                u16::from_be_bytes(*buf)
+                (len_start.usize()?.safe_add(2)?, u16::from_be_bytes(*buf))
             };
 
-            let data_start = len_start.usize()?.safe_add(2)?;
             let data_end = len_start.usize()?.safe_add(len.into())?;
 
             let segment = RawSegment {
@@ -473,6 +492,14 @@ impl Marker {
 
     pub fn is_sof(&self) -> bool {
         matches!(self, Self::SOF0 | Self::SOF1 | Self::SOF2)
+    }
+
+    pub fn is_progressive_sof(&self) -> Result<bool, Error> {
+        match self {
+            Self::SOF0 | Self::SOF1 => Ok(false),
+            Self::SOF2 => Ok(true),
+            _ => Err(Error::NoSofSegmentFound),
+        }
     }
 }
 
