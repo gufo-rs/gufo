@@ -10,8 +10,13 @@ repository.workspace = true
 [lints]
 workspace = true
 
+[features]
+default = []
+encoder = ["dep:jpeg-encoder"]
+
 [dependencies]
+jpeg-encoder = { workspace = true, optional = true }
 gufo-common.workspace = true
 tracing.workspace = true
 thiserror.workspace = true
-jpeg-encoder = "0.6.0"
+image = { version = "0.25.5", git = "https://github.com/image-rs/image.git" }

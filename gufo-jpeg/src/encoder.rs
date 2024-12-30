@@ -1,19 +1,20 @@
+use crate::Error;
+
 impl crate::Jpeg {
     pub fn encoder<W: jpeg_encoder::JfifWrite>(
         &self,
         w: W,
     ) -> Result<jpeg_encoder::Encoder<W>, EncoderError> {
-        let mut encoder = jpeg_encoder::Encoder::new(w, 100);
+        let mut encoder = jpeg_encoder::Encoder::new(w, 50);
 
         encoder.set_sampling_factor(self.sampling_factor()?);
 
-        //encoder.set_quantization_tables(luma, chroma);
+        let (luma, chroma) = self.quantization_tables()?;
 
-        //encoder.set_progressive(progressive);
+        encoder.set_quantization_tables(luma, chroma);
 
-        //encoder.set_restart_interval(interval);
-
-        encoder.set_optimized_huffman_tables(true);
+        //encoder.set_progressive(false);
+        //encoder.set_progressive_scans(scans);
 
         Ok(encoder)
     }
@@ -41,6 +42,28 @@ impl crate::Jpeg {
             }
         }
         .ok_or(EncoderError::UnsupportedSamplingFactor)
+    }
+
+    pub fn quantization_tables(
+        &self,
+    ) -> Result<
+        (
+            jpeg_encoder::QuantizationTableType,
+            jpeg_encoder::QuantizationTableType,
+        ),
+        EncoderError,
+    > {
+        let dqts = self.dqts()?;
+
+        let luma_parameters = self.components_specification_parameters(0)?;
+        let luma_table = dqts.get(&luma_parameters.tq).ok_or(Error::MissingDqt)?;
+        let luma = jpeg_encoder::QuantizationTableType::Custom(Box::new(luma_table.qk()));
+
+        let chroma_parameters = self.components_specification_parameters(1)?;
+        let chroma_table = dqts.get(&chroma_parameters.tq).ok_or(Error::MissingDqt)?;
+        let chroma = jpeg_encoder::QuantizationTableType::Custom(Box::new(chroma_table.qk()));
+
+        Ok((luma, chroma))
     }
 }
 

@@ -1,5 +1,6 @@
 #![doc = include_str!("../README.md")]
 
+#[cfg(feature = "encoder")]
 mod encoder;
 mod segments;
 
@@ -149,7 +150,7 @@ impl Jpeg {
         self.segments
             .iter()
             .find(|x| x.marker == *marker)
-            .map(|x| x.segment(&self))
+            .map(|x| x.segment(self))
     }
 
     pub fn exif_segments(&self) -> impl Iterator<Item = Segment> {
@@ -220,15 +221,13 @@ impl Jpeg {
             let marker = Marker::from(byte[0]);
             let len_start = cur.position();
 
-            let len;
-
-            if marker.is_standalone() {
-                len = 2;
+            let len = if marker.is_standalone() {
+                2
             } else {
                 // Read length. The length includes the two length bytes, but not the marker.
                 cur.read_exact(buf).map_err(|_| Error::UnexpectedEof)?;
-                len = u16::from_be_bytes(*buf);
-            }
+                u16::from_be_bytes(*buf)
+            };
 
             let data_start = len_start.usize()?.safe_add(2)?;
             let data_end = len_start.usize()?.safe_add(len.into())?;
