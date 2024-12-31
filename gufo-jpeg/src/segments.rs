@@ -29,7 +29,8 @@ impl Dqt {
 
     /// Quantization table elements in 16 bit
     ///
-    /// This resturns the data in 16 bit, even if defined as 8 bit.
+    /// This resturns the data in 16 bit, even if defined as 8 bit. The 8-bit
+    /// data is not scaled to 16-bit.
     pub fn qk(&self) -> [u16; 64] {
         match self {
             Self::Dqt8(dqt) => {
@@ -41,6 +42,32 @@ impl Dqt {
             }
             Self::Dqt16(dqt) => dqt.qk,
         }
+    }
+
+    /// Quantization table in non-zig-zag order
+    ///
+    /// Otherwise same as `qk()`
+    pub fn qk_ordered(&self) -> [u16; 64] {
+        const IDX: [[usize; 8]; 8] = [
+            [0, 1, 5, 6, 14, 15, 27, 28],
+            [2, 4, 7, 13, 16, 26, 29, 42],
+            [3, 8, 12, 17, 25, 30, 41, 43],
+            [9, 11, 18, 24, 31, 40, 44, 53],
+            [10, 19, 23, 32, 39, 45, 52, 54],
+            [20, 22, 33, 38, 46, 51, 55, 60],
+            [21, 34, 37, 47, 50, 56, 59, 61],
+            [35, 36, 48, 49, 57, 58, 62, 63],
+        ];
+
+        let qk = self.qk();
+
+        let mut qk_ordered = [0; 64];
+
+        for (i, n) in IDX.into_iter().flatten().enumerate() {
+            qk_ordered[i] = qk[n];
+        }
+
+        qk_ordered
     }
 
     pub fn from_data(mut value: &[u8]) -> Result<Vec<Self>, Error> {

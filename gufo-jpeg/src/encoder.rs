@@ -1,14 +1,14 @@
-use crate::Error;
 use gufo_common::math::*;
+use jpeg_encoder::QuantizationTableType;
+
+use crate::Error;
 
 impl crate::Jpeg {
     pub fn encoder<W: jpeg_encoder::JfifWrite>(
         &self,
         w: W,
     ) -> Result<jpeg_encoder::Encoder<W>, EncoderError> {
-        let mut encoder = jpeg_encoder::Encoder::new(w, 50);
-
-        encoder.set_sampling_factor(self.sampling_factor()?);
+        let mut encoder = jpeg_encoder::Encoder::new(w, 100);
 
         let (luma, chroma) = self.quantization_tables()?;
 
@@ -61,11 +61,12 @@ impl crate::Jpeg {
 
         let luma_parameters = self.components_specification_parameters(0)?;
         let luma_table = dqts.get(&luma_parameters.tq).ok_or(Error::MissingDqt)?;
-        let luma = jpeg_encoder::QuantizationTableType::Custom(Box::new(luma_table.qk()));
+        let luma = jpeg_encoder::QuantizationTableType::Custom(Box::new(luma_table.qk_ordered()));
 
         let chroma_parameters = self.components_specification_parameters(1)?;
         let chroma_table = dqts.get(&chroma_parameters.tq).ok_or(Error::MissingDqt)?;
-        let chroma = jpeg_encoder::QuantizationTableType::Custom(Box::new(chroma_table.qk()));
+        let chroma: QuantizationTableType =
+            jpeg_encoder::QuantizationTableType::Custom(Box::new(chroma_table.qk_ordered()));
 
         Ok((luma, chroma))
     }
