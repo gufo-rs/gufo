@@ -63,7 +63,7 @@ impl Jpeg {
     pub fn segments_marker(&self, marker: Marker) -> impl Iterator<Item = Segment> {
         self.segments
             .iter()
-            .filter(move |x| x.marker == marker)
+            .filter(move |x| x.marker == Some(marker))
             .map(|x| x.segment(self))
     }
 
@@ -72,7 +72,10 @@ impl Jpeg {
         let segments = self.segments();
 
         let mut dqts = Vec::new();
-        for i in segments.into_iter().filter(|x| x.marker == Marker::DQT) {
+        for i in segments
+            .into_iter()
+            .filter(|x| x.marker == Some(Marker::DQT))
+        {
             let data = i.data();
             dqts.push(Dqt::from_data(data)?);
         }
@@ -89,20 +92,21 @@ impl Jpeg {
         let segment = self
             .segments()
             .into_iter()
-            .find(|x| x.marker.is_sof())
+            .find(|x| x.marker.map_or(false, |x| x.is_sof()))
             .ok_or(Error::NoSofSegmentFound)?;
 
         Sof::from_data(segment.data())
     }
 
     pub fn is_progressive(&self) -> Result<bool, Error> {
-        let sof = self
+        let sof_marker = self
             .segments()
             .into_iter()
-            .find(|x| x.marker.is_sof())
+            .flat_map(|x| x.marker())
+            .find(|x| x.is_sof())
             .ok_or(Error::NoSofSegmentFound)?;
 
-        sof.marker().is_progressive_sof()
+        sof_marker.is_progressive_sof()
     }
 
     /// Number of SOS segments
@@ -111,13 +115,13 @@ impl Jpeg {
     pub fn n_sos(&self) -> usize {
         self.segments()
             .into_iter()
-            .filter(|x| matches!(x.marker, Marker::SOS))
+            .filter(|x| matches!(x.marker, Some(Marker::SOS)))
             .count()
     }
 
     pub fn sos(&self) -> Result<Sos, Error> {
         let segment = self
-            .segment_by_marker(&Marker::SOS)
+            .segment_by_marker(Marker::SOS)
             .ok_or(Error::NoSosSegmentFound)?;
 
         Sos::from_data(segment.data())
@@ -145,7 +149,7 @@ impl Jpeg {
         let sos = self.sos()?;
         let n_components = sos.components_specifications.len();
 
-        if let Some(app14) = self.segment_by_marker(&Marker::APP14) {
+        if let Some(app14) = self.segment_by_marker(Marker::APP14) {
             if app14.data().starts_with(b"Adobe\0") {
                 if let Some(color_model) = app14.data().get(11) {
                     return match *color_model {
@@ -166,10 +170,10 @@ impl Jpeg {
         }
     }
 
-    pub fn segment_by_marker(&self, marker: &Marker) -> Option<Segment> {
+    pub fn segment_by_marker(&self, marker: Marker) -> Option<Segment> {
         self.segments
             .iter()
-            .find(|x| x.marker == *marker)
+            .find(|x| x.marker == Some(marker))
             .map(|x| x.segment(self))
     }
 
@@ -205,14 +209,16 @@ impl Jpeg {
 
         let mut segments = Vec::new();
         segments.push(RawSegment {
-            marker: Marker::SOI,
+            marker: Some(Marker::SOI),
             data: 2..2,
         });
 
-        let mut sos = false;
+        let mut entropy_coded_segment = false;
         let byte = &mut [0; 1];
         loop {
-            if sos {
+            dbg!("loop");
+            if entropy_coded_segment {
+                let data_start = cur.position().usize()?;
                 loop {
                     cur.read_exact(byte).map_err(|_| Error::UnexpectedEof)?;
                     if byte == &[MARKER_START] {
@@ -221,6 +227,11 @@ impl Jpeg {
                         if byte == &[0] {
                             continue;
                         } else {
+                            let data_end = cur.position().safe_sub(2)?.usize()?;
+                            segments.push(RawSegment {
+                                marker: None,
+                                data: data_start..data_end,
+                            });
                             break;
                         }
                     }
@@ -252,23 +263,26 @@ impl Jpeg {
             let data_end = len_start.usize()?.safe_add(len.into())?;
 
             let segment = RawSegment {
-                marker,
+                marker: Some(marker),
                 data: data_start..data_end,
             };
 
+            dbg!(&segment);
             tracing::debug!("Found segment {segment:?}");
 
             segments.push(segment);
 
             if marker == Marker::EOI {
+                dbg!("EOI");
                 break;
             } else if marker == Marker::SOS {
-                sos = true;
+                entropy_coded_segment = true;
             }
 
             cur.set_position(len_start.safe_add(len.into())?);
         }
 
+        dbg!("DONE");
         Ok(segments)
     }
 
@@ -286,6 +300,33 @@ impl Jpeg {
 
         self.data = new;
         self.segments = Self::find_segments(&self.data)?;
+        Ok(())
+    }
+
+    /// Replaces this PNG's image data with those from another
+    ///
+    /// Keeps all the metadata from this image but replaces the `IHDR` and
+    /// `IDAT` chunks with the ones from `other`.
+    pub fn replace_image_data(&mut self, other: &Self) -> Result<(), Error> {
+        let mut buf = Vec::with_capacity(other.data.len());
+        buf.extend_from_slice(&MAGIC_BYTES[0..2]);
+
+        for segment in &self.segments {
+            if segment.marker.map_or(false, |x| x.is_metadata()) {
+                buf.extend_from_slice(&self.data[segment.complete_data()]);
+            }
+        }
+
+        for segment in &other.segments {
+            if !matches!(segment.marker, Some(Marker::SOI)) {
+                buf.extend_from_slice(&other.data[segment.complete_data()]);
+            }
+        }
+
+        self.segments = Self::find_segments(&buf).unwrap();
+        dbg!(&self.segments);
+        self.data = buf;
+
         Ok(())
     }
 }
@@ -318,7 +359,7 @@ impl<'a> NewSegment<'a> {
 
 #[derive(Debug)]
 pub struct RawSegment {
-    marker: Marker,
+    marker: Option<Marker>,
     data: Range<usize>,
 }
 
@@ -333,30 +374,26 @@ impl RawSegment {
 
     /// Complete segment including marker and length
     pub fn complete_data(&self) -> Range<usize> {
+        let sub = if self.marker.is_some() { 4 } else { 0 };
+
         self.data
             .start
-            .checked_sub(4)
+            .checked_sub(sub)
             .expect("Unreachable: Marker and length fields always exist")..self.data.end
     }
 }
 
 #[derive(Clone, Debug)]
 pub struct Segment<'a> {
-    marker: Marker,
+    marker: Option<Marker>,
     data: Range<usize>,
     jpeg: &'a Jpeg,
 }
 
 impl<'a> Segment<'a> {
-    pub fn marker(&self) -> Marker {
+    pub fn marker(&self) -> Option<Marker> {
         self.marker
     }
-
-    /*
-    pub fn pos(&self) -> u64 {
-        self.pos
-    }
-     */
 
     pub fn data_pos(&self) -> usize {
         self.data.start
@@ -500,6 +537,29 @@ impl Marker {
             Self::SOF2 => Ok(true),
             _ => Err(Error::NoSofSegmentFound),
         }
+    }
+
+    pub fn is_metadata(&self) -> bool {
+        matches!(
+            self,
+            Self::COM
+                | Self::APP0
+                | Self::APP1
+                | Self::APP2
+                | Self::APP3
+                | Self::APP4
+                | Self::APP5
+                | Self::APP6
+                | Self::APP7
+                | Self::APP8
+                | Self::APP9
+                | Self::APP10
+                | Self::APP11
+                | Self::APP12
+                | Self::APP13
+                | Self::APP14
+                | Self::APP15
+        )
     }
 }
 
