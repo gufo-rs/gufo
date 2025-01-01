@@ -19,4 +19,3 @@ jpeg-encoder = { workspace = true, optional = true }
 gufo-common.workspace = true
 tracing.workspace = true
 thiserror.workspace = true
-image = { version = "0.25.5", git = "https://github.com/image-rs/image.git" }
