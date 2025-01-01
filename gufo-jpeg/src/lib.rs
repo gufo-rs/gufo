@@ -216,7 +216,6 @@ impl Jpeg {
         let mut entropy_coded_segment = false;
         let byte = &mut [0; 1];
         loop {
-            dbg!("loop");
             if entropy_coded_segment {
                 let data_start = cur.position().usize()?;
                 loop {
@@ -267,13 +266,11 @@ impl Jpeg {
                 data: data_start..data_end,
             };
 
-            dbg!(&segment);
             tracing::debug!("Found segment {segment:?}");
 
             segments.push(segment);
 
             if marker == Marker::EOI {
-                dbg!("EOI");
                 break;
             } else if marker == Marker::SOS {
                 entropy_coded_segment = true;
@@ -282,7 +279,6 @@ impl Jpeg {
             cur.set_position(len_start.safe_add(len.into())?);
         }
 
-        dbg!("DONE");
         Ok(segments)
     }
 
@@ -324,7 +320,6 @@ impl Jpeg {
         }
 
         self.segments = Self::find_segments(&buf).unwrap();
-        dbg!(&self.segments);
         self.data = buf;
 
         Ok(())
