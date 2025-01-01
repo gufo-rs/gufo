@@ -5,6 +5,8 @@ crate::utils::maybe_convertible_enum!(
     #[derive(Clone, Copy, Debug, PartialEq, Eq)]
     #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
     /// Operations that have to be applied to orient the image correctly
+    ///
+    /// Rotations are counter-clockwise
     pub enum Orientation {
         Id = 1,
         Rotation90 = 8,
@@ -40,6 +42,7 @@ pub struct UnknownOrientation;
 /// Rotation was not given in multiples of 90
 pub struct InvalidRotation(f64);
 
+/// Counter-clockwise rotation
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum Rotation {
