@@ -267,8 +267,9 @@ impl Png {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use gufo_common::cicp::*;
+
+    use super::*;
 
     #[test]
     fn x() {
