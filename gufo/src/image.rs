@@ -33,15 +33,19 @@ impl Image {
 
     pub fn into_inner(self) -> Vec<u8> {
         match self {
+            #[cfg(feature = "jpeg")]
             Self::Jpeg(jpeg) => jpeg.into_inner(),
+            #[cfg(feature = "png")]
             Self::Png(png) => png.into_inner(),
         }
     }
 
     pub fn dyn_metadata(&self) -> Box<&dyn ImageMetadata> {
-        match self {
-            Self::Png(png) => Box::new(png as &dyn ImageMetadata),
-            Self::Jpeg(jpeg) => Box::new(jpeg as &dyn ImageMetadata),
+        match *self {
+            #[cfg(feature = "png")]
+            Self::Png(ref png) => Box::new(png as &dyn ImageMetadata),
+            #[cfg(feature = "jpeg")]
+            Self::Jpeg(ref jpeg) => Box::new(jpeg as &dyn ImageMetadata),
         }
     }
 
