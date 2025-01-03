@@ -1,5 +1,6 @@
 [package]
 name = "gufo-png"
+description = "Data structure for PNG images."
 version.workspace = true
 license.workspace = true
 edition.workspace = true

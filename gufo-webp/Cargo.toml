@@ -1,5 +1,6 @@
 [package]
 name = "gufo-webp"
+description = "Data structure for WebP images."
 version.workspace = true
 license.workspace = true
 edition.workspace = true
