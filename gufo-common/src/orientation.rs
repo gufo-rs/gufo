@@ -20,7 +20,7 @@ crate::utils::maybe_convertible_enum!(
 );
 
 impl Orientation {
-    pub fn new(rotation: Rotation, mirrored: bool) -> Self {
+    pub fn new(mirrored: bool, rotation: Rotation) -> Self {
         match (mirrored, rotation) {
             (false, Rotation::_0) => Self::Id,
             (false, Rotation::_90) => Self::Rotation90,
@@ -31,6 +31,35 @@ impl Orientation {
             (true, Rotation::_180) => Self::MirroredRotation180,
             (true, Rotation::_270) => Self::MirroredRotation270,
         }
+    }
+
+    /// Combine two orientation changes to one
+    ///
+    /// The `orientation` is applied after `self`
+    #[must_use]
+    pub fn combine(self, orientation: Orientation) -> Orientation {
+        let mut new_orientation = self;
+        if orientation.mirror() {
+            new_orientation = new_orientation.add_mirror_horizontally()
+        }
+        new_orientation = new_orientation.add_rotation(orientation.rotate());
+
+        new_orientation
+    }
+
+    #[must_use]
+    pub fn add_mirror_horizontally(self) -> Orientation {
+        Self::new(!self.mirror(), Rotation::_0 - self.rotate())
+    }
+
+    #[must_use]
+    pub fn add_mirror_vertically(self) -> Orientation {
+        Self::new(!self.mirror(), self.rotate() + Rotation::_180)
+    }
+
+    #[must_use]
+    pub fn add_rotation(self, rotation: Rotation) -> Orientation {
+        Self::new(self.mirror(), self.rotate() + rotation)
     }
 }
 
