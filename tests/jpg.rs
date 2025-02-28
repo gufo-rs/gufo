@@ -9,7 +9,7 @@ fn exif() {
 
     assert_eq!(
         exif.orientation(),
-        gufo_common::orientation::Orientation::Id
+        Some(gufo_common::orientation::Orientation::Id)
     );
 
     assert_eq!(exif.model(), Some(String::from("iPhone 6")));
@@ -41,7 +41,7 @@ fn rotate() {
     exif.decode().unwrap();
     let entry = exif.lookup_entry(gufo_common::field::Orientation).unwrap();
 
-    let pos = jpeg.exif().next().unwrap().data_pos() as usize
+    let pos = jpeg.exif_segments().next().unwrap().data_pos() as usize
         + entry.value_offset_position() as usize
         + EXIF_IDENTIFIER_STRING.len();
 
@@ -53,7 +53,7 @@ fn rotate() {
     let new_rotation = current_orientation.rotate() + gufo_common::orientation::Rotation::_180;
 
     let new_orientation =
-        gufo_common::orientation::Orientation::new(new_rotation, current_orientation.mirror());
+        gufo_common::orientation::Orientation::new(current_orientation.mirror(), new_rotation);
 
     data[pos] = new_orientation as u8;
 
@@ -61,6 +61,6 @@ fn rotate() {
     let exif = gufo_exif::Exif::new(jpeg.exif_data().next().unwrap().to_vec()).unwrap();
     assert_eq!(
         exif.orientation(),
-        gufo_common::orientation::Orientation::Rotation180
+        Some(gufo_common::orientation::Orientation::Rotation180)
     );
 }
