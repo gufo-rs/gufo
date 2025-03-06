@@ -1,5 +1,5 @@
 [workspace.package]
-version = "0.2.0"
+version = "0.2.1"
 license = "MPL-2.0 OR LGPL-2.1-or-later"
 edition = "2021"
 rust-version = "1.80"
