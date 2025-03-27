@@ -12,6 +12,14 @@ pub struct Exif {
     decoder: Mutex<ExifRaw>,
 }
 
+impl Clone for Exif {
+    fn clone(&self) -> Self {
+        Exif {
+            decoder: Mutex::new(self.decoder.lock().unwrap().clone()),
+        }
+    }
+}
+
 impl Exif {
     pub fn new(data: Vec<u8>) -> Result<Self> {
         let mut decoder = ExifRaw::new(data);

@@ -112,7 +112,7 @@ impl RawMetadata {
 
 static_assertions::assert_impl_all!(Metadata: Send, Sync);
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone)]
 pub struct Metadata {
     exif: Vec<Exif>,
     xmp: Vec<Xmp>,

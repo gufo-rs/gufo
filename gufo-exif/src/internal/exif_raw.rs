@@ -79,7 +79,7 @@ impl ValueOffset {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ExifRaw {
     pub raw: Raw,
     pub locations: BTreeMap<TagIfd, Vec<EntryRef>>,
