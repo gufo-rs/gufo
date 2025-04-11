@@ -129,6 +129,23 @@ impl Png {
         Ok(())
     }
 
+    /// Insert chunk before first `IDAT` chunk
+    pub fn insert_chunk(&mut self, chunk: NewChunk) -> Result<(), Error> {
+        let first_idat = self
+            .chunks
+            .iter()
+            .find(|x| x.chunk_type == ChunkType::IDAT)
+            .ok_or(Error::NoIdatChunk)?
+            .chunk_complete
+            .start;
+
+        self.data.splice(first_idat..first_idat, chunk.to_bytes());
+
+        self.chunks = Self::find_chunks(&self.data)?;
+
+        Ok(())
+    }
+
     /// List all chunks in the data
     fn find_chunks(data: &[u8]) -> Result<Vec<RawChunk>, Error> {
         let mut cur = Cursor::new(data);

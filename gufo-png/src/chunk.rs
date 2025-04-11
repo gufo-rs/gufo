@@ -284,3 +284,28 @@ pub struct Itxt<'a> {
     pub translated_keyword: Cow<'a, str>,
     pub text: Cow<'a, str>,
 }
+
+pub struct NewChunk {
+    chunk_type: ChunkType,
+    data: Vec<u8>,
+}
+
+impl NewChunk {
+    pub fn new(chunk_type: ChunkType, data: Vec<u8>) -> NewChunk {
+        NewChunk { chunk_type, data }
+    }
+
+    pub fn to_bytes(&self) -> Vec<u8> {
+        let mut buf = Vec::with_capacity(self.data.len());
+
+        buf.extend((self.data.len() as u32).to_be_bytes());
+        buf.extend(self.chunk_type.bytes());
+        buf.extend(&self.data);
+
+        let crc = crc32fast::hash(&buf[4..]);
+
+        buf.extend(crc.to_be_bytes());
+
+        buf
+    }
+}
