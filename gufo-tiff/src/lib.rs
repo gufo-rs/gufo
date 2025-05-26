@@ -17,6 +17,10 @@ impl Tiff {
         data.starts_with(LE_MAGIC_BYTES) || data.starts_with(BE_MAGIC_BYTES)
     }
 
+    pub fn into_inner(self) -> Vec<u8> {
+        self.data
+    }
+
     pub fn exif(&self) -> Result<&[u8], Error> {
         Ok(&self.data)
     }

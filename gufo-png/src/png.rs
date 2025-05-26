@@ -1,3 +1,4 @@
+use std::collections::BTreeMap;
 use std::io::{Cursor, Read};
 use std::ops::Range;
 use std::slice::SliceIndex;
@@ -127,6 +128,19 @@ impl Png {
         self.data.drain(chunk.complete_data());
         self.chunks = Self::find_chunks(&self.data)?;
         Ok(())
+    }
+
+    pub fn key_value(&self) -> BTreeMap<String, String> {
+        let mut map = BTreeMap::new();
+        for chunk in &self.chunks() {
+            if let Ok((key, value)) = chunk.textual(1024 * 1204) {
+                let mut buf = "\0\0".repeat(value.len());
+                let len = encoding_rs::mem::convert_latin1_to_str(&value, &mut buf);
+                buf.truncate(len);
+                map.insert(String::from_utf8_lossy(key).to_string(), buf);
+            }
+        }
+        map
     }
 
     /// Insert chunk before first `IDAT` chunk

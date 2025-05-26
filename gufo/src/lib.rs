@@ -1,5 +1,7 @@
 mod image;
 
+use std::collections::BTreeMap;
+
 pub use gufo_common as common;
 use gufo_common::error::ErrorWithData;
 use gufo_common::geography;
@@ -21,33 +23,35 @@ pub use image::Image;
 pub struct RawMetadata {
     pub exif: Vec<Vec<u8>>,
     pub xmp: Vec<Vec<u8>>,
+    pub key_value: BTreeMap<String, String>,
 }
 
 impl RawMetadata {
     #[cfg(any(feature = "jpeg", feature = "png", feature = "webp"))]
-    pub fn for_guessed(data: Vec<u8>) -> Result<Self, ErrorWithData<Error>> {
+    pub fn for_guessed(data: Vec<u8>) -> Result<(Self, Vec<u8>), ErrorWithData<Error>> {
         #[cfg(feature = "jpeg")]
         if gufo_jpeg::Jpeg::is_filetype(&data) {
             let jpeg = gufo_jpeg::Jpeg::new(data).map_err(|x| x.map_err(Error::Jpeg))?;
-            return Ok(Self::for_jpeg(&jpeg));
+            return Ok((Self::for_jpeg(&jpeg), jpeg.into_inner()));
         }
 
         #[cfg(feature = "png")]
         if gufo_png::Png::is_filetype(&data) {
             let png = gufo_png::Png::new(data).map_err(|x| x.map_err(Error::Png))?;
-            return Ok(Self::for_png(&png));
+            return Ok((Self::for_png(&png), png.into_inner()));
         }
 
         #[cfg(feature = "tiff")]
         if gufo_tiff::Tiff::is_filetype(&data) {
             let tiff = gufo_tiff::Tiff::new(data).map_err(|x| x.map_err(Error::Tiff))?;
-            return Ok(Self::for_tiff(&tiff));
+            return Ok((Self::for_tiff(&tiff), tiff.into_inner()));
         }
 
         #[cfg(feature = "webp")]
         if gufo_webp::WebP::is_filetype(&data) {
-            let webp = gufo_webp::WebP::new(data).map_err(|x| x.map_err(Error::WebP))?;
-            return Ok(Self::for_webp(&webp));
+            let webp: gufo_webp::WebP =
+                gufo_webp::WebP::new(data).map_err(|x| x.map_err(Error::WebP))?;
+            return Ok((Self::for_webp(&webp), webp.into_inner()));
         }
 
         Err(ErrorWithData::new(Error::NoSupportedFiletypeFound, data))
@@ -71,8 +75,8 @@ impl RawMetadata {
         let mut raw_metadata = Self::default();
 
         raw_metadata.exif.extend(png.exif());
-
         raw_metadata.xmp.extend(png.xmp());
+        raw_metadata.key_value.extend(png.key_value());
 
         raw_metadata
     }
@@ -150,7 +154,7 @@ impl Metadata {
 
     #[cfg(any(feature = "jpeg", feature = "png", feature = "tiff", feature = "webp"))]
     pub fn for_guessed(data: Vec<u8>) -> Result<Self, ErrorWithData<Error>> {
-        RawMetadata::for_guessed(data).map(|x| x.into_metadata())
+        RawMetadata::for_guessed(data).map(|x| x.0.into_metadata())
     }
 
     #[cfg(feature = "jpeg")]
