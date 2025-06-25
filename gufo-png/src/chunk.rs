@@ -295,6 +295,23 @@ impl NewChunk {
         NewChunk { chunk_type, data }
     }
 
+    /// Create new tEXt chunk
+    pub fn text(keyword: &str, text: &str) -> NewChunk {
+        let mut text_encoded = vec![0; text.len()];
+        let len =
+            encoding_rs::mem::convert_utf8_to_latin1_lossy(text.as_bytes(), &mut text_encoded);
+        text_encoded.truncate(len);
+
+        let mut data = keyword.as_bytes().to_vec();
+        data.push(0);
+        data.extend(text_encoded);
+
+        NewChunk {
+            chunk_type: ChunkType::tEXt,
+            data,
+        }
+    }
+
     pub fn to_bytes(&self) -> Vec<u8> {
         let mut buf = Vec::with_capacity(self.data.len());
 
