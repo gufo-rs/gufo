@@ -53,6 +53,24 @@ impl Cicp {
             video_full_range_flag,
         })
     }
+
+    /// Get CICP values as bytes
+    ///
+    /// ```
+    /// # use gufo_common::cicp::*;
+    /// let bytes = [0x09, 0x10, 0x00, 0x01];
+    /// let cicp = Cicp::from_bytes(&bytes).unwrap();
+    ///
+    /// assert_eq!(cicp.to_bytes(), bytes);
+    /// ```
+    pub fn to_bytes(&self) -> [u8; 4] {
+        [
+            self.color_primaries.into(),
+            self.transfer_characteristics.into(),
+            self.matrix_coefficients.into(),
+            self.video_full_range_flag.into(),
+        ]
+    }
 }
 
 impl From<Cicp> for Vec<u8> {
