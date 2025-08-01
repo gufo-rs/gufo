@@ -58,7 +58,7 @@ dependencies = [
 
 [[package]]
 name = "gufo"
-version = "0.3.0-alpha.1"
+version = "0.3.0-beta"
 dependencies = [
  "chrono",
  "gufo",
@@ -75,7 +75,7 @@ dependencies = [
 
 [[package]]
 name = "gufo-common"
-version = "1.0.0-alpha.1"
+version = "1.0.0-beta"
 dependencies = [
  "chrono",
  "paste",
@@ -85,7 +85,7 @@ dependencies = [
 
 [[package]]
 name = "gufo-exif"
-version = "0.3.0-alpha.1"
+version = "0.3.0-beta"
 dependencies = [
  "chrono",
  "gufo-common",
@@ -96,7 +96,7 @@ dependencies = [
 
 [[package]]
 name = "gufo-jpeg"
-version = "0.3.0-alpha.1"
+version = "0.3.0-beta"
 dependencies = [
  "gufo-common",
  "jpeg-encoder",
@@ -106,7 +106,7 @@ dependencies = [
 
 [[package]]
 name = "gufo-png"
-version = "0.3.0-alpha.1"
+version = "0.3.0-beta"
 dependencies = [
  "crc32fast",
  "encoding_rs",
@@ -118,7 +118,7 @@ dependencies = [
 
 [[package]]
 name = "gufo-tiff"
-version = "0.3.0-alpha.1"
+version = "0.3.0-beta"
 dependencies = [
  "gufo-common",
  "thiserror",
@@ -126,7 +126,7 @@ dependencies = [
 
 [[package]]
 name = "gufo-tools"
-version = "0.3.0-alpha.1"
+version = "0.3.0-beta"
 dependencies = [
  "gufo",
  "gufo-exif",
@@ -136,7 +136,7 @@ dependencies = [
 
 [[package]]
 name = "gufo-webp"
-version = "0.3.0-alpha.1"
+version = "0.3.0-beta"
 dependencies = [
  "gufo-common",
  "thiserror",
@@ -144,7 +144,7 @@ dependencies = [
 
 [[package]]
 name = "gufo-xmp"
-version = "0.3.0-alpha.1"
+version = "0.3.0-beta"
 dependencies = [
  "chrono",
  "gufo-common",
