@@ -20,4 +20,16 @@ fn main() {
 
         println!("{:x?}: {s}", segment.marker());
     }
+
+    println!("Start of frame: {:#?}", jpeg.sof());
+
+    println!("Color model: {:?}", jpeg.color_model());
+    for n in 0..=3 {
+        println!(
+            "Components specification parameters {n}: {:?}",
+            jpeg.components_specification_parameters(n)
+        );
+    }
+
+    println!("Start of scan: {:#?}", jpeg.sos());
 }
