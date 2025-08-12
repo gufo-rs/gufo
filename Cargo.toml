@@ -43,6 +43,7 @@ gufo-png = { version = "0.2.3", path = "gufo-png" }
 gufo-tiff = { version = "0.2.0", path = "gufo-tiff" }
 gufo-webp = { version = "0.2.0", path = "gufo-webp" }
 gufo-xmp = { version = "0.2.0", path = "gufo-xmp" }
+indexmap = "2.10"
 jpeg-encoder = "0.6.0"
 hex = "0.4.0"
 miniz_oxide = "0.8.0"

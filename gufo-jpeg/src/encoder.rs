@@ -59,12 +59,10 @@ impl crate::Jpeg {
     > {
         let dqts = self.dqts()?;
 
-        let luma_parameters = self.components_specification_parameters(0)?;
-        let luma_table = dqts.get(&luma_parameters.tq).ok_or(Error::MissingDqt)?;
+        let luma_table = dqts.get_index(0).ok_or(Error::MissingDqt)?.1;
         let luma = jpeg_encoder::QuantizationTableType::Custom(Box::new(luma_table.qk_ordered()));
 
-        let chroma_parameters = self.components_specification_parameters(1)?;
-        let chroma_table = dqts.get(&chroma_parameters.tq).ok_or(Error::MissingDqt)?;
+        let chroma_table = dqts.get_index(1).ok_or(Error::MissingDqt)?.1;
         let chroma: QuantizationTableType =
             jpeg_encoder::QuantizationTableType::Custom(Box::new(chroma_table.qk_ordered()));
 

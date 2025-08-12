@@ -15,7 +15,8 @@ default = []
 encoder = ["dep:jpeg-encoder"]
 
 [dependencies]
-jpeg-encoder = { workspace = true, optional = true }
 gufo-common.workspace = true
+indexmap.workspace = true
+jpeg-encoder = { workspace = true, optional = true }
 tracing.workspace = true
 thiserror.workspace = true

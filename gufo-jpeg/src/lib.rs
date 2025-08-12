@@ -4,13 +4,13 @@
 mod encoder;
 mod segments;
 
-use std::collections::BTreeMap;
 use std::io::{Cursor, Read};
 use std::ops::Range;
 
 use gufo_common::error::ErrorWithData;
 use gufo_common::math::*;
 use gufo_common::prelude::*;
+use indexmap::IndexMap;
 pub use segments::*;
 
 pub const EXIF_IDENTIFIER_STRING: &[u8] = b"Exif\0\0";
@@ -68,7 +68,7 @@ impl Jpeg {
     }
 
     /// Quantization tables with `Tq` value as key
-    pub fn dqts(&self) -> Result<BTreeMap<u8, Dqt>, Error> {
+    pub fn dqts(&self) -> Result<IndexMap<u8, Dqt>, Error> {
         let segments = self.segments();
 
         let mut dqts = Vec::new();
@@ -80,7 +80,7 @@ impl Jpeg {
             dqts.push(Dqt::from_data(data)?);
         }
 
-        let mut map = BTreeMap::new();
+        let mut map = IndexMap::new();
         for dqt in dqts.into_iter().flatten() {
             map.insert(dqt.tq(), dqt);
         }
@@ -146,8 +146,8 @@ impl Jpeg {
     }
 
     pub fn color_model(&self) -> Result<ColorModel, Error> {
-        let sos = self.sos()?;
-        let n_components = sos.components_specifications.len();
+        let sof = self.sof()?;
+        let n_components = sof.parameters.len();
 
         if let Some(app14) = self.segment_by_marker(Marker::APP14) {
             if app14.data().starts_with(b"Adobe\0") {
