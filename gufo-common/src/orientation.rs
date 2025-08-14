@@ -4,6 +4,7 @@ crate::utils::maybe_convertible_enum!(
     #[repr(u16)]
     #[derive(Clone, Copy, Debug, PartialEq, Eq)]
     #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(feature = "zvariant", derive(zvariant::Type))]
     /// Operations that have to be applied to orient the image correctly
     ///
     /// Rotations are counter-clockwise
