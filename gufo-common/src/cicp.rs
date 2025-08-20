@@ -91,7 +91,8 @@ utils::convertible_enum!(
         Srgb = 1,
         Unspecified = 2,
         Rec2020 = 9,
-        DciP3 = 12,
+        DciP3 = 11,
+        DisplayP3 = 12,
     }
 );
 
