@@ -114,6 +114,8 @@ utils::convertible_enum!(
         Gamma22Bit12 = 15,
         /// Perceptual quantization (PQ) system
         Pq = 16,
+        /// SMPTE ST 428-1
+        Dci = 17,
         /// Hybrid log-gamma (HLG) system
         Hlg = 18,
     }
