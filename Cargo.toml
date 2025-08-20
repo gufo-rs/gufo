@@ -36,7 +36,7 @@ cast_possible_wrap = "forbid"
 chrono = { version = "0.4.38", default-features = false, features = ["std"] }
 crc32fast = "1.2.0"
 gufo = { version = "0.3.0-beta", path = "gufo" }
-gufo-common = { version = "1.0.0-beta", path = "gufo-common" }
+gufo-common = { version = "1.0.0-beta.2", path = "gufo-common" }
 gufo-exif = { version = "0.3.0-beta", path = "gufo-exif" }
 gufo-jpeg = { version = "0.3.0-beta.1", path = "gufo-jpeg" }
 gufo-png = { version = "0.3.0-beta", path = "gufo-png" }
