@@ -1,5 +1,5 @@
 [workspace.package]
-version = "0.3.0-beta"
+version = "0.3.0"
 license = "MPL-2.0 OR LGPL-2.1-or-later"
 edition = "2021"
 rust-version = "1.80"
@@ -35,14 +35,14 @@ cast_possible_wrap = "forbid"
 [workspace.dependencies]
 chrono = { version = "0.4.38", default-features = false, features = ["std"] }
 crc32fast = "1.2.0"
-gufo = { version = "0.3.0-beta", path = "gufo" }
-gufo-common = { version = "1.0.0-beta.2", path = "gufo-common" }
-gufo-exif = { version = "0.3.0-beta", path = "gufo-exif" }
-gufo-jpeg = { version = "0.3.0-beta.1", path = "gufo-jpeg" }
-gufo-png = { version = "0.3.0-beta", path = "gufo-png" }
-gufo-tiff = { version = "0.3.0-beta", path = "gufo-tiff" }
-gufo-webp = { version = "0.3.0-beta", path = "gufo-webp" }
-gufo-xmp = { version = "0.3.0-beta", path = "gufo-xmp" }
+gufo = { version = "0.3.0", path = "gufo" }
+gufo-common = { version = "1.0.0", path = "gufo-common" }
+gufo-exif = { version = "0.3.0", path = "gufo-exif" }
+gufo-jpeg = { version = "0.3.0", path = "gufo-jpeg" }
+gufo-png = { version = "0.3.0", path = "gufo-png" }
+gufo-tiff = { version = "0.3.0", path = "gufo-tiff" }
+gufo-webp = { version = "0.3.0", path = "gufo-webp" }
+gufo-xmp = { version = "0.3.0", path = "gufo-xmp" }
 indexmap = "2.10"
 jpeg-encoder = "0.6.0"
 hex = "0.4.0"
