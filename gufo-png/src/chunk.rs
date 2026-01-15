@@ -291,12 +291,12 @@ pub struct NewChunk {
 }
 
 impl NewChunk {
-    pub fn new(chunk_type: ChunkType, data: Vec<u8>) -> NewChunk {
-        NewChunk { chunk_type, data }
+    pub fn new(chunk_type: ChunkType, data: Vec<u8>) -> Self {
+        Self { chunk_type, data }
     }
 
     /// Create new tEXt chunk
-    pub fn text(keyword: &str, text: &str) -> NewChunk {
+    pub fn text(keyword: &str, text: &str) -> Self {
         let mut text_encoded = vec![0; text.len()];
         let len =
             encoding_rs::mem::convert_utf8_to_latin1_lossy(text.as_bytes(), &mut text_encoded);
@@ -308,6 +308,19 @@ impl NewChunk {
 
         NewChunk {
             chunk_type: ChunkType::tEXt,
+            data,
+        }
+    }
+
+    pub fn phys_meter(x_pixels_per_meter: u32, y_pixels_per_meter: u32) -> Self {
+        let mut data = Vec::with_capacity(9);
+        data.extend_from_slice(&x_pixels_per_meter.to_be_bytes());
+        data.extend_from_slice(&y_pixels_per_meter.to_be_bytes());
+        // Set unit to meter
+        data.push(1);
+
+        Self {
+            chunk_type: ChunkType::pHYs,
             data,
         }
     }
