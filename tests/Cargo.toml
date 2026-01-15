@@ -13,7 +13,12 @@ gufo-exif.workspace = true
 gufo-common.workspace = true
 gufo-jpeg.workspace = true
 gufo-xmp.workspace = true
+gufo = { workspace = true, features = ["jpeg"] }
 
 [[test]]
 name = "JPEG"
 path = "jpg.rs"
+
+[[test]]
+name = "gthumb"
+path = "gthumb.rs"

@@ -98,7 +98,7 @@ dependencies = [
 
 [[package]]
 name = "gufo-exif"
-version = "0.3.0"
+version = "0.3.1"
 dependencies = [
  "chrono",
  "gufo-common",
@@ -400,6 +400,7 @@ dependencies = [
 name = "tests"
 version = "0.0.0"
 dependencies = [
+ "gufo",
  "gufo-common",
  "gufo-exif",
  "gufo-jpeg",
