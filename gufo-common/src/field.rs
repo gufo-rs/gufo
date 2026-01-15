@@ -31,6 +31,7 @@ macros::make_tags![
     (0x112, ThumbnailOrientation, Ifd::Thumbnail),
     (0x11A, XResolution, Ifd::Primary, xmp = Tiff),
     (0x11B, YResolution, Ifd::Primary, xmp = Tiff),
+    (0x128, ResolutionUnit, Ifd::Primary, xmp = Tiff),
     /// The XMP equivalent is [`CreatorTool`]
     (0x131, Software, Ifd::Primary),
 
