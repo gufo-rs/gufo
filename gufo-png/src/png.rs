@@ -120,7 +120,7 @@ impl Png {
     }
 
     /// Returns all chunks
-    pub fn chunks(&self) -> Vec<Chunk> {
+    pub fn chunks(&self) -> Vec<Chunk<'_>> {
         self.chunks.iter().map(|x| x.chunk(self)).collect()
     }
 

@@ -266,7 +266,7 @@ impl Exif {
         }
     }
 
-    pub fn decoder(&mut self) -> std::sync::MutexGuard<ExifRaw> {
+    pub fn decoder(&mut self) -> std::sync::MutexGuard<'_, ExifRaw> {
         self.decoder.lock().unwrap()
     }
 

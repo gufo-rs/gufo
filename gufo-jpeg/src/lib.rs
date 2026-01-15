@@ -55,12 +55,12 @@ impl Jpeg {
     }
 
     /// List all segments in their order of appearance
-    pub fn segments(&self) -> Vec<Segment> {
+    pub fn segments(&self) -> Vec<Segment<'_>> {
         self.segments.iter().map(|x| x.segment(self)).collect()
     }
 
     /// List all segments with the given marker
-    pub fn segments_marker(&self, marker: Marker) -> impl Iterator<Item = Segment> {
+    pub fn segments_marker(&self, marker: Marker) -> impl Iterator<Item = Segment<'_>> {
         self.segments
             .iter()
             .filter(move |x| x.marker == Some(marker))
@@ -92,7 +92,7 @@ impl Jpeg {
         let segment = self
             .segments()
             .into_iter()
-            .find(|x| x.marker.map_or(false, |x| x.is_sof()))
+            .find(|x| x.marker.is_some_and(|x| x.is_sof()))
             .ok_or(Error::NoSofSegmentFound)?;
 
         Sof::from_data(segment.data())
@@ -170,14 +170,14 @@ impl Jpeg {
         }
     }
 
-    pub fn segment_by_marker(&self, marker: Marker) -> Option<Segment> {
+    pub fn segment_by_marker(&self, marker: Marker) -> Option<Segment<'_>> {
         self.segments
             .iter()
             .find(|x| x.marker == Some(marker))
             .map(|x| x.segment(self))
     }
 
-    pub fn exif_segments(&self) -> impl Iterator<Item = Segment> {
+    pub fn exif_segments(&self) -> impl Iterator<Item = Segment<'_>> {
         self.segments_marker(Marker::APP1)
             .filter(|x| x.data().starts_with(EXIF_IDENTIFIER_STRING))
     }
@@ -187,7 +187,7 @@ impl Jpeg {
             .filter_map(|x| x.data().get(EXIF_IDENTIFIER_STRING.len()..))
     }
 
-    pub fn xmp_segments(&self) -> impl Iterator<Item = Segment> {
+    pub fn xmp_segments(&self) -> impl Iterator<Item = Segment<'_>> {
         self.segments_marker(Marker::APP1)
             .filter(|x| x.data().starts_with(XMP_IDENTIFIER_STRING))
     }
@@ -308,7 +308,7 @@ impl Jpeg {
         buf.extend_from_slice(&MAGIC_BYTES[0..2]);
 
         for segment in &self.segments {
-            if segment.marker.map_or(false, |x| x.is_metadata()) {
+            if segment.marker.is_some_and(|x| x.is_metadata()) {
                 buf.extend_from_slice(&self.data[segment.complete_data()]);
             }
         }

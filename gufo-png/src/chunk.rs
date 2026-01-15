@@ -49,7 +49,7 @@ impl<'a> Chunk<'a> {
     }
 
     /// Returns the contents of an [`iTXt`](ChunkType::iTXt) chunk
-    pub fn itxt(&self) -> Result<Itxt, Error> {
+    pub fn itxt(&self) -> Result<Itxt<'_>, Error> {
         let mut cur = Cursor::new(self.chunk_data());
 
         let keyword = cur.slice_until(b'\0')?;
@@ -126,7 +126,7 @@ impl<'a> Chunk<'a> {
     ///
     /// XMP data stored in accordance with XMP Specification Part 3: Storage in
     /// Files, Section 1.1.5
-    pub fn xmp(&self) -> Result<Option<Cow<str>>, Error> {
+    pub fn xmp(&self) -> Result<Option<Cow<'_, str>>, Error> {
         if self.chunk_type() == ChunkType::iTXt && self.keyword()? == XMP_KEYWORD {
             return Ok(Some(self.itxt()?.text));
         }
