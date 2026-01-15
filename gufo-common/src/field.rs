@@ -27,9 +27,10 @@ macros::make_tags![
     (0x10F, Make, Ifd::Primary, xmp = Tiff),
     (0x110, Model, Ifd::Primary, xmp = Tiff),
     /// Image orientation and mirroring
-    (0x112, Orientation, Ifd::Primary, xmp = Exif),
+    (0x112, Orientation, Ifd::Primary, xmp = Tiff),
     (0x112, ThumbnailOrientation, Ifd::Thumbnail),
-    (0x11A, XResolution, Ifd::Primary, xmp = Exif),
+    (0x11A, XResolution, Ifd::Primary, xmp = Tiff),
+    (0x11B, YResolution, Ifd::Primary, xmp = Tiff),
     /// The XMP equivalent is [`CreatorTool`]
     (0x131, Software, Ifd::Primary),
 
