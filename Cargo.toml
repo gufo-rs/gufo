@@ -1,5 +1,5 @@
 [workspace.package]
-version = "0.3.0"
+version = "0.4.0-alpha"
 license = "MPL-2.0 OR LGPL-2.1-or-later"
 edition = "2021"
 rust-version = "1.80"
@@ -37,16 +37,16 @@ chrono = { version = "0.4.38", default-features = false, features = ["std"] }
 crc32fast = "1.2.0"
 gufo = { version = "0.3.0", path = "gufo" }
 gufo-common = { version = "1.0.0", path = "gufo-common" }
-gufo-exif = { version = "0.3.0", path = "gufo-exif" }
-gufo-jpeg = { version = "0.3.0", path = "gufo-jpeg" }
-gufo-png = { version = "0.3.0", path = "gufo-png" }
-gufo-tiff = { version = "0.3.0", path = "gufo-tiff" }
-gufo-webp = { version = "0.3.0", path = "gufo-webp" }
-gufo-xmp = { version = "0.3.0", path = "gufo-xmp" }
+gufo-exif = { version = "0.4.0", path = "gufo-exif" }
+gufo-jpeg = { version = "0.4.0", path = "gufo-jpeg" }
+gufo-png = { version = "0.4.0", path = "gufo-png" }
+gufo-tiff = { version = "0.4.0", path = "gufo-tiff" }
+gufo-webp = { version = "0.4.0", path = "gufo-webp" }
+gufo-xmp = { version = "0.4.0", path = "gufo-xmp" }
 indexmap = "2.10"
-jpeg-encoder = "0.6.0"
+jpeg-encoder = "0.7.0"
 hex = "0.4.0"
-miniz_oxide = "0.8.0"
+miniz_oxide = "0.9.0"
 paste = "1.0.15"
 serde = { version = "1.0.202", features = ["derive"] }
 static_assertions = "1.1.0"
