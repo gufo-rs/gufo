@@ -3,6 +3,8 @@ use std::ops::Range;
 use gufo_common::read::ReadError;
 use miniz_oxide::inflate::DecompressError;
 
+use crate::ChunkType;
+
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
     #[error("Unexpected end of file")]
@@ -25,4 +27,8 @@ pub enum Error {
     IndexNotInData(Range<usize>),
     #[error("The chunk is not of type zTXt or tEXt")]
     NotTextualChunk,
+    #[error("Expected chunk type {0:?} but got {1:?}")]
+    UnexpectedChunkType(ChunkType, ChunkType),
+    #[error("Unsupported pHYs unit: {0}")]
+    UnsupportedPhysUnit(u8),
 }

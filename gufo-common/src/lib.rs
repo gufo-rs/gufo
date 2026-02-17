@@ -8,6 +8,7 @@ pub mod geography;
 pub mod image;
 pub mod math;
 pub mod orientation;
+pub mod phyiscal_dimension;
 pub mod prelude;
 pub mod read;
 pub mod utils;

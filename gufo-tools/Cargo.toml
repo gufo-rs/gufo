@@ -5,6 +5,7 @@ license.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 repository.workspace = true
+publish = false
 
 [dependencies]
 gufo-exif.workspace = true

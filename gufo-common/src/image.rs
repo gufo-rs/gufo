@@ -1,4 +1,4 @@
-use crate::cicp::Cicp;
+use crate::{cicp::Cicp, phyiscal_dimension::PhysicalDimensions};
 
 pub trait ImageFormat {
     /// Usually checks if data start with correct magic bytes
@@ -16,6 +16,10 @@ pub trait ImageMetadata {
 
     fn xmp(&self) -> Vec<Vec<u8>> {
         Vec::new()
+    }
+
+    fn physical_dimensions(&self) -> Option<PhysicalDimensions> {
+        None
     }
 }
 

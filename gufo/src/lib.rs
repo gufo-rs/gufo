@@ -6,6 +6,7 @@ pub use gufo_common as common;
 use gufo_common::error::ErrorWithData;
 use gufo_common::geography;
 use gufo_common::orientation::Orientation;
+use gufo_common::phyiscal_dimension::PhysicalDimensions;
 use gufo_common::prelude::*;
 use gufo_exif::Exif;
 #[cfg(feature = "jpeg")]
@@ -24,6 +25,7 @@ pub struct RawMetadata {
     pub exif: Vec<Vec<u8>>,
     pub xmp: Vec<Vec<u8>>,
     pub key_value: BTreeMap<String, String>,
+    physical_dimensions: Option<PhysicalDimensions>,
 }
 
 impl RawMetadata {
@@ -77,6 +79,7 @@ impl RawMetadata {
         raw_metadata.exif.extend(png.exif());
         raw_metadata.xmp.extend(png.xmp());
         raw_metadata.key_value.extend(png.key_value());
+        raw_metadata.physical_dimensions = png.physical_dimensions();
 
         raw_metadata
     }
@@ -110,7 +113,13 @@ impl RawMetadata {
             let _ = metadata.add_raw_xmp(xmp);
         }
 
+        metadata.physical_dimensions = self.physical_dimensions;
+
         metadata
+    }
+
+    pub fn physical_dimensions(&self) -> Option<PhysicalDimensions> {
+        self.physical_dimensions.clone()
     }
 }
 
@@ -120,6 +129,7 @@ static_assertions::assert_impl_all!(Metadata: Send, Sync);
 pub struct Metadata {
     exif: Vec<Exif>,
     xmp: Vec<Xmp>,
+    physical_dimensions: Option<PhysicalDimensions>,
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -266,5 +276,9 @@ impl Metadata {
 
     pub fn user_comment(&self) -> Option<String> {
         self.get_exif(Exif::user_comment)
+    }
+
+    pub fn phyiscal_dimensions(&self) -> Option<PhysicalDimensions> {
+        self.physical_dimensions.clone()
     }
 }

@@ -2,6 +2,9 @@ use std::borrow::Cow;
 use std::io::{Cursor, Read, Seek};
 use std::ops::Range;
 
+use gufo_common::phyiscal_dimension::{
+    PhysicalDimension, PhysicalDimensionUnit, PhysicalDimensions,
+};
 use gufo_common::read::{ReadExt, SliceExt};
 
 pub use crate::*;
@@ -217,6 +220,42 @@ impl<'a> Chunk<'a> {
         exif_with_prefix
             .strip_prefix(b"Exif\0\0")
             .map(|x| x.to_vec())
+    }
+
+    pub fn phys(&self) -> Result<PhysicalDimensions, Error> {
+        if self.chunk_type() != ChunkType::pHYs {
+            return Err(Error::UnexpectedChunkType(
+                ChunkType::pHYs,
+                self.chunk_type(),
+            ));
+        }
+
+        let mut data = Cursor::new(self.chunk_data());
+
+        let x = {
+            let mut buf = [0; 4];
+            data.read_exact(&mut buf)
+                .or(Err(Error::UnexpectedEndOfChunkData))?;
+            u32::from_be_bytes(buf)
+        };
+
+        let y = {
+            let mut buf = [0; 4];
+            data.read_exact(&mut buf)
+                .or(Err(Error::UnexpectedEndOfChunkData))?;
+            u32::from_be_bytes(buf)
+        };
+
+        let unit = data.read_byte().or(Err(Error::UnexpectedEndOfChunkData))?;
+
+        if unit != 1 {
+            return Err(Error::UnsupportedPhysUnit(unit));
+        }
+
+        Ok(PhysicalDimensions::new(
+            PhysicalDimension::new(x as f64, PhysicalDimensionUnit::Meter),
+            PhysicalDimension::new(y as f64, PhysicalDimensionUnit::Meter),
+        ))
     }
 
     pub fn unsafe_raw_chunk(self) -> RawChunk {

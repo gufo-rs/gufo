@@ -1,3 +1,4 @@
+use gufo::common::image::ImageMetadata;
 use tracing_subscriber::prelude::*;
 
 fn main() {
@@ -40,6 +41,8 @@ fn show_png(png: gufo::png::Png) {
         }
     }
     show_repeats(&mut n_repeats, &last_type);
+
+    println!("Physical Dimensions: {:?}", png.physical_dimensions());
 }
 
 fn show_jpeg(jpeg: gufo::jpeg::Jpeg) {

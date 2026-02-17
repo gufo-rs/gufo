@@ -4,6 +4,7 @@ use std::ops::Range;
 use std::slice::SliceIndex;
 
 use gufo_common::cicp::Cicp;
+use gufo_common::phyiscal_dimension::PhysicalDimensions;
 use gufo_common::prelude::*;
 
 pub use super::*;
@@ -77,6 +78,10 @@ impl ImageMetadata for Png {
         result.append(&mut legacy_xmp);
 
         result
+    }
+
+    fn physical_dimensions(&self) -> Option<PhysicalDimensions> {
+        self.chunks().iter().find_map(|x| x.phys().ok())
     }
 }
 
