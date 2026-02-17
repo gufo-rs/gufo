@@ -5,6 +5,7 @@ use std::collections::BTreeMap;
 
 pub use gufo_common as common;
 use gufo_common::error::ErrorWithData;
+use gufo_common::physical_dimension::PixelDensity;
 use gufo_common::prelude::*;
 use gufo_exif::ExifOwned;
 #[cfg(feature = "jpeg")]
@@ -23,6 +24,7 @@ pub struct RawMetadata {
     pub exif: Vec<Vec<u8>>,
     pub xmp: Vec<Vec<u8>>,
     pub key_value: BTreeMap<String, String>,
+    pixel_density: Option<PixelDensity>,
 }
 
 impl RawMetadata {
@@ -39,6 +41,7 @@ impl RawMetadata {
         raw_metadata.exif.extend(metadata.exif());
         raw_metadata.xmp.extend(metadata.xmp());
         raw_metadata.key_value.extend(metadata.key_value());
+        raw_metadata.pixel_density = metadata.pixel_density();
 
         raw_metadata
     }
@@ -80,8 +83,13 @@ impl RawMetadata {
         }
 
         metadata.key_value.extend(self.key_value);
+        metadata.pixel_density = self.pixel_density;
 
         metadata
+    }
+
+    pub fn pixel_density(&self) -> Option<PixelDensity> {
+        self.pixel_density.clone()
     }
 }
 
@@ -92,6 +100,7 @@ pub struct Metadata {
     exif: Vec<ExifOwned>,
     xmp: Vec<Xmp>,
     key_value: BTreeMap<String, String>,
+    pixel_density: Option<PixelDensity>,
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -211,5 +220,9 @@ impl Metadata {
         self.lookup_exif(exif_op)
             .or_else(|| self.lookup_xmp(xmp_op))
             .or_else(|| self.lookup_keyval(keyval_op))
+    }
+
+    pub fn pixel_density(&self) -> Option<PixelDensity> {
+        self.pixel_density.clone()
     }
 }

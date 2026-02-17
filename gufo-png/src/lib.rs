@@ -16,8 +16,7 @@ pub use png::*;
 /// ```
 /// let data = std::fs::read("../test-images/images/exif/exif.png").unwrap();
 /// let mut png = gufo_png::Png::new(data).unwrap();
-///
-/// assert_eq!(png.chunks().len(), 43);
+/// assert_eq!(png.chunks().len(), 9);
 ///
 /// // Find one Exif chunk
 /// let chunk = png
@@ -29,7 +28,7 @@ pub use png::*;
 /// // Remove that Exif chunk
 /// gufo_png::remove_chunk!(png, chunk);
 ///
-/// assert_eq!(png.chunks().len(), 42);
+/// assert_eq!(png.chunks().len(), 8);
 /// ```
 #[macro_export]
 macro_rules! remove_chunk {

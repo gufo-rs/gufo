@@ -9,9 +9,11 @@ use std::ops::Range;
 
 use gufo_common::error::ErrorWithData;
 use gufo_common::math::*;
+use gufo_common::physical_dimension::PixelDensity;
 use gufo_common::prelude::*;
 use indexmap::IndexMap;
 pub use segments::*;
+use zerocopy::FromBytes;
 
 pub const EXIF_IDENTIFIER_STRING: &[u8] = b"Exif\0\0";
 pub const XMP_IDENTIFIER_STRING: &[u8] = b"http://ns.adobe.com/xap/1.0/\0";
@@ -39,6 +41,10 @@ impl ImageMetadata for Jpeg {
 
     fn xmp(&self) -> Vec<Vec<u8>> {
         self.exif_data().map(|x| x.to_vec()).collect()
+    }
+
+    fn pixel_density(&self) -> Option<PixelDensity> {
+        self.jfif().ok().and_then(|(jfif, _)| jfif.pixel_density())
     }
 }
 
@@ -195,6 +201,19 @@ impl Jpeg {
     pub fn xmp_data(&self) -> impl Iterator<Item = &[u8]> {
         self.xmp_segments()
             .filter_map(|x| x.data().get(XMP_IDENTIFIER_STRING.len()..))
+    }
+
+    pub fn jfif(&self) -> Result<(&Jfif, &[u8]), Error> {
+        if let Some(jfif) = self.segments().get(1) {
+            if jfif.data().get(0..5) == Some(b"JFIF\0") {
+                if let Some(data) = jfif.data().get(5..) {
+                    return Jfif::ref_from_prefix(data)
+                        .map_err(|err| Error::JfifUnavailable(format!("{err:?}")));
+                }
+            }
+        }
+
+        Err(Error::JfifUnavailable("Not found".to_string()))
     }
 
     fn find_segments(data: &[u8]) -> Result<Vec<RawSegment>, Error> {
@@ -433,6 +452,8 @@ pub enum Error {
     MissingComponentSpecificationParameters,
     #[error("Missing quantization table")]
     MissingDqt,
+    #[error("JFIF unavailable: {0}")]
+    JfifUnavailable(String),
 }
 
 gufo_common::utils::convertible_enum!(
@@ -465,6 +486,7 @@ gufo_common::utils::convertible_enum!(
         /// Define quantization table(s)
         DQT = 0xDB,
 
+        /// JFIF (pixel density, aspect ratio)
         APP0 = 0xE0,
         /// Exif, XMP
         APP1 = 0xE1,

@@ -1,3 +1,4 @@
+use gufo::common::image::ImageMetadata;
 use tracing_subscriber::prelude::*;
 
 fn main() {
@@ -40,16 +41,25 @@ fn show_png(png: gufo::png::Png) {
         }
     }
     show_repeats(&mut n_repeats, &last_type);
+
+    println!("Physical Dimensions: {:?}", png.pixel_density());
 }
 
 fn show_jpeg(jpeg: gufo::jpeg::Jpeg) {
     println!("JPEG Segments:");
     for segment in jpeg.segments() {
-        println!(" - {:?} ({} bytes)", segment.marker(), segment.data().len());
+        println!(
+            " - {:?} ({} bytes) {}",
+            segment.marker(),
+            segment.data().len(),
+            segment.marker().and_then(|x| x.info()).unwrap_or_default()
+        );
     }
     println!("DQT:");
     for (i, _) in jpeg.dqts().unwrap() {
         println!(" - Tq: {i}");
     }
     println!("Color Model: {:?}", jpeg.color_model().unwrap());
+
+    println!("X: {:#?}", jpeg.jfif().unwrap());
 }

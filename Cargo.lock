@@ -561,6 +561,7 @@ dependencies = [
  "jpeg-encoder",
  "thiserror",
  "tracing",
+ "zerocopy",
 ]
 
 [[package]]

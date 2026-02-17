@@ -1,6 +1,7 @@
 use std::collections::BTreeMap;
 
 use crate::cicp::Cicp;
+use crate::physical_dimension::PixelDensity;
 
 pub trait ImageFormat {
     /// Usually checks if data start with correct magic bytes
@@ -22,6 +23,10 @@ pub trait ImageMetadata {
 
     fn key_value(&self) -> BTreeMap<String, String> {
         BTreeMap::new()
+    }
+
+    fn pixel_density(&self) -> Option<PixelDensity> {
+        None
     }
 }
 

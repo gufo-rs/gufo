@@ -9,6 +9,7 @@ pub mod hardware;
 pub mod image;
 pub mod math;
 pub mod orientation;
+pub mod physical_dimension;
 pub mod prelude;
 pub mod read;
 pub mod types;
