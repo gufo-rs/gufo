@@ -1,5 +1,10 @@
 use std::io::Read;
 
+use gufo_common::physical_dimension::{
+    PhysicalDimensionUnit, PixelDensity, PixelsPerPhysicalDimension,
+};
+use zerocopy::big_endian::U16;
+
 use super::Error;
 
 #[derive(Debug)]
@@ -257,5 +262,36 @@ impl ComponentSpecification {
         let ta = td_ta & 0b1111;
 
         Ok(Self { cs, td, ta })
+    }
+}
+
+#[derive(zerocopy::FromBytes, zerocopy::KnownLayout, zerocopy::Immutable, Clone, Debug)]
+#[repr(C)]
+pub struct Jfif {
+    pub major_verson: u8,
+    pub minor_version: u8,
+    pub pixel_density_unit: u8,
+    pub pixel_density_x: U16,
+    pub pixel_density_y: U16,
+    pub thumbnail_width: u8,
+    pub thunbnail_height: u8,
+}
+
+impl Jfif {
+    pub fn pixel_density(&self) -> Option<PixelDensity> {
+        let unit = match self.pixel_density_unit {
+            0 => None,
+            1 => Some(PhysicalDimensionUnit::Inch),
+            2 => Some(PhysicalDimensionUnit::Centimeter),
+            u => {
+                tracing::warn!("Unknown pixel density unit: {u}");
+                None
+            }
+        }?;
+
+        Some(PixelDensity::new(
+            PixelsPerPhysicalDimension::new(self.pixel_density_x.get() as f64, unit),
+            PixelsPerPhysicalDimension::new(self.pixel_density_y.get() as f64, unit),
+        ))
     }
 }

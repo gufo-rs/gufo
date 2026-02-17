@@ -20,3 +20,4 @@ indexmap.workspace = true
 jpeg-encoder = { workspace = true, optional = true }
 thiserror.workspace = true
 tracing.workspace = true
+zerocopy.workspace = true

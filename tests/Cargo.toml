@@ -9,7 +9,7 @@ rust-version.workspace = true
 workspace = true
 
 [dev-dependencies]
-gufo = { workspace = true, features = ["jpeg"] }
+gufo = { workspace = true, features = ["jpeg", "png"] }
 gufo-common.workspace = true
 gufo-exif.workspace = true
 gufo-jpeg = { workspace = true, features = ["encoder"] }

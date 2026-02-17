@@ -4,6 +4,7 @@ use std::ops::Range;
 use std::slice::SliceIndex;
 
 use gufo_common::cicp::Cicp;
+use gufo_common::physical_dimension::PixelDensity;
 use gufo_common::prelude::*;
 
 pub use super::*;
@@ -94,6 +95,10 @@ impl ImageMetadata for Png {
         }
         map
     }
+
+    fn pixel_density(&self) -> Option<PixelDensity> {
+        self.chunks().iter().find_map(|x| x.phys().ok())
+    }
 }
 
 impl ImageComplete for Png {}
@@ -105,7 +110,7 @@ impl ImageComplete for Png {}
 /// let png = gufo_png::Png::new(data).unwrap();
 ///
 /// assert_eq!(png.chunks()[0].chunk_type(), gufo_png::ChunkType::IHDR);
-/// assert_eq!(png.chunks().len(), 43);
+/// assert_eq!(png.chunks().len(), 9);
 ///
 /// use gufo_common::prelude::*;
 /// assert_eq!(png.exif().first().unwrap().len(), 7646);
@@ -309,7 +314,6 @@ mod tests {
     fn x() {
         let data = std::fs::read("../test-images/images/cicp-p3/cicp-p3.png").unwrap();
         let png = crate::Png::new(data).unwrap();
-        dbg!(png.cicp());
         assert_eq!(
             png.cicp(),
             Some(Cicp {

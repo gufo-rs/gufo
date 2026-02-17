@@ -21,13 +21,30 @@
 #[macro_export]
 macro_rules! convertible_enum {
     (#[repr($type:ty)]$(#[$meta:meta])* $visibility:vis enum $enum_name:ident {
-        $($(#[$variant_meta:meta])* $variant_name:ident = $variant_value:expr,)*
+        $($(#[doc = $variant_doc:expr])* $variant_name:ident = $variant_value:expr,)*
     }) => {
         #[repr($type)]
         $(#[$meta])*
         $visibility enum $enum_name {
-            $($(#[$variant_meta])* $variant_name = $variant_value,)*
+            $($(#[doc = $variant_doc])* $variant_name = $variant_value,)*
             Unknown($type)
+        }
+
+        impl $enum_name {
+            pub fn info(self) -> Option<&'static str> {
+                fn empty_none(s: &str) -> Option<&str> {
+                    if s == "" {
+                        None
+                    } else {
+                        Some(s)
+                    }
+                }
+
+                match self {
+                    $($enum_name::$variant_name => empty_none(concat!($($variant_doc, )*)), )*
+                    $enum_name::Unknown(_) => None,
+                }
+            }
         }
 
         impl std::convert::From<$type> for $enum_name {

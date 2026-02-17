@@ -18,6 +18,6 @@ thiserror.workspace = true
 zvariant = { workspace = true, optional = true }
 
 [features]
-serde = ["dep:serde"]
 chrono = ["dep:chrono"]
-zvariant = ["dep:zvariant"]
+serde = ["dep:serde"]
+zvariant = ["dep:zvariant", "serde"]

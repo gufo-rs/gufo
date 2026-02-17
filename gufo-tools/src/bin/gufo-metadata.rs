@@ -1,4 +1,6 @@
 use gufo_tools::*;
+use std::fmt::{Debug, Display};
+
 use tracing_subscriber::prelude::*;
 
 fn main() {
@@ -43,4 +45,78 @@ fn print(x: gufo::Metadata) {
     show("Rights Web Statement", x.rights_web_statement());
     show("Software", x.software());
     show("User Comment", x.user_comment());
+
+    let mut print = Print::new(vec![Alignment::Right, Alignment::Left]);
+
+    print.option_dbg("Creator", x.creator());
+    print.option_dsp(
+        "Physical Dimensions",
+        x.pixel_density().map(|x| x.display()),
+    );
+
+    print.print();
+}
+
+struct Print {
+    rows: Vec<Vec<String>>,
+    alignment: Vec<Alignment>,
+}
+
+enum Alignment {
+    Left,
+    Right,
+}
+
+impl Print {
+    fn new(alignment: Vec<Alignment>) -> Self {
+        Self {
+            rows: Default::default(),
+            alignment,
+        }
+    }
+
+    fn option_dbg(&mut self, title: &str, value: Option<impl Debug>) {
+        let v = match value {
+            Some(v) => format!("{:?}", v),
+            None => String::from("–"),
+        };
+
+        self.rows.push(vec![format!("{title}: "), v]);
+    }
+
+    fn option_dsp(&mut self, title: &str, value: Option<impl Display>) {
+        let v = match value {
+            Some(v) => v.to_string(),
+            None => String::from("–"),
+        };
+
+        self.rows.push(vec![format!("{title}: "), v]);
+    }
+
+    fn print(&self) {
+        let mut col_width = Vec::new();
+        for row in &self.rows {
+            for (n, col) in row.iter().enumerate() {
+                let w = col.chars().count();
+                if let Some(current_width) = col_width.get_mut(n) {
+                    if w > *current_width {
+                        *current_width = w;
+                    }
+                } else {
+                    col_width.push(w);
+                }
+            }
+        }
+
+        for row in &self.rows {
+            for (n, col) in row.iter().enumerate() {
+                let width_diff = col_width[n] - col.chars().count();
+                match self.alignment[n] {
+                    Alignment::Left => print!("{col}{spaces}", spaces = " ".repeat(width_diff)),
+                    Alignment::Right => print!("{spaces}{col}", spaces = " ".repeat(width_diff)),
+                }
+            }
+            print!("\n");
+        }
+    }
 }
