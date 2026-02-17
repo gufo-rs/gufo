@@ -1,5 +1,4 @@
 use gufo_common::math::*;
-use jpeg_encoder::QuantizationTableType;
 
 use crate::Error;
 
@@ -62,9 +61,11 @@ impl crate::Jpeg {
         let luma_table = dqts.get_index(0).ok_or(Error::MissingDqt)?.1;
         let luma = jpeg_encoder::QuantizationTableType::Custom(Box::new(luma_table.qk_ordered()));
 
-        let chroma_table = dqts.get_index(1).ok_or(Error::MissingDqt)?.1;
-        let chroma: QuantizationTableType =
-            jpeg_encoder::QuantizationTableType::Custom(Box::new(chroma_table.qk_ordered()));
+        let chroma = if let Some(chroma_table) = dqts.get_index(1) {
+            jpeg_encoder::QuantizationTableType::Custom(Box::new(chroma_table.1.qk_ordered()))
+        } else {
+            luma.clone()
+        };
 
         Ok((luma, chroma))
     }
