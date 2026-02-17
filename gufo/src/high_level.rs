@@ -1,5 +1,5 @@
 use gufo_common::types::Rational;
-use gufo_common::{geography, hardware, orientation};
+use gufo_common::{geography, hardware, orientation, physical_dimension};
 use gufo_exif::Exif;
 use gufo_xmp::Xmp;
 
@@ -112,5 +112,9 @@ impl Metadata {
         self.lookup_exif_xmp_keyval(Exif::user_comment, Xmp::user_comment, |x| {
             x.get("Comment").cloned()
         })
+    }
+
+    pub fn pixel_density(&self) -> Option<physical_dimension::PixelDensity> {
+        self.pixel_density.clone()
     }
 }

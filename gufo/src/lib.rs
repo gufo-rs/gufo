@@ -221,8 +221,4 @@ impl Metadata {
             .or_else(|| self.lookup_xmp(xmp_op))
             .or_else(|| self.lookup_keyval(keyval_op))
     }
-
-    pub fn pixel_density(&self) -> Option<PixelDensity> {
-        self.pixel_density.clone()
-    }
 }
