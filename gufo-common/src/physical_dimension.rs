@@ -31,14 +31,39 @@ impl PixelDensity {
         }
     }
 
+    pub fn dpi(&self) -> PixelDensity {
+        self.convert(PhysicalDimensionUnit::Inch)
+    }
+
+    pub fn convert(&self, unit: PhysicalDimensionUnit) -> Self {
+        Self {
+            x: self.x.convert(unit),
+            y: self.x.convert(unit),
+        }
+    }
+
     pub fn display(&self) -> Box<dyn Display> {
-        Box::new(format!(
-            "{}\u{2009}px/{} \u{d7} {}\u{2009}px/{}",
-            self.x.value(),
-            self.x.unit().shorthand(),
-            self.y.value(),
-            self.y.unit().shorthand()
-        ))
+        let x_unit = match self.x.unit() {
+            PhysicalDimensionUnit::Inch => String::from("DPI"),
+            unit => format!("px/{}", unit.shorthand()),
+        };
+
+        if self.x == self.y {
+            Box::new(format!("{}\u{2009}{}", self.x.value(), x_unit,))
+        } else {
+            let y_unit = match self.y.unit() {
+                PhysicalDimensionUnit::Inch => String::from("DPI"),
+                unit => format!("px/{}", unit.shorthand()),
+            };
+
+            Box::new(format!(
+                "{}\u{2009}{} \u{d7} {}\u{2009}{}",
+                self.x.value(),
+                x_unit,
+                self.y.value(),
+                y_unit
+            ))
+        }
     }
 }
 
@@ -60,7 +85,7 @@ impl PhysicalSize {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Deserialize, serde::Serialize))]
 #[cfg_attr(feature = "zvariant", derive(zvariant::Type))]
 #[non_exhaustive]
@@ -103,7 +128,7 @@ impl PhysicalDimensionUnit {
     feature = "zvariant",
     derive(zvariant::DeserializeDict, zvariant::SerializeDict, zvariant::Type)
 )]
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 #[cfg_attr(feature = "zvariant", zvariant(signature = "dict"))]
 #[non_exhaustive]
 pub struct PhysicalDimension {
@@ -152,7 +177,7 @@ impl PhysicalDimension {
     feature = "zvariant",
     derive(serde::Deserialize, serde::Serialize, zvariant::Type)
 )]
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 #[cfg_attr(feature = "zvariant", zvariant(signature = "dict"))]
 #[repr(transparent)]
 pub struct PixelsPerPhysicalDimension(PhysicalDimension);
