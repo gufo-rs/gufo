@@ -99,7 +99,7 @@ fn re_encode(data: Vec<u8>, reference: Vec<u8>) {
     let encoder = jpeg.encoder(&mut out_buf).unwrap();
     let mut buf = Cursor::new(jpeg.into_inner());
 
-    let decoder_options = zune_jpeg::zune_core::options::DecoderOptions::new_fast(); //.jpeg_set_out_colorspace(zune_jpeg::zune_core::colorspace::ColorSpace::YCbCr);
+    let decoder_options = zune_jpeg::zune_core::options::DecoderOptions::new_fast();
     let mut decoder = zune_jpeg::JpegDecoder::new_with_options(&mut buf, decoder_options);
     decoder.decode_headers().unwrap();
     let colorspace = decoder.input_colorspace().unwrap();
