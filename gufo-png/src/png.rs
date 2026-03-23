@@ -134,6 +134,9 @@ impl Png {
         let mut map = BTreeMap::new();
         for chunk in &self.chunks() {
             if let Ok((key, value)) = chunk.textual(1024 * 1204) {
+                if key.contains(&b'\0') || value.contains(&b'\0') {
+                    continue;
+                }
                 let mut buf = "\0\0".repeat(value.len());
                 let len = encoding_rs::mem::convert_latin1_to_str(&value, &mut buf);
                 buf.truncate(len);
