@@ -45,7 +45,7 @@ fn show_png(png: gufo::png::Png) {
 fn show_jpeg(jpeg: gufo::jpeg::Jpeg) {
     println!("JPEG Segments:");
     for segment in jpeg.segments() {
-        println!(" - {:?}", segment.marker());
+        println!(" - {:?} ({} bytes)", segment.marker(), segment.data().len());
     }
     println!("DQT:");
     for (i, _) in jpeg.dqts().unwrap() {
