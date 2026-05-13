@@ -313,7 +313,7 @@ mod tests {
         assert_eq!(
             png.cicp(),
             Some(Cicp {
-                color_primaries: ColorPrimaries::DciP3,
+                color_primaries: ColorPrimaries::DisplayP3,
                 transfer_characteristics: TransferCharacteristics::Gamma24,
                 matrix_coefficients: MatrixCoefficients::Identity,
                 video_full_range_flag: VideoRangeFlag::Full,

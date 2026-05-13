@@ -8,7 +8,7 @@ macro_rules! make_tags {
             impl $crate::exif::Field for $id {
                 const NAME: &'static str = stringify!($id);
                 const TAG: crate::exif::Tag = crate::exif::Tag($tag);
-                const IFD: Ifd = $ifd;
+                const IFD: IfdId = $ifd;
             }
 
             $(
@@ -19,7 +19,7 @@ macro_rules! make_tags {
             )*
         )*
 
-        pub(crate) static TAG_NAMES: std::sync::LazyLock<std::collections::HashMap<(u16, Ifd), &'static str>> =
+        pub(crate) static TAG_NAMES: std::sync::LazyLock<std::collections::HashMap<(u16, IfdId), &'static str>> =
          std::sync::LazyLock::new(|| std::collections::HashMap::from([
             $(
                 (($tag, $ifd), stringify!($id)),
@@ -38,7 +38,7 @@ macro_rules! make_exif_tags {
             impl $crate::exif::Field for $id {
                 const NAME: &'static str = stringify!($id);
                 const TAG: crate::exif::Tag = crate::exif::Tag($tag);
-                const IFD: Ifd = $ifd;
+                const IFD: IfdId = $ifd;
             }
         )*
     };

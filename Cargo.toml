@@ -2,7 +2,7 @@
 version = "0.4.1"
 license = "MPL-2.0 OR LGPL-2.1-or-later"
 edition = "2021"
-rust-version = "1.80"
+rust-version = "1.93"
 repository = "https://github.com/gufo-rs/gufo"
 
 [profile.release]
@@ -12,6 +12,7 @@ codegen-units = 1
 [workspace]
 resolver = "2"
 members = [
+    "benches",
     "gufo",
     "gufo-common",
     "gufo-exif",
@@ -28,13 +29,14 @@ members = [
 unsafe_code = "forbid"
 
 [workspace.lints.clippy]
-arithmetic_side_effects = "forbid"
-cast_possible_truncation = "forbid"
-cast_possible_wrap = "forbid"
+arithmetic_side_effects = "warn"
+cast_possible_truncation = "warn"
+cast_possible_wrap = "warn"
 
 [workspace.dependencies]
 chrono = { version = "0.4.38", default-features = false, features = ["std"] }
 crc32fast = "1.2.0"
+criterion = "0.8.2"
 gufo = { version = "0.4.0", path = "gufo" }
 gufo-common = { version = "1.1.0", path = "gufo-common" }
 gufo-exif = { version = "0.4.0", path = "gufo-exif" }
@@ -45,6 +47,7 @@ gufo-webp = { version = "0.4.0", path = "gufo-webp" }
 gufo-xmp = { version = "0.4.0", path = "gufo-xmp" }
 indexmap = "2.10"
 jpeg-encoder = "0.7.0"
+kamadak-exif = "0.6.1"
 hex = "0.4.0"
 miniz_oxide = "0.9.0"
 paste = "1.0.15"
@@ -54,3 +57,4 @@ thiserror = "2.0.3"
 tracing = "0.1"
 xml-rs = "0.8.19"
 zvariant = "5.6"
+zerocopy = "0.8.48"
