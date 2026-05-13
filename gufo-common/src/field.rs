@@ -5,57 +5,107 @@
 
 mod macros;
 
-use crate::exif::Ifd;
+use crate::exif::IfdId;
 
 // Exif
 macros::make_tags![
     // GPS
-    (0x1, GPSLatitudeRef, Ifd::Gps),
-    (0x2, GPSLatitude, Ifd::Gps),
-    (0x3, GPSLongitudeRef, Ifd::Gps),
-    (0x4, GPSLongitude, Ifd::Gps),
-    (0x5, GPSAltitudeRef, Ifd::Gps),
-    (0x6, GPSAltitude, Ifd::Gps),
-    (0x10, GPSImgDirectionRef, Ifd::Gps),
-    (0x11, GPSImgDirection, Ifd::Gps),
-    (0x12, GPSSpeedRef, Ifd::Gps),
-    (0x13, GPSSpeed, Ifd::Gps),
+    (0x0, GPSVersionID, IfdId::Gps, xmp = Exif),
+    (0x1, GPSLatitudeRef, IfdId::Gps),
+    (0x2, GPSLatitude, IfdId::Gps, xmp = Exif),
+    (0x3, GPSLongitudeRef, IfdId::Gps),
+    (0x4, GPSLongitude, IfdId::Gps, xmp = Exif),
+    /// TODO: Xmp mapping unclear
+    (0x5, GPSAltitudeRef, IfdId::Gps),
+    (0x6, GPSAltitude, IfdId::Gps, xmp = Exif),
+    (0x7, GPSTimeStamp, IfdId::Gps, xmp = Exif),
+    (0xC, GPSSpeedRef, IfdId::Gps, xmp = Exif),
+    (0xD, GPSSpeed, IfdId::Gps, xmp = Exif),
+    (0x10, GPSImgDirectionRef, IfdId::Gps, xmp = Exif),
+    (0x11, GPSImgDirection, IfdId::Gps, xmp = Exif),
+    (0x17, GPSDestBearingRef, IfdId::Gps, xmp = Exif),
+    (0x18, GPSDestBearing, IfdId::Gps, xmp = Exif),
+    (0x1D, GPSDateStamp, IfdId::Gps),
+    (0x1F, GPSHPositioningError, IfdId::Gps, xmp = Exif),
 
-    // Primary
-    (0x100, ImageWidth, Ifd::Primary, xmp = Exif),
-    (0x10E, ImageDescription, Ifd::Primary),
-    (0x10F, Make, Ifd::Primary, xmp = Tiff),
-    (0x110, Model, Ifd::Primary, xmp = Tiff),
+    // Primary/Thumbnail
+    (0x100, ImageWidth, IfdId::Primary, xmp = Exif),
+    (0x100, ThumbnailImageWidth, IfdId::Thumbnail),
+    (0x101, ImageHeight, IfdId::Primary, xmp = Exif),
+    (0x102, BitsPerSample, IfdId::Primary, xmp = Tiff),
+    (0x103, Compression, IfdId::Primary, xmp = Tiff),
+    (0x106, PhotometricInterpretation, IfdId::Primary, xmp = Tiff),
+    (0x10A, FillOrder, IfdId::Primary),
+    (0x10E, ImageDescription, IfdId::Primary, xmp = Dc),
+    (0x10F, Make, IfdId::Primary, xmp = Tiff),
+    (0x110, Model, IfdId::Primary, xmp = Tiff),
+    (0x111, StripOffsets, IfdId::Primary),
     /// Image orientation and mirroring
-    (0x112, Orientation, Ifd::Primary, xmp = Tiff),
-    (0x112, ThumbnailOrientation, Ifd::Thumbnail),
-    (0x11A, XResolution, Ifd::Primary, xmp = Tiff),
-    (0x11B, YResolution, Ifd::Primary, xmp = Tiff),
-    (0x128, ResolutionUnit, Ifd::Primary, xmp = Tiff),
+    (0x112, Orientation, IfdId::Primary, xmp = Tiff),
+    (0x112, ThumbnailOrientation, IfdId::Thumbnail),
+    (0x115, SamplesPerPixel, IfdId::Primary, xmp = Tiff),
+    (0x116, RowsPerStrip, IfdId::Primary),
+    (0x117, StripByteCounts, IfdId::Primary),
+    (0x11A, XResolution, IfdId::Primary, xmp = Tiff),
+    (0x11B, YResolution, IfdId::Primary, xmp = Tiff),
+    (0x11C, PlanarConfiguration, IfdId::Primary, xmp = Tiff),
+    (0x11E, XPosition, IfdId::Primary),
+    (0x11F, YPosition, IfdId::Primary),
+    (0x128, ResolutionUnit, IfdId::Primary, xmp = Tiff),
+    (0x129, PageNumber, IfdId::Primary),
     /// The XMP equivalent is [`CreatorTool`]
-    (0x131, Software, Ifd::Primary),
+    (0x131, Software, IfdId::Primary),
+    /// The XMP equivalent is [`ModifyDate`]
+    (0x132, DateTime, IfdId::Primary),
+    (0x13E, WhitePoint, IfdId::Primary, xmp = Tiff),
+    (0x13F, PrimaryChromaticities, IfdId::Primary, xmp = Tiff),
+    (0x258, Xmp, IfdId::Primary),
 
-    // Thumbnail
-    (0x100, ThumbnailImageWidth, Ifd::Thumbnail, xmp = Exif),
 
     // Exif
-    (0x829A, ExposureTime, Ifd::Exif, xmp = Exif),
-    (0x829D, FNumber, Ifd::Exif, xmp = Exif),
+    (0x829A, ExposureTime, IfdId::Exif, xmp = Exif),
+    (0x829D, FNumber, IfdId::Exif, xmp = Exif),
+    /// Points to the start of the [`Ifd::Exif`] entries list
+    (0x8769,  ExifIFDPointer, IfdId::Primary),
+    (0x8822, ExposureProgram, IfdId::Exif, xmp = Exif),
+    /// Points to the start of the [`Ifd::GPS`] entries list
+    (0x8825, GPSInfoIFDPointer, IfdId::Primary),
     /// Also called ISOSpeedRatings (new xmp value since Exif 2.3 or later)
-    (0x8827, PhotographicSensitivity, Ifd::Exif, xmp = ExifEX),
-    (0x9003, DateTimeOriginal, Ifd::Exif, xmp = Exif),
-    (0x9011, OffsetTimeOriginal, Ifd::Exif),
-    (0x9286, UserComment, Ifd::Exif, xmp = Exif),
-    (0x9291, SubSecTimeOriginal, Ifd::Exif),
+    (0x8827, PhotographicSensitivity, IfdId::Exif, xmp = ExifEX),
+    (0x9000, ExifVersion, IfdId::Exif, xmp = Exif),
+    (0x9004, DateTimeDigitized, IfdId::Exif, xmp = Exif),
+    (0x9101, ComponentsConfiguration, IfdId::Exif, xmp = Exif),
+    (0x9003, DateTimeOriginal, IfdId::Exif, xmp = Exif),
+    (0x9011, OffsetTimeOriginal, IfdId::Exif),
+    (0x9286, UserComment, IfdId::Exif, xmp = Exif),
+    (0x9291, SubSecTimeOriginal, IfdId::Exif),
+    (0x9201, ShutterSpeedValue, IfdId::Exif, xmp = Exif),
     /// Lens aperture with unit APEX
-    (0x9202, Aperture, Ifd::Exif, xmp = Exif),
-    (0x920A, FocalLength, Ifd::Exif, xmp = Exif),
-    (0xA430, CameraOwnerName, Ifd::Exif, xmp = ExifEX),
-    (0xA433, LensMake, Ifd::Exif, xmp = Exif),
-    (0xA434, LensModel, Ifd::Exif, xmp = Exif),
+    (0x9202, Aperture, IfdId::Exif, xmp = Exif),
+    (0x9203, BrightnessValue, IfdId::Exif, xmp = Exif),
+    (0x9204, ExposureBiasValue, IfdId::Exif, xmp = Exif),
+    (0x9207, MeteringMode, IfdId::Exif, xmp = Exif),
+    (0x920A, FocalLength, IfdId::Exif, xmp = Exif),
+    (0x9292, SubsecTimeDigitized, IfdId::Exif, xmp = Exif),
+    (0xA000, FlashpixVersion, IfdId::Exif, xmp = Exif),
+    (0xA001, ColorSpace, IfdId::Exif, xmp = Exif),
+    (0xA002, PixelXDimension, IfdId::Exif, xmp = Exif),
+    (0xA003, PixelYDimension, IfdId::Exif, xmp = Exif),
+    (0xA217, SensingMethod, IfdId::Exif, xmp = Exif),
+    (0xA300, FileSource, IfdId::Exif, xmp = Exif),
+    (0xA301, SceneType, IfdId::Exif, xmp = Exif),
+    (0xA402, ExposureMode, IfdId::Exif, xmp = Exif),
+    (0xA403, WhiteBalance, IfdId::Exif, xmp = Exif),
+    (0xA405, FocalLengthIn35mmFilm, IfdId::Exif, xmp = Exif),
+    (0xA406, SceneCaptureType, IfdId::Exif, xmp = Exif),
+    (0xA430, CameraOwnerName, IfdId::Exif, xmp = ExifEX),
+    (0xA432, LensSpecification, IfdId::Exif, xmp = ExifEX),
+    (0xA433, LensMake, IfdId::Exif, xmp = Exif),
+    (0xA434, LensModel, IfdId::Exif, xmp = Exif),
+
 ];
 
-macros::make_exif_tags!((0x9, CanonOwnerName, Ifd::MakerNote),);
+macros::make_exif_tags!((0x9, CanonOwnerName, IfdId::MakerNote),);
 
 macros::make_xmp_tags![
     /// Legacy XMP Exif (till Exif 2.21)
@@ -67,3 +117,4 @@ macros::make_xmp_tags![(Creator, "creator", Dc)];
 
 // XMP
 macros::make_xmp_tags![(CreatorTool, Xmp)];
+macros::make_xmp_tags![(ModifyDate, Xmp)];

@@ -1,7 +1,8 @@
-#![doc = include_str!("../README.md")]
+mod error;
+mod exif;
+pub mod structure;
 
-pub mod error;
-mod high_level;
-pub mod internal;
+pub use error::*;
+pub use exif::{ExifInternal, Storage};
 
-pub use high_level::Exif;
+pub type Exif = ExifInternal<'static, exif::OwnedStore>;

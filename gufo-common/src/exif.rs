@@ -1,11 +1,13 @@
+use std::ops::Deref;
+
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub struct TagIfd {
     pub tag: Tag,
-    pub ifd: Ifd,
+    pub ifd: IfdId,
 }
 
 impl TagIfd {
-    pub fn new(tag: Tag, ifd: Ifd) -> Self {
+    pub fn new(tag: Tag, ifd: IfdId) -> Self {
         Self { tag, ifd }
     }
 }
@@ -22,8 +24,8 @@ impl<T: Field> From<T> for TagIfd {
 pub trait Field {
     const NAME: &'static str;
     const TAG: Tag;
-    const IFD: Ifd;
-    const IFD_ENTRY: Option<Ifd> = None;
+    const IFD: IfdId;
+    const IFD_ENTRY: Option<IfdId> = None;
 }
 
 pub fn lookup_tag_name(tagifd: TagIfd) -> Option<&'static str> {
@@ -45,11 +47,11 @@ impl Tag {
     /// Returns the IFD if the tag stores the location of that IFD
     ///
     /// See 4.6.3 in v3.0 standard
-    pub fn exif_specific_ifd(&self) -> Option<Ifd> {
+    pub fn exif_specific_ifd(&self) -> Option<IfdId> {
         match *self {
-            Self::EXIF_IFD_POINTER => Some(Ifd::Exif),
-            Self::GPS_INFO_IFD_POINTER => Some(Ifd::Gps),
-            Self::INTEROPERABILITY_IFD_POINTER => Some(Ifd::Interoperability),
+            Self::EXIF_IFD_POINTER => Some(IfdId::Exif),
+            Self::GPS_INFO_IFD_POINTER => Some(IfdId::Gps),
+            Self::INTEROPERABILITY_IFD_POINTER => Some(IfdId::Interoperability),
             _ => None,
         }
     }
@@ -59,9 +61,16 @@ impl Tag {
     }
 }
 
+impl Deref for Tag {
+    type Target = u16;
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
 /// Image file directory
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq, PartialOrd, Ord)]
-pub enum Ifd {
+pub enum IfdId {
     Primary,
     Thumbnail,
     Exif,
