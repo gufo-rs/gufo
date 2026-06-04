@@ -7,9 +7,9 @@ use std::ops::Range;
 use gufo_common::exif::{IfdId, TagIfd};
 
 use super::Ifd;
+use crate::Error;
 use crate::structure::util::Endieness;
 use crate::structure::{Entry, FileParser, Type, Typed, ValueOrOffset};
-use crate::Error;
 
 #[derive(Debug)]
 pub struct Document<'a> {
@@ -59,7 +59,7 @@ impl<'a> Document<'a> {
         })
     }
 
-    pub fn assemble(&mut self) -> Result<Vec<u8>, Error> {
+    pub fn serialize(&mut self) -> Result<Vec<u8>, Error> {
         let mut data = self
             .data
             .iter()
@@ -71,7 +71,7 @@ impl<'a> Document<'a> {
         let ifd_data = self
             .ifds()
             .values()
-            .map(|(pos, ifd)| (*pos, ifd.assemble()))
+            .map(|(pos, ifd)| (*pos, ifd.serialize()))
             .collect::<Vec<_>>();
 
         data.extend(ifd_data);
@@ -81,7 +81,10 @@ impl<'a> Document<'a> {
         let mut vec = Vec::new();
         for (pos, fragment) in data {
             if vec.len() != pos {
-                return Err(Error::other(format!("Document fragments do not fit together. Want to insert at {pos} but at currently at {}", vec.len())));
+                return Err(Error::other(format!(
+                    "Document fragments do not fit together. Want to insert at {pos} but at currently at {}",
+                    vec.len()
+                )));
             }
             vec.extend(fragment);
         }

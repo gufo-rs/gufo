@@ -60,7 +60,9 @@ impl Location {
         let lat_sec = pad_one_0(lat_sec);
         let lon_sec = pad_one_0(lon_sec);
 
-        format!("{lat_deg}°{lat_min:02}'{lat_sec}\"{lat_ref} {lon_deg}°{lon_min:02}'{lon_sec}\"{lon_ref}")
+        format!(
+            "{lat_deg}°{lat_min:02}'{lat_sec}\"{lat_ref} {lon_deg}°{lon_min:02}'{lon_sec}\"{lon_ref}"
+        )
     }
 
     /// Locations as `geo:` URI
@@ -125,11 +127,7 @@ pub enum LatRef {
 
 impl LatRef {
     pub fn from_sign(sign: f64) -> Self {
-        if sign >= 0. {
-            Self::North
-        } else {
-            Self::South
-        }
+        if sign >= 0. { Self::North } else { Self::South }
     }
 
     pub fn as_sign(&self) -> f64 {
@@ -174,11 +172,7 @@ pub enum LonRef {
 
 impl LonRef {
     pub fn from_sign(sign: f64) -> Self {
-        if sign >= 0. {
-            Self::East
-        } else {
-            Self::West
-        }
+        if sign >= 0. { Self::East } else { Self::West }
     }
 
     pub fn as_sign(&self) -> f64 {

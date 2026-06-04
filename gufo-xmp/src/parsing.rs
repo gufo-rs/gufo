@@ -4,7 +4,7 @@ use std::io::Cursor;
 use gufo_common::xmp::XML_NS_RDF;
 use xml::name::OwnedName;
 use xml::reader::XmlEvent;
-use xml::{writer, EmitterConfig, ParserConfig};
+use xml::{EmitterConfig, ParserConfig, writer};
 
 use super::{Error, Tag, Xmp};
 

@@ -102,11 +102,7 @@ impl Xmp {
         let (x, y) = self.get_frac(tag)?;
 
         let res = x as f32 / y as f32;
-        if res.is_finite() {
-            Some(res)
-        } else {
-            None
-        }
+        if res.is_finite() { Some(res) } else { None }
     }
 
     pub fn get_u16(&self, tag: impl Into<Tag>) -> Option<u16> {

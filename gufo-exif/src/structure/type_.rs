@@ -1,7 +1,7 @@
 use std::fmt::Display;
 
-use crate::structure::util::Endieness;
 use crate::Error;
+use crate::structure::util::Endieness;
 
 gufo_common::utils::convertible_enum!(
     #[repr(u16)]
@@ -172,6 +172,71 @@ impl Typed {
             }
             Type::Byte => Ok(Typed::Byte(data.to_vec())),
             Type::Unknown(type_id) => Ok(Typed::Unknown(type_id, data.to_vec())),
+        }
+    }
+
+    pub fn serialize(&self, endieness: Endieness) -> Vec<u8> {
+        match self {
+            Self::Ascii(data) => {
+                let mut vec = data.to_vec();
+                vec.push(0);
+                vec
+            }
+            Self::Byte(data) => data.to_vec(),
+            Self::Long(long) => long
+                .iter()
+                .flat_map(|x| endieness.u32_to_bytes(*x))
+                .collect(),
+            Self::Rational(rational) => rational
+                .iter()
+                .flat_map(|x| {
+                    [
+                        endieness.u32_to_bytes(x.numerator),
+                        endieness.u32_to_bytes(x.denominator),
+                    ]
+                })
+                .flatten()
+                .collect(),
+            Self::SLong(slong) => slong
+                .iter()
+                .flat_map(|x| endieness.i32_to_bytes(*x))
+                .collect(),
+            Self::SRational(srational) => srational
+                .iter()
+                .flat_map(|x| {
+                    [
+                        endieness.i32_to_bytes(x.numerator),
+                        endieness.i32_to_bytes(x.denominator),
+                    ]
+                })
+                .flatten()
+                .collect(),
+            Self::Short(short) => short
+                .iter()
+                .flat_map(|x| endieness.u16_to_bytes(*x))
+                .collect(),
+            Self::Undefined(undefined) => undefined.to_vec(),
+            Self::Utf8(utf8) => {
+                let mut vec = utf8.as_bytes().to_vec();
+                vec.push(0);
+                vec
+            }
+            Self::Unknown(_, unknown) => unknown.to_vec(),
+        }
+    }
+
+    pub fn count(&self) -> usize {
+        match self {
+            Self::Ascii(x) => x.len() + 1,
+            Self::Byte(x) => x.len(),
+            Self::Long(x) => x.len(),
+            Self::Rational(x) => x.len(),
+            Self::SLong(x) => x.len(),
+            Self::SRational(x) => x.len(),
+            Self::Short(x) => x.len(),
+            Self::Undefined(x) => x.len(),
+            Self::Unknown(_, x) => x.len(),
+            Self::Utf8(x) => x.len() + 1,
         }
     }
 

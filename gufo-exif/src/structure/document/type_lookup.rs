@@ -1,8 +1,8 @@
 use gufo_common::exif::TagIfd;
 
 use super::Document;
-use crate::structure::{Rational, Type, Typed};
 use crate::Error;
+use crate::structure::{Rational, Type, Typed};
 
 impl<'a> Document<'a> {
     pub fn lookup(&mut self, tag_ifd: TagIfd) -> Result<Option<Typed>, Error> {
@@ -127,10 +127,6 @@ impl<'a> Document<'a> {
         // NULLs at the end
         let s = s.replace('\0', "");
 
-        if s.is_empty() {
-            Ok(None)
-        } else {
-            Ok(Some(s))
-        }
+        if s.is_empty() { Ok(None) } else { Ok(Some(s)) }
     }
 }
