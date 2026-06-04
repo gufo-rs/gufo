@@ -8,8 +8,8 @@ use zerocopy::{BigEndian, ByteOrder, FromBytes, LittleEndian, U16, U32, U64};
 use super::util::{IndexType, UsizeConversion};
 use super::{Entry, Ifd, IfdTyped};
 use crate::error::Error;
-use crate::structure::util::{handle_error_, Endieness};
 use crate::structure::EntryTyped;
+use crate::structure::util::{Endieness, handle_error_};
 
 const MAGIC_BYTES_LE_32: &[u8] = b"II*\0";
 const MAGIC_BYTES_BE_32: &[u8] = b"MM\0*";

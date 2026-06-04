@@ -1,5 +1,5 @@
 use gufo_common::exif::Tag;
-use zerocopy::{BigEndian, ByteOrder, FromBytes, IntoBytes, LittleEndian, U16, U32, U64};
+use zerocopy::{BE, BigEndian, ByteOrder, FromBytes, IntoBytes, LE, LittleEndian, U16, U32, U64};
 
 use super::type_::Type;
 use super::util::{IndexType, UsizeConversion};
@@ -21,12 +21,55 @@ pub enum Entry<'a> {
 }
 
 impl<'a> Entry<'a> {
-    pub fn value_or_offset(&'a mut self) -> Result<ValueOrOffset<'a>, Error> {
+    pub fn value_or_offset(&mut self) -> Result<ValueOrOffset<'_>, Error> {
         crate::forall_formats!(self, entry, entry.value_or_offset())
     }
 
     pub fn ifd_pointer(&mut self) -> Result<u16, Error> {
         crate::forall_formats!(self, entry, entry.ifd_pointer())
+    }
+
+    pub fn update(
+        &mut self,
+        tag: Tag,
+        type_: Type,
+        count: usize,
+        value: Vec<u8>,
+    ) -> Result<(), Error> {
+        crate::forall_formats!(self, entry, {
+            entry.check_count_fits(count)?;
+            entry.set_value(value)?;
+            entry.set_count(count)?;
+            entry.set_tag_id(tag);
+            entry.set_type(type_);
+        });
+
+        Ok(())
+    }
+
+    pub fn update_offset(
+        &mut self,
+        tag: Tag,
+        type_: Type,
+        count: usize,
+        value: usize,
+    ) -> Result<(), Error> {
+        let data = match self {
+            Self::Be32(_) => U32::<BE>::new(value.try_into()?).as_bytes().to_vec(),
+            Self::Le32(_) => U32::<LE>::new(value.try_into()?).as_bytes().to_vec(),
+            Self::Be64(_) => U64::<BE>::new(value.try_into()?).as_bytes().to_vec(),
+            Self::Le64(_) => U64::<LE>::new(value.try_into()?).as_bytes().to_vec(),
+        };
+
+        self.update(tag, type_, count, data)
+    }
+
+    pub fn type_(&self) -> Type {
+        crate::forall_formats!(self, entry, entry.type_())
+    }
+
+    pub fn count(&self) -> Result<usize, Error> {
+        crate::forall_formats!(self, entry, entry.count())
     }
 
     pub fn to_immutable(&self) -> Result<EntryImmutable, Error> {
@@ -88,8 +131,36 @@ impl<T: IndexType + zerocopy::Immutable, O: ByteOrder> EntryTyped<T, O> {
         self.count.try_to_usize()
     }
 
-    pub fn assemble(&self) -> &[u8] {
+    pub fn serialize(&self) -> &[u8] {
         self.as_bytes()
+    }
+
+    pub fn set_tag_id(&mut self, tag_id: Tag) {
+        self.tag_id = U16::<O>::new(tag_id.0);
+    }
+
+    pub fn set_type(&mut self, type_: Type) {
+        self.type_ = U16::<O>::new(type_.u16());
+    }
+
+    pub fn check_count_fits(&self, count: usize) -> Result<(), Error> {
+        T::try_from_usize(count).map(|_| ())
+    }
+
+    pub fn set_count(&mut self, count: usize) -> Result<(), Error> {
+        self.count = T::try_from_usize(count)?;
+        Ok(())
+    }
+
+    pub fn set_value(&mut self, mut value: Vec<u8>) -> Result<(), Error> {
+        let target_len = std::mem::size_of::<T>();
+        if value.len() < target_len {
+            value.resize(target_len, 0);
+        }
+
+        self.value_or_offset = T::read_from_bytes(&value).map_err(|_| Error::TryFromSlice)?;
+
+        Ok(())
     }
 
     pub fn value_or_offset(&mut self) -> Result<ValueOrOffset<'_>, Error> {

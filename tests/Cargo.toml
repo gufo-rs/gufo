@@ -20,9 +20,9 @@ zune-jpeg = "0.5.0"
 image = { version = "0.25.0", features = ["png", "jpeg"] }
 image-compare = "0.5.0"
 
-#[[test]]
-#name = "JPEG"
-#path = "crate-jpeg.rs"
+[[test]]
+name = "JPEG"
+path = "crate-jpeg.rs"
 
 [[test]]
 name = "exif"

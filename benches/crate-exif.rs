@@ -1,4 +1,4 @@
-use criterion::{criterion_group, criterion_main, Criterion};
+use criterion::{Criterion, criterion_group, criterion_main};
 
 fn thumbnailer(c: &mut Criterion) {
     let mut group = c.benchmark_group("apple-iphone6.exif.le.tiff");

@@ -1,12 +1,13 @@
+mod high_level;
+
 use std::marker::PhantomData;
 use std::sync::Mutex;
 
 use gufo_common::exif::TagIfd;
-use gufo_common::{geography, orientation};
 use zerocopy::FromZeros;
 
-use crate::structure::{Document, Rational};
 use crate::Error;
+use crate::structure::{Document, Typed, ValueOrOffset};
 
 #[derive(Debug)]
 pub struct ExifInternal<'a, S: Storage<'a>> {
@@ -16,7 +17,7 @@ pub struct ExifInternal<'a, S: Storage<'a>> {
 
 impl<'a> Clone for ExifInternal<'a, OwnedStore> {
     fn clone(&self) -> Self {
-        Self::for_vec(self.assemble().unwrap()).unwrap()
+        Self::for_vec(self.serialize().unwrap()).unwrap()
     }
 }
 
@@ -122,7 +123,7 @@ impl<'a> ExifInternal<'a, OwnedStore> {
         };
 
         // Get a raw exif data to edit them
-        let mut raw = self.assemble()?;
+        let mut raw = self.serialize()?;
 
         // Overwrite old list entry with remaining data
         raw.copy_within(pos_retain_begin..pos_retain_end, pos_retain_new);
@@ -144,74 +145,86 @@ impl<'a> ExifInternal<'a, OwnedStore> {
 }
 
 impl<'a, S: Storage<'a>> ExifInternal<'a, S> {
-    pub fn assemble(&self) -> Result<Vec<u8>, Error> {
-        self.document(|x| x.assemble())
+    pub fn update_entry(&mut self, tag_ifd: TagIfd, value: Typed) -> Result<(), Error> {
+        self.document(|document| {
+            let data = value.serialize(document.endieness);
+            let new_data_store = data.len() > document.index_size;
+
+            let Some((_, mut entry)) = document.entry(tag_ifd) else {
+                return Err(Error::other("Inserting new entries not yet supported."));
+            };
+
+            let old_data_len = entry.type_().size() * entry.count()?;
+
+            let current_data_store = match entry.value_or_offset()? {
+                ValueOrOffset::Value(_) => None,
+                ValueOrOffset::Offset(offset) => Some(offset),
+            };
+
+            if current_data_store.is_none() && new_data_store {
+                // Currentlt stored in ifd, but new needs data chunk
+                return Err(Error::WouldIncreaseDataStore);
+            } else if current_data_store.is_none() && !new_data_store {
+                // Data remains in ifd
+                entry.update(tag_ifd.tag, value.type_(), value.count(), data)?;
+            } else if let Some(old_data_offset) = current_data_store
+                && !new_data_store
+            {
+                // Currently stored in data, but new in ifd
+                let old_data_offset_end = old_data_offset + old_data_len;
+
+                entry.update_offset(tag_ifd.tag, value.type_(), value.count(), old_data_offset)?;
+
+                document
+                    .data(old_data_offset..old_data_offset_end)
+                    .ok_or(Error::other(
+                        "Expected to find data to delete for {tag_ifd:?}",
+                    ))?
+                    .zero();
+            } else if let Some(old_data_offset) = current_data_store
+                && new_data_store
+            {
+                if data.len() > old_data_len {
+                    return Err(Error::WouldIncreaseDataStore);
+                }
+
+                // Data remains in in store
+                let old_data_offset_end = old_data_offset + old_data_len;
+
+                entry.update_offset(tag_ifd.tag, value.type_(), value.count(), old_data_offset)?;
+
+                let x = document
+                    .data(old_data_offset..old_data_offset_end)
+                    .ok_or(Error::other(
+                        "Expected to find data to delete for {tag_ifd:?}",
+                    ))?;
+                x.zero();
+
+                x.get_mut(..data.len())
+                    .ok_or(Error::IndexOverflow)?
+                    .copy_from_slice(&data);
+            }
+
+            Ok::<_, Error>(())
+        })
     }
 
-    pub fn camera_owner_name(&self) -> Option<String> {
-        self.document(|x| x.camera_owner_name())
-    }
+    pub fn update_entry_diff(
+        &mut self,
+        tag_ifd: TagIfd,
+        value: Typed,
+    ) -> Result<Vec<(usize, u8)>, Error> {
+        let serialized_old = self.serialize()?;
+        self.update_entry(tag_ifd, value)?;
+        let serialized_new = self.serialize()?;
 
-    pub fn document<T>(&self, f: impl FnOnce(&mut Document<'_>) -> T) -> T {
-        self.document.access(|x| f(x))
-    }
+        let mut changes = Vec::new();
+        for (n_byte, (old, new)) in serialized_old.into_iter().zip(serialized_new).enumerate() {
+            if old != new {
+                changes.push((n_byte, new));
+            }
+        }
 
-    #[cfg(feature = "chrono")]
-    pub fn date_time_original(&self) -> Option<gufo_common::datetime::DateTime> {
-        self.document(|x| x.date_time_original())
-    }
-
-    /// Exposure time in seconds
-    ///
-    /// Fraction of first element devided by second element. The first element
-    /// is typically one, such that the value is given in its common for like
-    /// "1/60 sec".
-    pub fn exposure_time(&self) -> Option<Rational<u32>> {
-        self.document(|x| x.exposure_time())
-    }
-
-    /// Aperture
-    pub fn f_number(&self) -> Option<f32> {
-        self.document(|x| x.f_number())
-    }
-
-    /// Focal length in mm
-    pub fn focal_length(&self) -> Option<f32> {
-        self.document(|x| x.focal_length())
-    }
-
-    pub fn gps_location(&self) -> Option<geography::Location> {
-        self.document(|x| x.gps_location())
-    }
-
-    /// ISO
-    pub fn iso_speed_rating(&self) -> Option<u16> {
-        self.document(|x| x.iso_speed_rating())
-    }
-
-    /// Camera manifacturer
-    pub fn make(&self) -> Option<String> {
-        self.document(|x| x.make())
-    }
-
-    /// Camera model
-    pub fn model(&self) -> Option<String> {
-        self.document(|x| x.model())
-    }
-
-    /// Image orientation
-    ///
-    /// Rotation and mirroring that have to be applied to show the image
-    /// correctly
-    pub fn orientation(&self) -> Option<orientation::Orientation> {
-        self.document(|x| x.orientation())
-    }
-
-    pub fn software(&self) -> Option<String> {
-        self.document(|x| x.software())
-    }
-
-    pub fn user_comment(&self) -> Option<String> {
-        self.document(|x| x.user_comment())
+        Ok(changes)
     }
 }

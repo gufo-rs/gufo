@@ -24,6 +24,8 @@ pub enum Error {
     ElementCountMissmatch(usize, usize),
     #[error("InputDataWrongLength: Expected data of length '{1}', got length '{0}'")]
     InputDataWrongLength(usize, usize),
+    #[error("WouldIncreaseDataStore")]
+    WouldIncreaseDataStore,
     #[error("Other: {0}")]
     Other(String),
 }

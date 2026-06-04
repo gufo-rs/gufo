@@ -18,7 +18,7 @@ pub enum Ifd<'a> {
 }
 
 impl<'a> Ifd<'a> {
-    pub fn assemble(&self) -> Vec<u8> {
+    pub fn serialize(&self) -> Vec<u8> {
         // Ifd entry list starts with number of entries
         let mut vec = crate::forall_formats!(self, ifd, ifd.n_entries.as_bytes()).to_vec();
 
@@ -27,7 +27,7 @@ impl<'a> Ifd<'a> {
             ifd,
             ifd.entries
                 .values()
-                .map(|x| x.assemble())
+                .map(|x| x.serialize())
                 .collect::<Vec<_>>()
         ) {
             vec.extend_from_slice(entry);

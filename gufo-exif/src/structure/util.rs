@@ -1,6 +1,6 @@
 use std::fmt::Display;
 
-use zerocopy::{ByteOrder, FromBytes, Immutable, IntoBytes, KnownLayout, Unaligned, U16, U32, U64};
+use zerocopy::{ByteOrder, FromBytes, Immutable, IntoBytes, KnownLayout, U16, U32, U64, Unaligned};
 
 use crate::Error;
 
@@ -41,6 +41,27 @@ impl Endieness {
         match self {
             Self::Big => Ok(i32::from_be_bytes(bytes)),
             Self::Litte => Ok(i32::from_le_bytes(bytes)),
+        }
+    }
+
+    pub fn u16_to_bytes(&self, value: u16) -> [u8; 2] {
+        match self {
+            Self::Big => value.to_be_bytes(),
+            Self::Litte => value.to_le_bytes(),
+        }
+    }
+
+    pub fn u32_to_bytes(&self, value: u32) -> [u8; 4] {
+        match self {
+            Self::Big => value.to_be_bytes(),
+            Self::Litte => value.to_le_bytes(),
+        }
+    }
+
+    pub fn i32_to_bytes(&self, value: i32) -> [u8; 4] {
+        match self {
+            Self::Big => value.to_be_bytes(),
+            Self::Litte => value.to_le_bytes(),
         }
     }
 }
