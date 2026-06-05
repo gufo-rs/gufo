@@ -25,7 +25,7 @@ fn print(exif_data: Vec<u8>) {
 
     eprintln!("{}", output(&mut exif));
 
-    show_("Camera Owner Name", exif.camera_owner_name());
+    show("Camera Owner Name", exif.camera_owner_name());
     show("DateTime Original", exif.date_time_original());
     show("Exposure Time", exif.exposure_time().map(|x| x.display()));
     show("F-Number", exif.f_number());

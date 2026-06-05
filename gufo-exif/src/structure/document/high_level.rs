@@ -10,7 +10,7 @@ impl<'a> Document<'a> {
         if let Some(s) = handle_error(self.lookup_string_raw(field::CameraOwnerName.into())) {
             Some(s)
         } else {
-            handle_error(self.lookup_string_raw(field::CanonCameraOwnerName.into()))
+            handle_error(self.lookup_string(field::CanonCameraOwnerName.into()))
         }
     }
 
