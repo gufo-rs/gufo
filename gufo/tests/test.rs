@@ -112,7 +112,7 @@ struct Reference<'a> {
 
 fn check(metadata: &gufo::Metadata, reference: &Reference) {
     assert_eq!(
-        metadata.camera_owner(),
+        metadata.camera_owner_name(),
         reference.camera_owner.map(ToString::to_string)
     );
     assert_eq!(

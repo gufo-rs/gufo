@@ -22,7 +22,7 @@ impl<'a> Entry<'a> {
         crate::forall_formats_self!(self, entry, entry.value_or_offset())
     }
 
-    pub fn ifd_pointer(&mut self) -> Result<u16, Error> {
+    pub fn ifd_pointer(&mut self) -> Result<u32, Error> {
         crate::forall_formats_self!(self, entry, entry.ifd_pointer())
     }
 
@@ -137,12 +137,12 @@ impl<T: IndexType + zerocopy::Immutable, O: ByteOrder> EntryGeneric<T, O> {
         }
     }
 
-    pub fn ifd_pointer(&mut self) -> Result<u16, Error> {
+    pub fn ifd_pointer(&mut self) -> Result<u32, Error> {
         let count = self.count()?;
         let type_ = self.type_();
         if (count == 1 && type_ == Type::Long) || type_ == Type::Undefined {
             Ok(
-                U16::<O>::read_from_prefix(self.value_or_offset.as_mut_bytes())
+                U32::<O>::read_from_prefix(self.value_or_offset.as_mut_bytes())
                     .map_err(|_| Error::TryFromSlice)?
                     .0
                     .get(),

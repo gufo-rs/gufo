@@ -31,7 +31,7 @@ pub fn main() {
     );
 
     p("Creator", metadata.creator());
-    p("Camera Owner", metadata.camera_owner());
+    p("Camera Owner", metadata.camera_owner_name());
 }
 
 pub fn p(label: &str, s: Option<impl Display>) {

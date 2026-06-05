@@ -209,7 +209,7 @@ impl Metadata {
         self.get_exif(exif_op).or_else(|| self.get_xmp(xmp_op))
     }
 
-    pub fn camera_owner(&self) -> Option<String> {
+    pub fn camera_owner_name(&self) -> Option<String> {
         self.get_exif(Exif::camera_owner_name)
     }
 

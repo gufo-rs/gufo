@@ -540,6 +540,7 @@ dependencies = [
  "gufo-common",
  "gufo-exif",
  "gufo-jpeg",
+ "gufo-xmp",
  "tracing-subscriber",
 ]
 
