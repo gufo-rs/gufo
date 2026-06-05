@@ -40,11 +40,11 @@ impl<'a> Storage<'a> for OwnedStore {
     }
 }
 
-pub struct BorrowedStore<'a> {
+pub struct MutBorrowedStore<'a> {
     document: Mutex<Document<'a>>,
 }
 
-impl<'a> Storage<'a> for BorrowedStore<'a> {
+impl<'a> Storage<'a> for MutBorrowedStore<'a> {
     fn access<T>(&self, f: impl FnOnce(&mut Document) -> T) -> T {
         f(&mut self.document.lock().unwrap())
     }
@@ -61,14 +61,14 @@ impl<'a> ExifInternal<'a, OwnedStore> {
     }
 }
 
-impl<'a> ExifInternal<'a, BorrowedStore<'a>> {
+impl<'a> ExifInternal<'a, MutBorrowedStore<'a>> {
     pub fn for_mut_slice(data: &'a mut [u8]) -> Result<Self, Error> {
         let document = Document::for_mut_slice(data)?;
         Ok(Self {
-            document: BorrowedStore {
+            document: MutBorrowedStore {
                 document: Mutex::new(document),
             },
-            lifetime: Default::default(),
+            lifetime: PhantomData::<&'a ()>,
         })
     }
 }
