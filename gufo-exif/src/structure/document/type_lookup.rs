@@ -3,6 +3,7 @@ use gufo_common::types::Rational;
 
 use super::Document;
 use crate::Error;
+use crate::structure::util::Endieness;
 use crate::structure::{Type, Typed};
 
 impl<'a> Document<'a> {
@@ -124,8 +125,30 @@ impl<'a> Document<'a> {
 
         let s = if let Some(ascii) = data.strip_prefix(b"ASCII\0\0\0") {
             String::from_utf8_lossy(ascii).to_string()
-        } else if let Some(utf8) = data.strip_prefix(b"UNICODE\0") {
-            String::from_utf8_lossy(utf8).to_string()
+        } else if let Some(unicode) = data.strip_prefix(b"UNICODE\0") {
+            if let Ok(s) = String::from_utf8(unicode.to_vec()) {
+                // First try UTF-8 as specified in Exif 3.0
+                s
+            } else {
+                let u16_vec = match self.endieness {
+                    Endieness::Big => unicode
+                        .chunks_exact(2)
+                        .map(|x| u16::from_be_bytes(x.try_into().unwrap()))
+                        .collect::<Vec<_>>(),
+                    Endieness::Litte => unicode
+                        .chunks_exact(2)
+                        .map(|x| u16::from_le_bytes(x.try_into().unwrap()))
+                        .collect::<Vec<_>>(),
+                };
+
+                if let Ok(x) = String::from_utf16(&u16_vec) {
+                    // Try UTF-16 otherwise, since Exif 2.3 can be interpreted as using UCS-2
+                    x
+                } else {
+                    // Fallback to UTF-8 lossy if both don't work
+                    String::from_utf8_lossy(unicode).to_string()
+                }
+            }
         } else {
             // Don't expect leading NULLs here since sometimes the content starts directly
             String::from_utf8_lossy(&data).to_string()
