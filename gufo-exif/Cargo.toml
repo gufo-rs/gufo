@@ -22,3 +22,6 @@ workspace = true
 default = ["tracing"]
 tracing = ["dep:tracing"]
 chrono = ["dep:chrono", "gufo-common/chrono"]
+
+[dev-dependencies]
+gufo-jpeg.workspace = true

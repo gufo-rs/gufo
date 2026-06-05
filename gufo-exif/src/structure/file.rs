@@ -6,9 +6,9 @@ use indexmap::IndexMap;
 use zerocopy::{BigEndian, ByteOrder, FromBytes, LittleEndian, U16, U32, U64};
 
 use super::util::{IndexType, UsizeConversion};
-use super::{Entry, Ifd, IfdTyped};
+use super::{Ifd, IfdGeneric};
 use crate::error::Error;
-use crate::structure::EntryTyped;
+use crate::structure::EntryGeneric;
 use crate::structure::util::{Endieness, handle_error_};
 
 const MAGIC_BYTES_LE_32: &[u8] = b"II*\0";
@@ -17,30 +17,30 @@ const MAGIC_BYTES_LE_64: &[u8] = b"II+\0";
 const MAGIC_BYTES_BE_64: &[u8] = b"MM\0+";
 
 #[derive(Debug)]
-pub enum FileParser<'a> {
-    Le32(FileTyped<'a, U32<LittleEndian>, LittleEndian>),
-    Be32(FileTyped<'a, U32<BigEndian>, BigEndian>),
-    Le64(FileTyped<'a, U64<LittleEndian>, LittleEndian>),
-    Be64(FileTyped<'a, U64<BigEndian>, BigEndian>),
+pub(crate) enum Parser<'a> {
+    Le32(ParserGeneric<'a, U32<LittleEndian>, LittleEndian>),
+    Be32(ParserGeneric<'a, U32<BigEndian>, BigEndian>),
+    Le64(ParserGeneric<'a, U64<LittleEndian>, LittleEndian>),
+    Be64(ParserGeneric<'a, U64<BigEndian>, BigEndian>),
 }
 
-impl<'a> FileParser<'a> {
+impl<'a> Parser<'a> {
     pub fn new(data: &'a mut [u8]) -> Result<Self, Error> {
         let magic_bytes = data.get(..4).ok_or(Error::TryFromSlice)?;
 
         Ok(match magic_bytes {
-            MAGIC_BYTES_BE_32 => Self::Be32(FileTyped::<U32<BigEndian>, BigEndian>::new(data)),
+            MAGIC_BYTES_BE_32 => Self::Be32(ParserGeneric::<U32<BigEndian>, BigEndian>::new(data)),
             MAGIC_BYTES_LE_32 => {
-                Self::Le32(FileTyped::<U32<LittleEndian>, LittleEndian>::new(data))
+                Self::Le32(ParserGeneric::<U32<LittleEndian>, LittleEndian>::new(data))
             }
             MAGIC_BYTES_BE_64 => {
-                let mut x = Self::Be64(FileTyped::<U64<BigEndian>, BigEndian>::new(data));
+                let mut x = Self::Be64(ParserGeneric::<U64<BigEndian>, BigEndian>::new(data));
                 x.read_u16()?;
                 x.read_u16()?;
                 x
             }
             MAGIC_BYTES_LE_64 => {
-                let mut x = Self::Le64(FileTyped::<U64<LittleEndian>, LittleEndian>::new(data));
+                let mut x = Self::Le64(ParserGeneric::<U64<LittleEndian>, LittleEndian>::new(data));
                 x.read_u16()?;
                 x.read_u16()?;
                 x
@@ -108,57 +108,40 @@ impl<'a> FileParser<'a> {
     }
 
     pub fn n_entries_size(&self) -> usize {
-        crate::forall_formats!(self, file, file.n_entries_size())
+        crate::forall_formats_self!(self, file, file.n_entries_size())
     }
 
     pub fn index_size(&self) -> usize {
-        crate::forall_formats!(self, file, file.index_size())
+        crate::forall_formats_self!(self, file, file.index_size())
     }
 
     pub fn entry_size(&self) -> usize {
-        crate::forall_formats!(self, file, file.entry_size())
+        crate::forall_formats_self!(self, file, file.entry_size())
     }
 
     pub fn read_primary_ifd_offset(&mut self) -> Result<usize, Error> {
-        crate::forall_formats!(self, file, file.read_primary_ifd_offset())
+        crate::forall_formats_self!(self, file, file.read_primary_ifd_offset())
     }
 
     pub fn read_u16(&mut self) -> Result<u16, Error> {
-        crate::forall_formats!(self, file, Ok(file.read_u16()?.get()))
-    }
-
-    pub fn read_n_entries(&mut self) -> Result<usize, Error> {
-        crate::forall_formats!(self, file, file.read_index()?.try_to_usize())
+        crate::forall_formats_self!(self, file, Ok(file.read_u16()?.get()))
     }
 
     pub fn seek_absolute(&mut self, abs_pos: usize) -> Result<(), Error> {
-        crate::forall_formats!(self, file, file.seek_absolute(abs_pos))
-    }
-
-    pub fn read_entry(&mut self) -> Result<Entry<'a>, Error> {
-        Ok(match self {
-            FileParser::Be32(x) => Entry::Be32(x.read_entry()?),
-            FileParser::Le32(x) => Entry::Le32(x.read_entry()?),
-            FileParser::Be64(x) => Entry::Be64(x.read_entry()?),
-            FileParser::Le64(x) => Entry::Le64(x.read_entry()?),
-        })
+        crate::forall_formats_self!(self, file, file.seek_absolute(abs_pos))
     }
 
     pub fn read_ifd(&mut self, ifd: IfdId) -> Result<Ifd<'a>, Error> {
         Ok(match self {
-            FileParser::Be32(x) => Ifd::Be32(x.read_ifd(ifd)?),
-            FileParser::Le32(x) => Ifd::Le32(x.read_ifd(ifd)?),
-            FileParser::Be64(x) => Ifd::Be64(x.read_ifd(ifd)?),
-            FileParser::Le64(x) => Ifd::Le64(x.read_ifd(ifd)?),
+            Parser::Be32(x) => Ifd::Be32(x.read_ifd(ifd)?),
+            Parser::Le32(x) => Ifd::Le32(x.read_ifd(ifd)?),
+            Parser::Be64(x) => Ifd::Be64(x.read_ifd(ifd)?),
+            Parser::Le64(x) => Ifd::Le64(x.read_ifd(ifd)?),
         })
     }
 
     pub fn data(self) -> (&'a mut [u8], Vec<(usize, &'a mut [u8])>) {
-        crate::forall_formats!(self, file, (file.primary_ifd_offset, file.data))
-    }
-
-    pub fn primary_ifd_offset(&mut self) -> &mut [u8] {
-        crate::forall_formats!(self, file, file.primary_ifd_offset)
+        crate::forall_formats_self!(self, file, (file.primary_ifd_offset, file.data))
     }
 
     pub fn endieness(&self) -> Endieness {
@@ -169,12 +152,12 @@ impl<'a> FileParser<'a> {
     }
 
     pub fn read_remaining_data(&mut self) {
-        crate::forall_formats!(self, file, file.read_remaining_data())
+        crate::forall_formats_self!(self, file, file.read_remaining_data())
     }
 }
 
 #[derive(Debug)]
-pub struct FileTyped<'a, T, O> {
+pub(crate) struct ParserGeneric<'a, T, O> {
     remaining_data: &'a mut [u8],
     pointer_type: PhantomData<T>,
     endieness: PhantomData<O>,
@@ -183,7 +166,7 @@ pub struct FileTyped<'a, T, O> {
     data: Vec<(usize, &'a mut [u8])>,
 }
 
-impl<'a, T: IndexType, O: ByteOrder> FileTyped<'a, T, O> {
+impl<'a, T: IndexType, O: ByteOrder> ParserGeneric<'a, T, O> {
     fn new(remaining_data: &'a mut [u8]) -> Self {
         Self {
             remaining_data,
@@ -252,16 +235,16 @@ impl<'a, T: IndexType, O: ByteOrder> FileTyped<'a, T, O> {
     }
 
     /// Read one entry from the ifd
-    fn read_entry(&mut self) -> Result<&'a mut EntryTyped<T, O>, Error> {
+    fn read_entry(&mut self) -> Result<&'a mut EntryGeneric<T, O>, Error> {
         let size = self.entry_size();
 
         let bytes = self.read_bytes(size)?;
 
-        EntryTyped::mut_from_bytes(bytes).map_err(Into::into)
+        EntryGeneric::mut_from_bytes(bytes).map_err(Into::into)
     }
 
     /// Read entries from ifd
-    fn read_ifd(&mut self, ifd: IfdId) -> Result<IfdTyped<'a, T, O>, Error> {
+    fn read_ifd(&mut self, ifd: IfdId) -> Result<IfdGeneric<'a, T, O>, Error> {
         let n_entries = self.read_n_entries()?;
         let mut entries = IndexMap::new();
         for _ in 0..n_entries.try_to_usize()? {
@@ -271,7 +254,7 @@ impl<'a, T: IndexType, O: ByteOrder> FileTyped<'a, T, O> {
 
         let ifd_offset = self.read_index()?;
 
-        Ok(IfdTyped {
+        Ok(IfdGeneric {
             namespace: ifd,
             n_entries,
             entries,
@@ -297,6 +280,6 @@ impl<'a, T: IndexType, O: ByteOrder> FileTyped<'a, T, O> {
 
     /// Byte size of one entry in the table
     fn entry_size(&self) -> usize {
-        std::mem::size_of::<EntryTyped<T, O>>()
+        std::mem::size_of::<EntryGeneric<T, O>>()
     }
 }

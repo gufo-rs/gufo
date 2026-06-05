@@ -185,7 +185,8 @@ impl<O: ByteOrder + 'static> IndexType for U64<O> {
 }
 
 #[macro_export]
-macro_rules! forall_formats {
+#[doc(hidden)]
+macro_rules! forall_formats_self {
     ($value:expr, $varname:ident, $function:expr) => {
         match $value {
             Self::Le32($varname) => $function,
@@ -197,7 +198,8 @@ macro_rules! forall_formats {
 }
 
 #[macro_export]
-macro_rules! forall_formats_ {
+#[doc(hidden)]
+macro_rules! forall_formats {
     ($enum_name:ident, $value:expr, $varname:ident, $function:expr) => {
         match $value {
             $enum_name::Le32($varname) => $function,

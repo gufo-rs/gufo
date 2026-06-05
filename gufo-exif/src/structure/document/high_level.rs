@@ -5,11 +5,12 @@ use super::Document;
 use crate::structure::util::{handle_error, handle_error_};
 
 impl<'a> Document<'a> {
+    //! Covenience functions for frequently used Exif fields. See [`Exif`](crate::Exif) for documentation.
     pub fn camera_owner_name(&mut self) -> Option<String> {
         if let Some(s) = handle_error(self.lookup_string_raw(field::CameraOwnerName.into())) {
             Some(s)
         } else {
-            handle_error(self.lookup_string_raw(field::CanonOwnerName.into()))
+            handle_error(self.lookup_string_raw(field::CanonCameraOwnerName.into()))
         }
     }
 
@@ -32,7 +33,6 @@ impl<'a> Document<'a> {
         f_number.map(|x| x.as_f32())
     }
 
-    /// Focal length in mm
     pub fn focal_length(&mut self) -> Option<f32> {
         let focal_length = handle_error(self.lookup_rational(field::FocalLength.into()));
 
@@ -80,7 +80,6 @@ impl<'a> Document<'a> {
         handle_error_(orientation::Orientation::try_from(orientation))
     }
 
-    /// Software used
     pub fn software(&mut self) -> Option<String> {
         handle_error(self.lookup_string_raw(field::Software.into()))
     }

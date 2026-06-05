@@ -7,7 +7,7 @@ fn thumbnailer(c: &mut Criterion) {
         b.iter_batched_ref(
             || std::fs::read("../apple-iphone6.exif.le.tiff").unwrap(),
             |data| {
-                let data = gufo_exif::ExifInternal::for_mut_slice(data).unwrap();
+                let data = gufo_exif::Exif::for_mut_slice(data).unwrap();
                 data.gps_location().unwrap();
             },
             criterion::BatchSize::LargeInput,

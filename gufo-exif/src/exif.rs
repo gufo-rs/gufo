@@ -9,18 +9,20 @@ use zerocopy::FromZeros;
 use crate::Error;
 use crate::structure::{Document, Typed, ValueOrOffset};
 
+/// Exif file
 #[derive(Debug)]
-pub struct ExifInternal<'a, S: Storage<'a>> {
+pub struct Exif<'a, S: Storage<'a>> {
     document: S,
     lifetime: PhantomData<&'a ()>,
 }
 
-impl<'a> Clone for ExifInternal<'a, OwnedStore> {
+impl<'a> Clone for Exif<'a, OwnedStore> {
     fn clone(&self) -> Self {
         Self::for_vec(self.serialize().unwrap()).unwrap()
     }
 }
 
+/// Data type on which [`Exif`] can be based
 pub trait Storage<'a> {
     fn access<T>(&self, f: impl FnOnce(&mut Document) -> T) -> T;
 }
@@ -50,7 +52,8 @@ impl<'a> Storage<'a> for MutBorrowedStore<'a> {
     }
 }
 
-impl<'a> ExifInternal<'a, OwnedStore> {
+impl<'a> Exif<'a, OwnedStore> {
+    /// Create from an owned vector
     pub fn for_vec(data: Vec<u8>) -> Result<Self, Error> {
         Ok(Self {
             document: OwnedStore::try_new(data, |x| {
@@ -61,7 +64,11 @@ impl<'a> ExifInternal<'a, OwnedStore> {
     }
 }
 
-impl<'a> ExifInternal<'a, MutBorrowedStore<'a>> {
+impl<'a> Exif<'a, MutBorrowedStore<'a>> {
+    /// Create for a mutable slice
+    ///
+    /// Functions that need to resize the underlying storage are not available
+    /// with this constructor. This includes the deletion of entries.
     pub fn for_mut_slice(data: &'a mut [u8]) -> Result<Self, Error> {
         let document = Document::for_mut_slice(data)?;
         Ok(Self {
@@ -73,7 +80,11 @@ impl<'a> ExifInternal<'a, MutBorrowedStore<'a>> {
     }
 }
 
-impl<'a> ExifInternal<'a, OwnedStore> {
+impl<'a> Exif<'a, OwnedStore> {
+    /// Delete entry
+    ///
+    /// The size of the raw exif data is not reduced. Deleted data is
+    /// overwritten with zeros instead.
     pub fn delete(&mut self, tag_ifd: TagIfd) -> Result<bool, Error> {
         let Some((pos_retain_begin, pos_retain_end, pos_retain_new, pos_obsolete_retain_start)) =
             self.document(|document| {
@@ -135,7 +146,7 @@ impl<'a> ExifInternal<'a, OwnedStore> {
             .zero();
 
         // Parse exif again from raw data
-        let exif = ExifInternal::for_vec(raw)?;
+        let exif = Exif::for_vec(raw)?;
 
         // Replace internal parsed data with new data
         self.document = exif.document;
@@ -144,7 +155,12 @@ impl<'a> ExifInternal<'a, OwnedStore> {
     }
 }
 
-impl<'a, S: Storage<'a>> ExifInternal<'a, S> {
+impl<'a, S: Storage<'a>> Exif<'a, S> {
+    /// Overwrite stored entry
+    ///
+    /// The raw size of `value` can only be of the same size or smaller than the
+    /// existing size. Otherwise, an [`Error::WouldIncreaseDataStore`] is
+    /// returned.
     pub fn update_entry(&mut self, tag_ifd: TagIfd, value: Typed) -> Result<(), Error> {
         self.document(|document| {
             let data = value.serialize(document.endieness);
@@ -209,6 +225,11 @@ impl<'a, S: Storage<'a>> ExifInternal<'a, S> {
         })
     }
 
+    /// Bytes that change by an update
+    ///
+    /// Identical to [`update_entry`](Self::update_entry). Aditionally, a list
+    /// of bytes with their corresponding values is returned. Changing these
+    /// bytes in the original raw exif would achieve the requested update.
     pub fn update_entry_diff(
         &mut self,
         tag_ifd: TagIfd,

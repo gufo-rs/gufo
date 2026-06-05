@@ -1,7 +1,6 @@
 use std::fmt::{Debug, Display};
 
-use gufo_common::field;
-use gufo_exif::{ExifInternal, Storage};
+use gufo_exif::{Exif, Storage};
 use tracing_subscriber::prelude::*;
 
 fn main() {
@@ -22,7 +21,7 @@ fn main() {
 }
 
 fn print(exif_data: Vec<u8>) {
-    let mut exif = gufo_exif::Exif::for_vec(exif_data).unwrap();
+    let mut exif = gufo_exif::ExifOwned::for_vec(exif_data).unwrap();
 
     eprintln!("{}", output(&mut exif));
 
@@ -58,11 +57,11 @@ fn show_<T: Debug>(name: &str, x: Option<T>) {
     println!("{:>20} {s}", format!("{name}:"));
 }
 
-pub fn output<'a, S: Storage<'a>>(exif: &mut ExifInternal<'a, S>) -> String {
+pub fn output<'a, S: Storage<'a>>(exif: &mut Exif<'a, S>) -> String {
     exif.document(|document| {
         let mut s = String::new();
 
-        let entries = document.entries();
+        let entries = document.entries().unwrap();
         for (ifd, (pos, _)) in document.ifds().iter_mut() {
             s.push_str(&format!("\n{ifd:?} ({pos})\n----------\n"));
 

@@ -1,25 +1,8 @@
 # Gufo Exif
 
-Gufo exif is a native Rust crate to read and edit EXIF metadata.
+Gufo exif is a native Rust crate to read and edit Exif metadata.
 
-This crate is specifically focused on editing EXIF data while preserving the existing structure as much as possible. Every edit operation tries to only updates the raw data as much as necessary.
-
-## Usage
-
-The high level API in `Exif` provides simple access to commonly used metadata.
-
-```
-let data = std::fs::read("tests/example.jpg").unwrap();
-let jpeg = gufo_jpeg::Jpeg::new(data).unwrap();
-let raw_exif = jpeg.exif_data().next().unwrap().to_vec();
-
-eprintln!("{}", String::from_utf8_lossy(&raw_exif));
-
-let exif = gufo_exif::Exif::new(raw_exif).unwrap();
-println!("Camera Model: {}", exif.model().unwrap());
-```
-
-This library also exposes lower level access to the Exif data. More details can be found in the [`internal`] documentation.
+This crate is specifically focused on editing Exif data while preserving the existing structure as much as possible. Every edit operation tries to only updates the raw data as much as necessary.
 
 ## Existing Crates
 

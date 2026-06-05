@@ -9,8 +9,11 @@ use gufo_common::exif::{IfdId, TagIfd};
 use super::Ifd;
 use crate::Error;
 use crate::structure::util::Endieness;
-use crate::structure::{Entry, FileParser, Type, Typed, ValueOrOffset};
+use crate::structure::{Entry, Parser, Type, Typed, ValueOrOffset};
 
+/// Exif Document
+///
+/// Access to the lower lying structures of an Exif document.
 #[derive(Debug)]
 pub struct Document<'a> {
     ifds: BTreeMap<IfdId, (usize, Ifd<'a>)>,
@@ -22,7 +25,7 @@ pub struct Document<'a> {
     pub(crate) entry_size: usize,
 }
 
-pub struct EntryTyped2 {
+pub struct EntryTyped {
     pub tag_ifd: TagIfd,
     pub count: usize,
     pub type_: Type,
@@ -38,7 +41,7 @@ pub struct EntryData<'a> {
 
 impl<'a> Document<'a> {
     pub fn for_mut_slice(data: &'a mut [u8]) -> Result<Self, Error> {
-        let mut file_parser = FileParser::new(data)?;
+        let mut file_parser = Parser::new(data)?;
 
         let ifds = file_parser.parse()?;
         let endieness = file_parser.endieness();
@@ -92,14 +95,16 @@ impl<'a> Document<'a> {
         Ok(vec)
     }
 
-    pub fn entries(&mut self) -> BTreeMap<IfdId, BTreeMap<gufo_common::exif::Tag, EntryTyped2>> {
+    pub fn entries(
+        &mut self,
+    ) -> Result<BTreeMap<IfdId, BTreeMap<gufo_common::exif::Tag, EntryTyped>>, Error> {
         let mut entries = Vec::new();
 
         for (ifd_id, (_, list)) in self.ifds.iter_mut() {
-            for entry in list.entries_immutable().unwrap().values() {
-                let tag_ifd = TagIfd::new(entry.tag, *ifd_id);
+            for entry in list.entries()?.values() {
+                let tag_ifd = TagIfd::new(entry.tag(), *ifd_id);
 
-                entries.push((tag_ifd, entry.count, entry.type_));
+                entries.push((tag_ifd, entry.count()?, entry.type_()));
             }
         }
 
@@ -118,7 +123,7 @@ impl<'a> Document<'a> {
                 })
                 .flatten();
 
-            let x = EntryTyped2 {
+            let x = EntryTyped {
                 tag_ifd,
                 count,
                 type_,
@@ -128,7 +133,7 @@ impl<'a> Document<'a> {
             y.insert(tag_ifd.tag, x);
         }
 
-        xs
+        Ok(xs)
     }
 
     pub fn list_entry_offset(&self, tag_ifd: TagIfd) -> Option<usize> {
@@ -149,7 +154,7 @@ impl<'a> Document<'a> {
 
     pub fn entry(&mut self, tag_ifd: TagIfd) -> Option<(usize, Entry<'_>)> {
         let ifd: &mut Ifd<'a> = self.ifd(tag_ifd.ifd)?;
-        crate::forall_formats_!(Ifd, ifd, ifd, {
+        crate::forall_formats!(Ifd, ifd, ifd, {
             let entry = ifd.entries.get_full_mut(&tag_ifd.tag.0)?;
             Some((entry.0, entry.2.as_entry()))
         })
@@ -160,7 +165,7 @@ impl<'a> Document<'a> {
             return Ok(None);
         };
 
-        let Some((n_entry, type_, count, value_or_offset)) = crate::forall_formats_!(
+        let Some((n_entry, type_, count, value_or_offset)) = crate::forall_formats!(
             Ifd,
             ifd,
             ifd,
@@ -189,7 +194,7 @@ impl<'a> Document<'a> {
                 return Ok(None);
             };
 
-            let value_or_offset = crate::forall_formats_!(
+            let value_or_offset = crate::forall_formats!(
                 Ifd,
                 ifd,
                 ifd,

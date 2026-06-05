@@ -6,6 +6,7 @@ use crate::Error;
 use crate::structure::{Type, Typed};
 
 impl<'a> Document<'a> {
+    /// Lookup entry with arbitrary type
     pub fn lookup(&mut self, tag_ifd: TagIfd) -> Result<Option<Typed>, Error> {
         let endieness = self.endieness;
 
@@ -16,7 +17,7 @@ impl<'a> Document<'a> {
         Typed::new(entry.type_, entry.count, entry.data, endieness).map(Some)
     }
 
-    /// Lookup Ascii or Utf8
+    /// Lookup entry with ASCII or UTF-8 entry
     pub fn lookup_string_raw(&mut self, tag_ifd: TagIfd) -> Result<Option<String>, Error> {
         let Some(typed) = self.lookup(tag_ifd)? else {
             return Ok(None);
@@ -44,6 +45,7 @@ impl<'a> Document<'a> {
         Ok(Some(s))
     }
 
+    /// Lookup entry with multiple short values
     pub fn lookup_shorts(&mut self, tag_ifd: TagIfd) -> Result<Option<Vec<u16>>, Error> {
         let Some(typed) = self.lookup(tag_ifd)? else {
             return Ok(None);
@@ -56,6 +58,7 @@ impl<'a> Document<'a> {
         }
     }
 
+    /// Lookup entry with single short entry
     pub fn lookup_short(&mut self, tag_ifd: TagIfd) -> Result<Option<u16>, Error> {
         let Some(vec) = self.lookup_shorts(tag_ifd)? else {
             return Ok(None);
@@ -72,6 +75,7 @@ impl<'a> Document<'a> {
         }
     }
 
+    /// Lookup entry with multiple rational entries
     pub fn lookup_rationals<const N: usize>(
         &mut self,
         tag_ifd: TagIfd,
@@ -92,10 +96,13 @@ impl<'a> Document<'a> {
         }
     }
 
+    /// Lookup entry with single rational entry
     pub fn lookup_rational(&mut self, tag_ifd: TagIfd) -> Result<Option<Rational<u32>>, Error> {
         Ok(self.lookup_rationals::<1>(tag_ifd)?.map(|x| x[0]))
     }
 
+    /// Lookupe entry with character identified code
+    ///
     /// Exif 3.0: 4.6.4. Character Identifier Code
     pub fn lookup_character_identified_code_string(
         &mut self,

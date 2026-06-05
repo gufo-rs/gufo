@@ -10,7 +10,7 @@ fn jpeg_exif() {
     let data = std::fs::read("exif-xmp.jpg").unwrap();
     let jpeg = gufo_jpeg::Jpeg::new(data).unwrap();
 
-    let exif = gufo_exif::Exif::for_vec(jpeg.exif_data().next().unwrap().to_vec()).unwrap();
+    let exif = gufo_exif::ExifOwned::for_vec(jpeg.exif_data().next().unwrap().to_vec()).unwrap();
 
     assert_eq!(
         exif.orientation(),
@@ -42,7 +42,8 @@ fn jpeg_rotate() {
 
     let jpeg = gufo_jpeg::Jpeg::new(data).unwrap();
 
-    let mut exif = gufo_exif::Exif::for_vec(jpeg.exif_data().next().unwrap().to_vec()).unwrap();
+    let mut exif =
+        gufo_exif::ExifOwned::for_vec(jpeg.exif_data().next().unwrap().to_vec()).unwrap();
     let jpeg_exif_segment_pos = jpeg.exif_segments().map(|x| x.data_pos()).next().unwrap();
 
     let current_orientation = exif.orientation().unwrap();
@@ -69,7 +70,7 @@ fn jpeg_rotate() {
     }
 
     let jpeg = gufo_jpeg::Jpeg::new(data).unwrap();
-    let exif = gufo_exif::Exif::for_vec(jpeg.exif_data().next().unwrap().to_vec()).unwrap();
+    let exif = gufo_exif::ExifOwned::for_vec(jpeg.exif_data().next().unwrap().to_vec()).unwrap();
     assert_eq!(
         exif.orientation(),
         Some(gufo_common::orientation::Orientation::Rotation180)

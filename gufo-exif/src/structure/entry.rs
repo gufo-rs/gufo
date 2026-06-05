@@ -2,31 +2,28 @@ use gufo_common::exif::Tag;
 use zerocopy::{BE, BigEndian, ByteOrder, FromBytes, IntoBytes, LE, LittleEndian, U16, U32, U64};
 
 use super::type_::Type;
-use super::util::{IndexType, UsizeConversion};
+use super::util::IndexType;
 use crate::Error;
-
-pub struct EntryImmutable {
-    pub tag: Tag,
-    pub type_: Type,
-    pub count: usize,
-    pub value_or_offset: usize,
-}
 
 #[derive(Debug)]
 pub enum Entry<'a> {
-    Be32(&'a mut EntryTyped<U32<BigEndian>, BigEndian>),
-    Le32(&'a mut EntryTyped<U32<LittleEndian>, LittleEndian>),
-    Be64(&'a mut EntryTyped<U64<BigEndian>, BigEndian>),
-    Le64(&'a mut EntryTyped<U64<LittleEndian>, LittleEndian>),
+    Be32(&'a mut EntryGeneric<U32<BigEndian>, BigEndian>),
+    Le32(&'a mut EntryGeneric<U32<LittleEndian>, LittleEndian>),
+    Be64(&'a mut EntryGeneric<U64<BigEndian>, BigEndian>),
+    Le64(&'a mut EntryGeneric<U64<LittleEndian>, LittleEndian>),
 }
 
 impl<'a> Entry<'a> {
+    pub fn tag(&self) -> Tag {
+        crate::forall_formats_self!(self, entry, entry.tag())
+    }
+
     pub fn value_or_offset(&mut self) -> Result<ValueOrOffset<'_>, Error> {
-        crate::forall_formats!(self, entry, entry.value_or_offset())
+        crate::forall_formats_self!(self, entry, entry.value_or_offset())
     }
 
     pub fn ifd_pointer(&mut self) -> Result<u16, Error> {
-        crate::forall_formats!(self, entry, entry.ifd_pointer())
+        crate::forall_formats_self!(self, entry, entry.ifd_pointer())
     }
 
     pub fn update(
@@ -36,7 +33,7 @@ impl<'a> Entry<'a> {
         count: usize,
         value: Vec<u8>,
     ) -> Result<(), Error> {
-        crate::forall_formats!(self, entry, {
+        crate::forall_formats_self!(self, entry, {
             entry.check_count_fits(count)?;
             entry.set_value(value)?;
             entry.set_count(count)?;
@@ -65,47 +62,11 @@ impl<'a> Entry<'a> {
     }
 
     pub fn type_(&self) -> Type {
-        crate::forall_formats!(self, entry, entry.type_())
+        crate::forall_formats_self!(self, entry, entry.type_())
     }
 
     pub fn count(&self) -> Result<usize, Error> {
-        crate::forall_formats!(self, entry, entry.count())
-    }
-
-    pub fn to_immutable(&self) -> Result<EntryImmutable, Error> {
-        let (tag_id, type_, count, value_or_offset) = match self {
-            Self::Be32(x) => (
-                x.tag_id.get(),
-                x.type_.get(),
-                x.count.try_to_usize()?,
-                x.value_or_offset.try_to_usize()?,
-            ),
-            Self::Le32(x) => (
-                x.tag_id.get(),
-                x.type_.get(),
-                x.count.try_to_usize()?,
-                x.value_or_offset.try_to_usize()?,
-            ),
-            Self::Be64(x) => (
-                x.tag_id.get(),
-                x.type_.get(),
-                x.count.try_to_usize()?,
-                x.value_or_offset.try_to_usize()?,
-            ),
-            Self::Le64(x) => (
-                x.tag_id.get(),
-                x.type_.get(),
-                x.count.try_to_usize()?,
-                x.value_or_offset.try_to_usize()?,
-            ),
-        };
-
-        Ok(EntryImmutable {
-            tag: Tag(tag_id),
-            type_: Type::from(type_),
-            count,
-            value_or_offset,
-        })
+        crate::forall_formats_self!(self, entry, entry.count())
     }
 }
 
@@ -113,7 +74,7 @@ impl<'a> Entry<'a> {
     Debug, zerocopy::FromBytes, zerocopy::KnownLayout, zerocopy::IntoBytes, zerocopy::Immutable,
 )]
 #[repr(C)]
-pub struct EntryTyped<T: IndexType + zerocopy::Immutable, O: ByteOrder> {
+pub struct EntryGeneric<T: IndexType + zerocopy::Immutable, O: ByteOrder> {
     /// What data is stored (focal length etc)
     pub tag_id: U16<O>,
     pub type_: U16<O>,
@@ -122,7 +83,11 @@ pub struct EntryTyped<T: IndexType + zerocopy::Immutable, O: ByteOrder> {
     pub value_or_offset: T,
 }
 
-impl<T: IndexType + zerocopy::Immutable, O: ByteOrder> EntryTyped<T, O> {
+impl<T: IndexType + zerocopy::Immutable, O: ByteOrder> EntryGeneric<T, O> {
+    pub fn tag(&self) -> Tag {
+        Tag(self.tag_id.get())
+    }
+
     pub fn type_(&self) -> Type {
         Type::from(self.type_.get())
     }
@@ -191,25 +156,25 @@ impl<T: IndexType + zerocopy::Immutable, O: ByteOrder> EntryTyped<T, O> {
     }
 }
 
-impl EntryTyped<U32<BigEndian>, BigEndian> {
+impl EntryGeneric<U32<BigEndian>, BigEndian> {
     pub fn as_entry(&mut self) -> Entry<'_> {
         Entry::Be32(self)
     }
 }
 
-impl EntryTyped<U32<LittleEndian>, LittleEndian> {
+impl EntryGeneric<U32<LittleEndian>, LittleEndian> {
     pub fn as_entry(&mut self) -> Entry<'_> {
         Entry::Le32(self)
     }
 }
 
-impl EntryTyped<U64<BigEndian>, BigEndian> {
+impl EntryGeneric<U64<BigEndian>, BigEndian> {
     pub fn as_entry(&mut self) -> Entry<'_> {
         Entry::Be64(self)
     }
 }
 
-impl EntryTyped<U64<LittleEndian>, LittleEndian> {
+impl EntryGeneric<U64<LittleEndian>, LittleEndian> {
     pub fn as_entry(&mut self) -> Entry<'_> {
         Entry::Le64(self)
     }
