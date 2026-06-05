@@ -1,5 +1,7 @@
 use std::fmt::Display;
 
+use gufo_common::types::Rational;
+
 use crate::Error;
 use crate::structure::util::Endieness;
 
@@ -21,34 +23,6 @@ gufo_common::utils::convertible_enum!(
         Utf8 = 129,
     }
 );
-
-#[derive(Debug, Clone, Copy)]
-pub struct Rational<T: Display> {
-    pub numerator: T,
-    pub denominator: T,
-}
-
-impl Rational<u32> {
-    pub fn as_f32(&self) -> f32 {
-        self.numerator as f32 / self.denominator as f32
-    }
-
-    pub fn as_f64(&self) -> f64 {
-        self.numerator as f64 / self.denominator as f64
-    }
-}
-
-impl Rational<i32> {
-    pub fn as_f32(&self) -> f32 {
-        self.numerator as f32 / self.denominator as f32
-    }
-}
-
-impl<T: Display> Rational<T> {
-    pub fn display(&self) -> String {
-        format!("{}/{}", self.numerator, self.denominator)
-    }
-}
 
 impl Type {
     /// Size of an entry per count

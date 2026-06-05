@@ -7,6 +7,7 @@ use gufo_common::error::ErrorWithData;
 use gufo_common::geography;
 use gufo_common::orientation::Orientation;
 use gufo_common::prelude::*;
+use gufo_common::types::Rational;
 use gufo_exif::{Exif, ExifInternal};
 #[cfg(feature = "jpeg")]
 pub use gufo_jpeg as jpeg;
@@ -222,9 +223,8 @@ impl Metadata {
     }
 
     /// Exposure time in seconds
-    pub fn exposure_time(&self) -> Option<(u32, u32)> {
-        todo!()
-        //self.exif_xmp(Exif::exposure_time, Xmp::exposure_time)
+    pub fn exposure_time(&self) -> Option<Rational<u32>> {
+        self.exif_xmp(Exif::exposure_time, Xmp::exposure_time)
     }
 
     pub fn f_number(&self) -> Option<f32> {

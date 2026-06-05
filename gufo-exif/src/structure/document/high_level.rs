@@ -1,7 +1,7 @@
+use gufo_common::types::Rational;
 use gufo_common::{field, geography, orientation};
 
 use super::Document;
-use crate::structure::Rational;
 use crate::structure::util::{handle_error, handle_error_};
 
 impl<'a> Document<'a> {

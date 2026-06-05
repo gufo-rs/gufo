@@ -175,7 +175,7 @@ impl<T: IndexType + zerocopy::Immutable, O: ByteOrder> EntryTyped<T, O> {
     pub fn ifd_pointer(&mut self) -> Result<u16, Error> {
         let count = self.count()?;
         let type_ = self.type_();
-        if count == 1 && type_ == Type::Long {
+        if (count == 1 && type_ == Type::Long) || type_ == Type::Undefined {
             Ok(
                 U16::<O>::read_from_prefix(self.value_or_offset.as_mut_bytes())
                     .map_err(|_| Error::TryFromSlice)?

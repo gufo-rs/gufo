@@ -22,7 +22,7 @@ pub fn main() {
     p("F-Number", metadata.f_number().map(|x| format!("f/{x}")));
     p(
         "Exposure Time",
-        metadata.exposure_time().map(|(x, y)| format!("{x}/{y} s")),
+        metadata.exposure_time().map(|x| x.display()),
     );
     p("ISO", metadata.iso_speed_rating());
     p(

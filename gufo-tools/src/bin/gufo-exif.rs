@@ -1,5 +1,6 @@
 use std::fmt::{Debug, Display};
 
+use gufo_common::field;
 use gufo_exif::{ExifInternal, Storage};
 use tracing_subscriber::prelude::*;
 
@@ -21,22 +22,22 @@ fn main() {
 }
 
 fn print(exif_data: Vec<u8>) {
-    let mut image = gufo_exif::Exif::for_vec(exif_data).unwrap();
+    let mut exif = gufo_exif::Exif::for_vec(exif_data).unwrap();
 
-    eprintln!("{}", output(&mut image));
+    eprintln!("{}", output(&mut exif));
 
-    show_("Camera Owner Name", image.camera_owner_name());
-    show("DateTime Original", image.date_time_original());
-    show("Exposure Time", image.exposure_time().map(|x| x.display()));
-    show("F-Number", image.f_number());
-    show("Focal Length", image.focal_length());
-    show("GPS Location", image.gps_location().map(|x| x.iso_6709()));
-    show("ISO Speed Rating", image.iso_speed_rating());
-    show("Make", image.make());
-    show("Model", image.model());
-    show_("Orientation", image.orientation());
-    show("Software", image.software());
-    show("User Comment", image.user_comment());
+    show_("Camera Owner Name", exif.camera_owner_name());
+    show("DateTime Original", exif.date_time_original());
+    show("Exposure Time", exif.exposure_time().map(|x| x.display()));
+    show("F-Number", exif.f_number());
+    show("Focal Length", exif.focal_length());
+    show("GPS Location", exif.gps_location().map(|x| x.iso_6709()));
+    show("ISO Speed Rating", exif.iso_speed_rating());
+    show("Make", exif.make());
+    show("Model", exif.model());
+    show_("Orientation", exif.orientation());
+    show("Software", exif.software());
+    show("User Comment", exif.user_comment());
 }
 
 fn show<T: Display>(name: &str, x: Option<T>) {
