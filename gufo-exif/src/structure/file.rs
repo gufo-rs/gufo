@@ -77,9 +77,13 @@ impl<'a> Parser<'a> {
                     if let Some(offset) =
                         handle_error_(maker_ifd_pointer.ifd_pointer()).map(|x| x as usize)
                     {
-                        self.seek_absolute(offset)?;
-                        let maker_info_ifd = self.read_ifd(IfdId::Gps)?;
-                        ifds.insert(IfdId::MakerNote, (offset, maker_info_ifd));
+                        if handle_error_(self.seek_absolute(offset)).is_some() {
+                            if let Some(maker_info_ifd) =
+                                handle_error_(self.read_ifd(IfdId::MakerNote))
+                            {
+                                ifds.insert(IfdId::MakerNote, (offset, maker_info_ifd));
+                            }
+                        }
                     }
                 }
 
@@ -92,7 +96,7 @@ impl<'a> Parser<'a> {
             primary_ifd.entry_by_tag(gufo_common::field::GPSInfoIFDPointer::TAG)
         {
             if let Some(offset) = handle_error_(gps_ifd_pointer.ifd_pointer()).map(|x| x as usize) {
-                self.seek_absolute(offset)?;
+                dbg!(self.seek_absolute(offset))?;
                 let gps_info_ifd = self.read_ifd(IfdId::Gps)?;
                 ifds.insert(IfdId::Gps, (offset, gps_info_ifd));
             }
@@ -215,7 +219,7 @@ impl<'a, T: IndexType, O: ByteOrder> ParserGeneric<'a, T, O> {
 
     fn seek_absolute(&mut self, abs_pos: usize) -> Result<(), Error> {
         let pos = self.pos;
-        let relative_position = abs_pos.checked_sub(self.pos).unwrap();
+        let relative_position = abs_pos.checked_sub(self.pos).ok_or(Error::IndexOverflow)?;
 
         let bytes = self.read_bytes(relative_position)?;
 

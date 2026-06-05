@@ -11,8 +11,9 @@ repository.workspace = true
 gufo-exif = { workspace = true, features = ["chrono"] }
 gufo-common.workspace = true
 gufo-jpeg = { workspace = true }
-gufo = { workspace = true, features = ["all-image-formats"] }
+gufo = { workspace = true, features = ["all-image-formats", "chrono"] }
 tracing-subscriber = { version = "0.3", features = ["fmt", "env-filter"] }
+gufo-xmp.workspace = true
 
 [lints]
 workspace = true
