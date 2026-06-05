@@ -14,7 +14,7 @@ fn exif_delete_entry() {
     let (metadata, _) = gufo::RawMetadata::for_guessed(data).unwrap();
     let data = metadata.exif[0].clone();
 
-    let mut exif = gufo_exif::Exif::for_vec(data).unwrap();
+    let mut exif = gufo_exif::ExifOwned::for_vec(data).unwrap();
     let deleted = exif.delete(gufo_common::field::UserComment.into()).unwrap();
     assert_eq!(deleted, true);
 }

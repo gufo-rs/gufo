@@ -40,7 +40,7 @@ impl Type {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum Typed {
     Byte(Vec<u8>),
     Ascii(Vec<u8>),

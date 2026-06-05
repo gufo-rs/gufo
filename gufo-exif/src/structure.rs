@@ -7,6 +7,6 @@ mod util;
 
 pub use document::*;
 pub use entry::*;
-pub use file::*;
+use file::*;
 pub use ifd::*;
 pub use type_::*;

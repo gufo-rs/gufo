@@ -114,7 +114,7 @@ macros::make_tags![
 
     // Canon
     (0x7, CanonFirmwareVersion, IfdId::MakerNote),
-    (0x9, CanonOwnerName, IfdId::MakerNote),
+    (0x9, CanonCameraOwnerName, IfdId::MakerNote),
 ];
 
 macros::make_xmp_tags![

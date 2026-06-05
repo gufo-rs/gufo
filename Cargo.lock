@@ -493,6 +493,7 @@ version = "0.4.1"
 dependencies = [
  "chrono",
  "gufo-common",
+ "gufo-jpeg",
  "indexmap",
  "ouroboros",
  "thiserror 2.0.18",

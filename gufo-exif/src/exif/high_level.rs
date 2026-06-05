@@ -2,22 +2,26 @@ use gufo_common::types::Rational;
 use gufo_common::{geography, orientation};
 
 use crate::structure::Document;
-use crate::{Error, ExifInternal, Storage};
+use crate::{Error, Exif, Storage};
 
-impl<'a, S: Storage<'a>> ExifInternal<'a, S> {
+impl<'a, S: Storage<'a>> Exif<'a, S> {
+    /// Generate raw exif data representing the Exif data
     pub fn serialize(&self) -> Result<Vec<u8>, Error> {
         self.document(|x| x.serialize())
     }
 
-    pub fn camera_owner_name(&self) -> Option<String> {
-        self.document(|x| x.camera_owner_name())
-    }
-
+    /// Access to the underlying [`Document`]
     pub fn document<T>(&self, f: impl FnOnce(&mut Document<'_>) -> T) -> T {
         self.document.access(|x| f(x))
     }
 
+    /// Owner of the camera used in photography
+    pub fn camera_owner_name(&self) -> Option<String> {
+        self.document(|x| x.camera_owner_name())
+    }
+
     #[cfg(feature = "chrono")]
+    /// The date and time when the original image data was generated
     pub fn date_time_original(&self) -> Option<gufo_common::datetime::DateTime> {
         self.document(|x| x.date_time_original())
     }
@@ -41,6 +45,7 @@ impl<'a, S: Storage<'a>> ExifInternal<'a, S> {
         self.document(|x| x.focal_length())
     }
 
+    /// GPS location
     pub fn gps_location(&self) -> Option<geography::Location> {
         self.document(|x| x.gps_location())
     }
@@ -68,10 +73,12 @@ impl<'a, S: Storage<'a>> ExifInternal<'a, S> {
         self.document(|x| x.orientation())
     }
 
+    /// Name and version of the software or firmware of the camera or image input device
     pub fn software(&self) -> Option<String> {
         self.document(|x| x.software())
     }
 
+    /// Freely write keywords or comments on the image
     pub fn user_comment(&self) -> Option<String> {
         self.document(|x| x.user_comment())
     }
