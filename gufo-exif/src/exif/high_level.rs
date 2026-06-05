@@ -1,6 +1,7 @@
+use gufo_common::types::Rational;
 use gufo_common::{geography, orientation};
 
-use crate::structure::{Document, Rational};
+use crate::structure::Document;
 use crate::{Error, ExifInternal, Storage};
 
 impl<'a, S: Storage<'a>> ExifInternal<'a, S> {

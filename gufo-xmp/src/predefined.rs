@@ -1,4 +1,5 @@
 use gufo_common::field;
+use gufo_common::types::Rational;
 
 use super::Xmp;
 
@@ -16,7 +17,7 @@ impl Xmp {
         self.get_date_time(field::DateTimeOriginal)
     }
 
-    pub fn exposure_time(&self) -> Option<(u32, u32)> {
+    pub fn exposure_time(&self) -> Option<Rational<u32>> {
         self.get_frac(field::ExposureTime)
     }
 

@@ -68,7 +68,21 @@ impl<'a> FileParser<'a> {
             if let Some(offset) = handle_error_(exif_ifd_pointer.ifd_pointer()).map(|x| x as usize)
             {
                 self.seek_absolute(offset)?;
-                let exif_ifd = self.read_ifd(IfdId::Exif)?;
+                let mut exif_ifd = self.read_ifd(IfdId::Exif)?;
+
+                // Read Maker Info Ifd if available
+                if let Some(mut maker_ifd_pointer) =
+                    exif_ifd.entry_by_tag(gufo_common::field::MakerNote::TAG)
+                {
+                    if let Some(offset) =
+                        handle_error_(maker_ifd_pointer.ifd_pointer()).map(|x| x as usize)
+                    {
+                        self.seek_absolute(offset)?;
+                        let maker_info_ifd = self.read_ifd(IfdId::Gps)?;
+                        ifds.insert(IfdId::MakerNote, (offset, maker_info_ifd));
+                    }
+                }
+
                 ifds.insert(IfdId::Exif, (offset, exif_ifd));
             }
         }

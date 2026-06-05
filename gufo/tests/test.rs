@@ -1,4 +1,5 @@
 pub use gufo_common::orientation::Orientation;
+use gufo_common::types::Rational;
 
 #[test]
 pub fn canon_eos400d() {
@@ -6,7 +7,7 @@ pub fn canon_eos400d() {
         camera_owner: Some("Sophie Herold"),
         creator: None,
         date_time_original: Some("2012-09-16 14:08:04"),
-        exposure_time: Some((1, 500)),
+        exposure_time: Some(Rational::new(1, 500)),
         f_number: Some(13.),
         focal_length: Some(17.),
         gps_location: None,
@@ -52,7 +53,7 @@ pub fn apple_iphone6() {
             camera_owner: None,
             creator: None,
             date_time_original: Some("2020-07-07 14:08:27.890"),
-            exposure_time: Some((1, 100)),
+            exposure_time: Some(Rational::new(1, 100)),
             f_number: Some(2.2),
             focal_length: Some(2.65),
             gps_location: Some("geo:52.543644,13.383522"),
@@ -78,7 +79,7 @@ pub fn nikon_d5100() {
             // From XMP
             creator: Some("Kiley Barbero"),
             date_time_original: Some("2012-08-29 01:55:05.400"),
-            exposure_time: Some((1, 500)),
+            exposure_time: Some(Rational::new(1, 500)),
             f_number: Some(5.6),
             focal_length: Some(280.),
             gps_location: None,
@@ -97,7 +98,7 @@ struct Reference<'a> {
     camera_owner: Option<&'a str>,
     creator: Option<&'a str>,
     date_time_original: Option<&'a str>,
-    exposure_time: Option<(u32, u32)>,
+    exposure_time: Option<Rational<u32>>,
     f_number: Option<f32>,
     focal_length: Option<f32>,
     gps_location: Option<&'a str>,

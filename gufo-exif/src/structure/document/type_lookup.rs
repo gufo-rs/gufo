@@ -1,8 +1,9 @@
 use gufo_common::exif::TagIfd;
+use gufo_common::types::Rational;
 
 use super::Document;
 use crate::Error;
-use crate::structure::{Rational, Type, Typed};
+use crate::structure::{Type, Typed};
 
 impl<'a> Document<'a> {
     pub fn lookup(&mut self, tag_ifd: TagIfd) -> Result<Option<Typed>, Error> {

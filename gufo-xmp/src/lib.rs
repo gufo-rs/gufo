@@ -6,6 +6,7 @@ mod predefined;
 use std::collections::BTreeMap;
 use std::sync::Arc;
 
+use gufo_common::types::Rational;
 use gufo_common::xmp::Namespace;
 use xml::name::OwnedName;
 
@@ -90,18 +91,16 @@ impl Xmp {
         self.entries.get(&tag.into()).map(|x| x.as_str())
     }
 
-    pub fn get_frac(&self, tag: impl Into<Tag>) -> Option<(u32, u32)> {
+    pub fn get_frac(&self, tag: impl Into<Tag>) -> Option<Rational<u32>> {
         let (x, y) = self.get(tag)?.split_once('/')?;
         let x = x.parse().ok()?;
         let y = y.parse().ok()?;
 
-        Some((x, y))
+        Some(Rational::new(x, y))
     }
 
     pub fn get_frac_f32(&self, tag: impl Into<Tag>) -> Option<f32> {
-        let (x, y) = self.get_frac(tag)?;
-
-        let res = x as f32 / y as f32;
+        let res = self.get_frac(tag)?.as_f32();
         if res.is_finite() { Some(res) } else { None }
     }
 

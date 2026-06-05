@@ -59,6 +59,7 @@ macros::make_tags![
     (0x132, DateTime, IfdId::Primary),
     (0x13E, WhitePoint, IfdId::Primary, xmp = Tiff),
     (0x13F, PrimaryChromaticities, IfdId::Primary, xmp = Tiff),
+    (0x213, YCbCrPositioning, IfdId::Primary),
     (0x258, Xmp, IfdId::Primary),
 
 
@@ -85,15 +86,23 @@ macros::make_tags![
     (0x9203, BrightnessValue, IfdId::Exif, xmp = Exif),
     (0x9204, ExposureBiasValue, IfdId::Exif, xmp = Exif),
     (0x9207, MeteringMode, IfdId::Exif, xmp = Exif),
+    (0x9209, Flash, IfdId::Exif),
     (0x920A, FocalLength, IfdId::Exif, xmp = Exif),
+    (0x927C, MakerNote, IfdId::Exif),
     (0x9292, SubsecTimeDigitized, IfdId::Exif, xmp = Exif),
     (0xA000, FlashpixVersion, IfdId::Exif, xmp = Exif),
     (0xA001, ColorSpace, IfdId::Exif, xmp = Exif),
     (0xA002, PixelXDimension, IfdId::Exif, xmp = Exif),
     (0xA003, PixelYDimension, IfdId::Exif, xmp = Exif),
+    (0xA20E, FocalPlaneXResolution, IfdId::Exif),
+    (0xA20F, FocalPlaneYResolution, IfdId::Exif),
+    (0xA210, FocalPlaneResolutionUnit, IfdId::Exif),
+
     (0xA217, SensingMethod, IfdId::Exif, xmp = Exif),
     (0xA300, FileSource, IfdId::Exif, xmp = Exif),
+
     (0xA301, SceneType, IfdId::Exif, xmp = Exif),
+    (0xA401, CustomRendered, IfdId::Exif),
     (0xA402, ExposureMode, IfdId::Exif, xmp = Exif),
     (0xA403, WhiteBalance, IfdId::Exif, xmp = Exif),
     (0xA405, FocalLengthIn35mmFilm, IfdId::Exif, xmp = Exif),
@@ -103,9 +112,10 @@ macros::make_tags![
     (0xA433, LensMake, IfdId::Exif, xmp = Exif),
     (0xA434, LensModel, IfdId::Exif, xmp = Exif),
 
+    // Canon
+    (0x7, CanonFirmwareVersion, IfdId::MakerNote),
+    (0x9, CanonOwnerName, IfdId::MakerNote),
 ];
-
-macros::make_exif_tags!((0x9, CanonOwnerName, IfdId::MakerNote),);
 
 macros::make_xmp_tags![
     /// Legacy XMP Exif (till Exif 2.21)

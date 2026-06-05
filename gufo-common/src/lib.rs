@@ -10,5 +10,6 @@ pub mod math;
 pub mod orientation;
 pub mod prelude;
 pub mod read;
+pub mod types;
 pub mod utils;
 pub mod xmp;
