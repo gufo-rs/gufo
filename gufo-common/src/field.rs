@@ -11,6 +11,7 @@ use crate::exif::IfdId;
 macros::make_tags![
     // Interoperability
     (0x1, InteroperabilityIndex, IfdId::Interoperability),
+    (0x2, InteroperabilityVersion, IfdId::Interoperability),
 
     // GPS
     (0x0, GPSVersionID, IfdId::Gps, xmp = Exif),
@@ -132,7 +133,7 @@ macros::make_tags![
     (0xA409, Saturation, IfdId::Exif),
     (0xA40A, Sharpness, IfdId::Exif),
     (0xA40C, SubjectDistanceRange, IfdId::Exif),
-
+    (0xA420, ImageUniqueID, IfdId::Exif),
     (0xA430, CameraOwnerName, IfdId::Exif, xmp = ExifEX),
     (0xA431, BodySerialNumber, IfdId::Exif),
     (0xA432, LensSpecification, IfdId::Exif, xmp = ExifEX),
@@ -143,6 +144,7 @@ macros::make_tags![
     // Canon
     (0x7, CanonFirmwareVersion, IfdId::MakerNote),
     (0x9, CanonCameraOwnerName, IfdId::MakerNote),
+    (0x95, CanonLensModel, IfdId::MakerNote),
 ];
 
 macros::make_xmp_tags![

@@ -1,5 +1,6 @@
 use crate::types::Rational;
 
+#[derive(Debug)]
 pub struct LensSpecification {
     /// Minimal folcal length in mm
     pub min_focal_length: Rational<u32>,
@@ -12,24 +13,26 @@ pub struct LensSpecification {
 impl LensSpecification {
     pub fn display(&self) -> String {
         let mut s = if self.min_focal_length == self.max_focal_length {
-            format!("{:.1}\u{202F}mm", self.min_focal_length.as_f32())
+            format!("{}\u{202F}mm", self.min_focal_length.as_f32())
         } else {
             format!(
-                "{:.1}-{:.1}\u{202F}mm",
+                "{}–{}\u{202F}mm",
                 self.min_focal_length.as_f32(),
                 self.max_focal_length.as_f32()
             )
         };
 
-        if self.min_f_number_max_focal_length.numerator > 0 {
-            if self.min_f_number_max_focal_length == self.min_f_number_max_focal_length {
+        if self.min_f_number_max_focal_length.numerator > 0
+            && self.min_f_number_max_focal_length.denominator > 0
+        {
+            if self.min_f_number_min_focal_length == self.min_f_number_max_focal_length {
                 s.push_str(&format!(
-                    " \u{192}\u{2215}{:.1}",
+                    " \u{192}\u{2215}{}",
                     self.min_f_number_min_focal_length.as_f32()
                 ));
             } else {
                 s.push_str(&format!(
-                    " \u{192}\u{2215}{:.1}–{:.1}",
+                    " \u{192}\u{2215}{}–{}",
                     self.min_f_number_min_focal_length.as_f32(),
                     self.min_f_number_max_focal_length.as_f32()
                 ));
