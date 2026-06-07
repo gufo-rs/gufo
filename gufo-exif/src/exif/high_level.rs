@@ -89,7 +89,8 @@ impl<'a, S: Storage<'a>> Exif<'a, S> {
         self.document(|x| x.orientation())
     }
 
-    /// Name and version of the software or firmware of the camera or image input device
+    /// Name and version of the software or firmware of the camera or image
+    /// input device
     pub fn software(&self) -> Option<String> {
         self.document(|x| x.software())
     }

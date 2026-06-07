@@ -166,7 +166,7 @@ impl<O: ByteOrder> UsizeConversion for U64<O> {
 }
 
 pub trait IndexType:
-    FromBytes + IntoBytes + Immutable + KnownLayout + Unaligned + UsizeConversion + 'static
+    FromBytes + IntoBytes + Immutable + KnownLayout + Unaligned + UsizeConversion + Display + 'static
 {
     type NEntries: FromBytes
         + IntoBytes
@@ -174,6 +174,7 @@ pub trait IndexType:
         + KnownLayout
         + Unaligned
         + UsizeConversion
+        + Display
         + 'static;
 }
 

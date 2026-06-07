@@ -187,8 +187,9 @@ impl<'a> Document<'a> {
 
         let data = if let Some(offset) = offset {
             let len = count * type_.size();
-            self.data(offset..offset + len)
-                .ok_or(Error::IndexOverflow)?
+            let data_range = offset..offset + len;
+            self.data(data_range.clone())
+                .ok_or(Error::IndexNotFound(data_range))?
         } else {
             let Some(ifd) = self.ifd(tag_ifd.ifd) else {
                 return Ok(None);

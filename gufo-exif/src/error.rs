@@ -1,6 +1,7 @@
 use std::array::TryFromSliceError;
 use std::fmt::Display;
 use std::num::TryFromIntError;
+use std::ops::Range;
 
 use zerocopy::ConvertError;
 
@@ -12,6 +13,10 @@ pub enum Error {
     TryFromSlice,
     #[error("TryFromInt")]
     TryFromInt,
+    #[error("IndexUsed")]
+    IndexUsed,
+    #[error("IndexNotFound({0:?})")]
+    IndexNotFound(Range<usize>),
     #[error("Alignment: {0}")]
     Alignment(String),
     #[error("IndexOverflow")]

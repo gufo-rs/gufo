@@ -112,7 +112,7 @@ impl<'a> Parser<'a> {
             primary_ifd.entry_by_tag(gufo_common::field::GPSInfoIFDPointer::TAG)
         {
             if let Some(offset) = handle_error_(gps_ifd_pointer.ifd_pointer()).map(|x| x as usize) {
-                dbg!(self.seek_absolute(offset))?;
+                self.seek_absolute(offset)?;
                 let gps_info_ifd = self.read_ifd(IfdId::Gps)?;
                 ifds.insert(IfdId::Gps, (offset, gps_info_ifd));
             }
@@ -179,11 +179,14 @@ impl<'a> Parser<'a> {
 #[derive(Debug)]
 pub(crate) struct ParserGeneric<'a, T, O> {
     remaining_data: &'a mut [u8],
+    remaining_data_pos: usize,
+    pos: usize,
+    // Data sections where either data referenced from Ifds lives or Ifds that haven't been parsed
+    // yet live
+    data: Vec<(usize, &'a mut [u8])>,
     pointer_type: PhantomData<T>,
     endieness: PhantomData<O>,
-    pos: usize,
     primary_ifd_offset: &'a mut [u8],
-    data: Vec<(usize, &'a mut [u8])>,
 }
 
 impl<'a, T: IndexType, O: ByteOrder> ParserGeneric<'a, T, O> {
@@ -191,6 +194,7 @@ impl<'a, T: IndexType, O: ByteOrder> ParserGeneric<'a, T, O> {
         Self {
             remaining_data,
             pos: 0,
+            remaining_data_pos: 0,
             pointer_type: Default::default(),
             endieness: Default::default(),
             primary_ifd_offset: Default::default(),
@@ -200,16 +204,73 @@ impl<'a, T: IndexType, O: ByteOrder> ParserGeneric<'a, T, O> {
 
     /// Read specified number of bytes
     fn read_bytes(&mut self, n_bytes: usize) -> Result<&'a mut [u8], Error> {
-        let current_data = std::mem::take(&mut self.remaining_data);
+        if self.remaining_data_pos == self.pos {
+            #[cfg(feature = "tracing")]
+            tracing::trace!(
+                "Reading {n_bytes} bytes from remaining data at {}",
+                self.pos
+            );
 
-        let (x, y) = current_data
-            .split_at_mut_checked(n_bytes)
-            .ok_or(Error::IndexOverflow)?;
+            let current_data = std::mem::take(&mut self.remaining_data);
 
-        self.remaining_data = y;
-        self.pos = self.pos.checked_add(n_bytes).ok_or(Error::IndexOverflow)?;
+            let (read, remaining_data) = current_data
+                .split_at_mut_checked(n_bytes)
+                .ok_or(Error::IndexOverflow)?;
 
-        Ok(x)
+            self.remaining_data = remaining_data;
+            let new_pos = self.pos.checked_add(n_bytes).ok_or(Error::IndexOverflow)?;
+            self.pos = new_pos;
+            self.remaining_data_pos = new_pos;
+
+            Ok(read)
+        } else {
+            #[cfg(feature = "tracing")]
+            tracing::trace!(
+                "Reading {n_bytes} bytes from already read data at {}",
+                self.pos
+            );
+
+            let data_index = self
+                .data
+                .iter()
+                .enumerate()
+                .find(|(_, (pos, x))| (*pos..*pos + x.len()).contains(&self.pos))
+                .ok_or(Error::IndexUsed)?
+                .0;
+
+            let (pos, data) = self.data.swap_remove(data_index);
+
+            // Split if data block start does not align with current position
+            let data = if pos != self.pos {
+                let remaining = self.pos - pos;
+
+                #[cfg(feature = "tracing")]
+                tracing::trace!(
+                    "Data block at {pos} does not align with position {}",
+                    self.pos
+                );
+
+                let (new_data_chunk, data) = data
+                    .split_at_mut_checked(remaining)
+                    .ok_or(Error::IndexOverflow)?;
+
+                self.data.push((pos, new_data_chunk));
+                data
+            } else {
+                data
+            };
+
+            let (read, remaining_data) = data.split_at_mut_checked(n_bytes).unwrap();
+            let new_pos = self.pos + read.len();
+
+            if remaining_data.len() > 0 {
+                self.data.push((new_pos, remaining_data));
+            }
+
+            self.pos = new_pos;
+
+            Ok(read)
+        }
     }
 
     /// Read index value, 32 bit for TIFF, 64 bit for BigTIFF
@@ -235,15 +296,32 @@ impl<'a, T: IndexType, O: ByteOrder> ParserGeneric<'a, T, O> {
 
     fn seek_absolute(&mut self, abs_pos: usize) -> Result<(), Error> {
         let pos = self.pos;
-        let relative_position = abs_pos.checked_sub(self.pos).ok_or(Error::IndexOverflow)?;
 
-        let bytes = self.read_bytes(relative_position)?;
+        #[cfg(feature = "tracing")]
+        tracing::trace!("Seeking absolute to {abs_pos} from current {pos}");
 
-        if !bytes.is_empty() {
-            self.data.push((pos, bytes));
+        if let Some(relative_position) = abs_pos.checked_sub(self.pos) {
+            // Seeking forward
+            let bytes = self.read_bytes(relative_position)?;
+
+            if !bytes.is_empty() {
+                self.data.push((pos, bytes));
+            }
+
+            Ok(())
+        } else {
+            let pos_found = self
+                .data
+                .iter()
+                .any(|(pos, x)| (*pos..*pos + x.len()).contains(pos));
+
+            if pos_found {
+                self.pos = abs_pos;
+                Ok(())
+            } else {
+                Err(Error::IndexUsed)
+            }
         }
-
-        Ok(())
     }
 
     /// Read number of entries in an ifd
@@ -269,13 +347,23 @@ impl<'a, T: IndexType, O: ByteOrder> ParserGeneric<'a, T, O> {
         tracing::trace!("{ifd:?}: Reading n-entries");
 
         let n_entries = self.read_n_entries()?;
+
+        #[cfg(feature = "tracing")]
+        tracing::trace!("{ifd:?}: Has {n_entries} entries");
+
         let mut entries = IndexMap::new();
         for _ in 0..n_entries.try_to_usize()? {
             let entry = self.read_entry()?;
             entries.insert(entry.tag_id.get(), entry);
         }
 
+        #[cfg(feature = "tracing")]
+        tracing::trace!("{ifd:?}: Reading offset for next Ifd");
+
         let ifd_offset = self.read_index()?;
+
+        #[cfg(feature = "tracing")]
+        tracing::trace!("{ifd:?}: Next Ifd at {ifd_offset}");
 
         Ok(IfdGeneric {
             namespace: ifd,
