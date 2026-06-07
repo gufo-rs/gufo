@@ -87,6 +87,22 @@ impl<'a> Parser<'a> {
                     }
                 }
 
+                if let Some(mut interoperability_ifd) =
+                    exif_ifd.entry_by_tag(gufo_common::field::InteroperabilityIfd::TAG)
+                {
+                    if let Some(offset) =
+                        handle_error_(interoperability_ifd.ifd_pointer()).map(|x| x as usize)
+                    {
+                        self.seek_absolute(offset)?;
+                        let interoperability_ifd_content =
+                            self.read_ifd(IfdId::Interoperability)?;
+                        ifds.insert(
+                            IfdId::Interoperability,
+                            (offset, interoperability_ifd_content),
+                        );
+                    }
+                }
+
                 ifds.insert(IfdId::Exif, (offset, exif_ifd));
             }
         }
@@ -249,6 +265,9 @@ impl<'a, T: IndexType, O: ByteOrder> ParserGeneric<'a, T, O> {
 
     /// Read entries from ifd
     fn read_ifd(&mut self, ifd: IfdId) -> Result<IfdGeneric<'a, T, O>, Error> {
+        #[cfg(feature = "tracing")]
+        tracing::trace!("{ifd:?}: Reading n-entries");
+
         let n_entries = self.read_n_entries()?;
         let mut entries = IndexMap::new();
         for _ in 0..n_entries.try_to_usize()? {

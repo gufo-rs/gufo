@@ -1,5 +1,5 @@
 use gufo_common::types::Rational;
-use gufo_common::{field, geography, orientation};
+use gufo_common::{field, geography, hardware, orientation};
 
 use super::Document;
 use crate::structure::util::{handle_error, handle_error_};
@@ -12,6 +12,10 @@ impl<'a> Document<'a> {
         } else {
             handle_error(self.lookup_string(field::CanonCameraOwnerName.into()))
         }
+    }
+
+    pub fn digital_zoom_ratio(&mut self) -> Option<Rational<u32>> {
+        handle_error(self.lookup_rational(field::DigitalZoomRatio.into()))
     }
 
     #[cfg(feature = "chrono")]
@@ -64,6 +68,30 @@ impl<'a> Document<'a> {
 
     pub fn iso_speed_rating(&mut self) -> Option<u16> {
         handle_error(self.lookup_short(field::PhotographicSensitivity.into()))
+    }
+
+    pub fn lens_make(&mut self) -> Option<String> {
+        handle_error(self.lookup_string_raw(field::LensMake.into()))
+    }
+
+    pub fn lens_model(&mut self) -> Option<String> {
+        handle_error(self.lookup_string_raw(field::LensModel.into()))
+    }
+
+    pub fn lens_specification(&mut self) -> Option<hardware::LensSpecification> {
+        let [
+            min_focal_length,
+            max_focal_length,
+            min_f_number_min_focal_length,
+            min_f_number_max_focal_length,
+        ] = handle_error(self.lookup_rationals(field::LensSpecification.into()))?;
+
+        Some(hardware::LensSpecification {
+            min_focal_length,
+            max_focal_length,
+            min_f_number_min_focal_length,
+            min_f_number_max_focal_length,
+        })
     }
 
     pub fn make(&mut self) -> Option<String> {

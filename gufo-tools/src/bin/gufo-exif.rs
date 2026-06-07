@@ -37,6 +37,12 @@ fn print(exif_data: Vec<u8>) {
     show_("Orientation", exif.orientation());
     show("Software", exif.software());
     show("User Comment", exif.user_comment());
+    show("Lens Make", exif.lens_make());
+    show("Lens Model", exif.lens_model());
+    show(
+        "Lens Sepcification",
+        exif.lens_specification().map(|x| x.display()),
+    );
 }
 
 fn show<T: Display>(name: &str, x: Option<T>) {

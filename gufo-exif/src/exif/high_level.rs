@@ -1,5 +1,5 @@
 use gufo_common::types::Rational;
-use gufo_common::{geography, orientation};
+use gufo_common::{geography, hardware, orientation};
 
 use crate::structure::Document;
 use crate::{Error, Exif, Storage};
@@ -24,6 +24,10 @@ impl<'a, S: Storage<'a>> Exif<'a, S> {
     /// The date and time when the original image data was generated
     pub fn date_time_original(&self) -> Option<gufo_common::datetime::DateTime> {
         self.document(|x| x.date_time_original())
+    }
+
+    pub fn digital_zoom_ratio(&self) -> Option<Rational<u32>> {
+        self.document(|x| x.digital_zoom_ratio())
     }
 
     /// Exposure time in seconds
@@ -53,6 +57,18 @@ impl<'a, S: Storage<'a>> Exif<'a, S> {
     /// ISO
     pub fn iso_speed_rating(&self) -> Option<u16> {
         self.document(|x| x.iso_speed_rating())
+    }
+
+    pub fn lens_make(&self) -> Option<String> {
+        self.document(|x| x.lens_make())
+    }
+
+    pub fn lens_model(&self) -> Option<String> {
+        self.document(|x| x.lens_model())
+    }
+
+    pub fn lens_specification(&mut self) -> Option<hardware::LensSpecification> {
+        self.document(|x| x.lens_specification())
     }
 
     /// Camera manifacturer

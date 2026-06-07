@@ -5,6 +5,7 @@ pub mod error;
 pub mod exif;
 pub mod field;
 pub mod geography;
+pub mod hardware;
 pub mod image;
 pub mod math;
 pub mod orientation;
