@@ -21,26 +21,38 @@ impl Xmp {
         self.get_date_time(field::DateTimeOriginal)
     }
 
+    pub fn digital_zoom_ratio(&self) -> Option<Rational<u32>> {
+        self.get_frac(field::DigitalZoomRatio)
+    }
+
     pub fn exposure_time(&self) -> Option<Rational<u32>> {
         self.get_frac(field::ExposureTime)
     }
 
     pub fn f_number(&self) -> Option<f32> {
-        if let Some(fnumer) = self.get_frac_f32(field::FNumber) {
-            Some(fnumer)
+        if let Some(fnumer) = self.get_frac(field::FNumber) {
+            Some(fnumer.as_f32())
         } else {
             let aperture_apex = self.get_frac_f32(field::Aperture)?;
             Some(gufo_common::math::apex_to_f_number(aperture_apex))
         }
     }
 
-    pub fn focal_length(&self) -> Option<f32> {
-        self.get_frac_f32(field::FocalLength)
+    pub fn focal_length(&self) -> Option<Rational<u32>> {
+        self.get_frac(field::FocalLength)
     }
 
     pub fn iso_speed_rating(&self) -> Option<u16> {
         self.get_u16(field::PhotographicSensitivity)
             .or_else(|| self.get_u16(field::ISOSpeedRatings))
+    }
+
+    pub fn lens_make(&self) -> Option<String> {
+        self.get(field::LensMake).map(ToString::to_string)
+    }
+
+    pub fn lens_model(&self) -> Option<String> {
+        self.get(field::LensMake).map(ToString::to_string)
     }
 
     pub fn make(&self) -> Option<String> {
@@ -57,6 +69,14 @@ impl Xmp {
                 .and_then(|x| str::parse::<u16>(x).ok())?,
         )
         .ok()
+    }
+
+    pub fn rights(&self) -> Option<String> {
+        self.get(field::Rights).map(ToString::to_string)
+    }
+
+    pub fn rights_web_statement(&self) -> Option<String> {
+        self.get(field::WebStatement).map(ToString::to_string)
     }
 
     pub fn software(&self) -> Option<String> {

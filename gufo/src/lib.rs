@@ -1,14 +1,12 @@
+mod high_level;
 mod image;
 
 use std::collections::BTreeMap;
 
 pub use gufo_common as common;
 use gufo_common::error::ErrorWithData;
-use gufo_common::geography;
-use gufo_common::orientation::Orientation;
 use gufo_common::prelude::*;
-use gufo_common::types::Rational;
-use gufo_exif::{Exif, ExifOwned};
+use gufo_exif::ExifOwned;
 #[cfg(feature = "jpeg")]
 pub use gufo_jpeg as jpeg;
 #[cfg(feature = "png")]
@@ -207,63 +205,5 @@ impl Metadata {
         xmp_op: impl Fn(&Xmp) -> Option<T>,
     ) -> Option<T> {
         self.get_exif(exif_op).or_else(|| self.get_xmp(xmp_op))
-    }
-
-    pub fn camera_owner_name(&self) -> Option<String> {
-        self.get_exif(Exif::camera_owner_name)
-    }
-
-    pub fn creator(&self) -> Option<String> {
-        self.exif_xmp(Exif::artist, Xmp::creator)
-    }
-
-    #[cfg(feature = "chrono")]
-    pub fn date_time_original(&self) -> Option<gufo_common::datetime::DateTime> {
-        self.exif_xmp(Exif::date_time_original, Xmp::date_time_original)
-    }
-
-    /// Exposure time in seconds
-    pub fn exposure_time(&self) -> Option<Rational<u32>> {
-        self.exif_xmp(ExifOwned::exposure_time, Xmp::exposure_time)
-    }
-
-    pub fn f_number(&self) -> Option<f32> {
-        self.exif_xmp(Exif::f_number, Xmp::f_number)
-    }
-
-    /// Focal length in millimeters
-    pub fn focal_length(&self) -> Option<f32> {
-        self.exif_xmp(Exif::focal_length, Xmp::focal_length)
-    }
-
-    pub fn gps_location(&self) -> Option<geography::Location> {
-        self.get_exif(Exif::gps_location)
-    }
-
-    /// ISO
-    pub fn iso_speed_rating(&self) -> Option<u16> {
-        self.exif_xmp(Exif::iso_speed_rating, Xmp::iso_speed_rating)
-    }
-
-    /// Camera manifacturer
-    pub fn make(&self) -> Option<String> {
-        self.exif_xmp(Exif::make, Xmp::make)
-    }
-
-    /// Camera model
-    pub fn model(&self) -> Option<String> {
-        self.exif_xmp(Exif::model, Xmp::model)
-    }
-
-    pub fn orientation(&self) -> Option<Orientation> {
-        self.exif_xmp(Exif::orientation, Xmp::orientation)
-    }
-
-    pub fn software(&self) -> Option<String> {
-        self.exif_xmp(Exif::software, Xmp::creator_tool)
-    }
-
-    pub fn user_comment(&self) -> Option<String> {
-        self.get_exif(Exif::user_comment)
     }
 }

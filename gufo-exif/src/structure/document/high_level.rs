@@ -20,6 +20,10 @@ impl<'a> Document<'a> {
         }
     }
 
+    pub fn copyright(&mut self) -> Option<String> {
+        handle_error(self.lookup_string_raw(field::Copyright.into()))
+    }
+
     pub fn digital_zoom_ratio(&mut self) -> Option<Rational<u32>> {
         handle_error(self.lookup_rational(field::DigitalZoomRatio.into()))
     }
@@ -37,16 +41,12 @@ impl<'a> Document<'a> {
         handle_error(self.lookup_rational(field::ExposureTime.into()))
     }
 
-    pub fn f_number(&mut self) -> Option<f32> {
-        let f_number = handle_error(self.lookup_rational(field::FNumber.into()));
-
-        f_number.map(|x| x.as_f32())
+    pub fn f_number(&mut self) -> Option<Rational<u32>> {
+        handle_error(self.lookup_rational(field::FNumber.into()))
     }
 
-    pub fn focal_length(&mut self) -> Option<f32> {
-        let focal_length = handle_error(self.lookup_rational(field::FocalLength.into()));
-
-        focal_length.map(|x| x.as_f32())
+    pub fn focal_length(&mut self) -> Option<Rational<u32>> {
+        handle_error(self.lookup_rational(field::FocalLength.into()))
     }
 
     pub fn gps_location(&mut self) -> Option<geography::Location> {

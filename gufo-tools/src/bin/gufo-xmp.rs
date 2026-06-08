@@ -1,8 +1,6 @@
-use std::{
-    collections::BTreeSet,
-    fmt::{Debug, Display},
-};
+use std::collections::BTreeSet;
 
+use gufo_tools::*;
 use tracing_subscriber::prelude::*;
 
 fn main() {
@@ -23,40 +21,36 @@ fn main() {
 }
 
 fn print(xmp_data: Vec<u8>) {
-    let xmp = gufo_xmp::Xmp::new(xmp_data).unwrap();
+    let x = gufo_xmp::Xmp::new(xmp_data).unwrap();
 
-    eprintln!("{}", output(&xmp));
+    println!("{}", output(&x));
 
-    show_("Camera Owner Name", xmp.camera_owner_name());
-    show("DateTime Original", xmp.date_time_original());
-    show("Exposure Time", xmp.exposure_time().map(|x| x.display()));
-    show("F-Number", xmp.f_number());
-    show("Focal Length", xmp.focal_length());
-    //show("GPS Location", exif.gps_location().map(|x| x.iso_6709()));
-    show("ISO Speed Rating", xmp.iso_speed_rating());
-    show("Make", xmp.make());
-    show("Model", xmp.model());
-    show_("Orientation", xmp.orientation());
-    show("Software", xmp.software());
-    show("User Comment", xmp.user_comment());
-}
-
-fn show<T: Display>(name: &str, x: Option<T>) {
-    let s = match x {
-        Some(x) => x.to_string(),
-        None => String::from("–"),
-    };
-
-    println!("{:>20} {s}", format!("{name}:"));
-}
-
-fn show_<T: Debug>(name: &str, x: Option<T>) {
-    let s = match x {
-        Some(x) => format!("{x:?}"),
-        None => String::from("–"),
-    };
-
-    println!("{:>20} {s}", format!("{name}:"));
+    show("Camera Owner Name", x.camera_owner_name());
+    show("Creator", x.creator());
+    show("DateTime Original", x.date_time_original());
+    show(
+        "Digital Zoom Ratio",
+        x.digital_zoom_ratio()
+            .map(|x| format!("{}\u{00D7}", x.as_f32())),
+    );
+    show("Exposure Time", x.exposure_time().map(|x| x.display()));
+    show("F-Number", x.f_number());
+    show("Focal Length", x.focal_length().map(|x| x.as_f32()));
+    //show("GPS Location", x.gps_location().map(|x| x.iso_6709()));
+    show("ISO Speed Rating", x.iso_speed_rating());
+    show("Lens Make", x.lens_make());
+    show("Lens Model", x.lens_model());
+    /* show(
+        "Lens Sepcification",
+        x.lens_specification().map(|x| x.display()),
+    ); */
+    show("Make", x.make());
+    show("Model", x.model());
+    show_("Orientation", x.orientation());
+    show("Rights", x.rights());
+    show("Rights Web Statement", x.rights_web_statement());
+    show("Software", x.software());
+    show("User Comment", x.user_comment());
 }
 
 pub fn output(xmp: &gufo_xmp::Xmp) -> String {

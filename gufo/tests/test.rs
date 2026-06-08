@@ -125,7 +125,10 @@ fn check(metadata: &gufo::Metadata, reference: &Reference) {
     );
     assert_eq!(metadata.exposure_time(), reference.exposure_time);
     assert_eq!(metadata.f_number(), reference.f_number);
-    assert_eq!(metadata.focal_length(), reference.focal_length);
+    assert_eq!(
+        metadata.focal_length().map(|x| x.as_f32()),
+        reference.focal_length
+    );
     assert_eq!(
         metadata.gps_location().map(|x| x.geo_uri()),
         reference.gps_location.map(ToString::to_string)

@@ -1,6 +1,5 @@
-use std::fmt::{Debug, Display};
-
 use gufo_exif::{Exif, Storage};
+use gufo_tools::*;
 use tracing_subscriber::prelude::*;
 
 fn main() {
@@ -21,46 +20,35 @@ fn main() {
 }
 
 fn print(exif_data: Vec<u8>) {
-    let mut exif = gufo_exif::ExifOwned::for_vec(exif_data).unwrap();
+    let mut x = gufo_exif::ExifOwned::for_vec(exif_data).unwrap();
 
-    eprintln!("{}", output(&mut exif));
+    println!("{}", output(&mut x));
 
-    show("Camera Owner Name", exif.camera_owner_name());
-    show("DateTime Original", exif.date_time_original());
-    show("Exposure Time", exif.exposure_time().map(|x| x.display()));
-    show("F-Number", exif.f_number());
-    show("Focal Length", exif.focal_length());
-    show("GPS Location", exif.gps_location().map(|x| x.iso_6709()));
-    show("ISO Speed Rating", exif.iso_speed_rating());
-    show("Make", exif.make());
-    show("Model", exif.model());
-    show_("Orientation", exif.orientation());
-    show("Software", exif.software());
-    show("User Comment", exif.user_comment());
-    show("Lens Make", exif.lens_make());
-    show("Lens Model", exif.lens_model());
+    show("Artist", x.artist());
+    show("Camera Owner Name", x.camera_owner_name());
+    show("Copyright", x.copyright());
+    show("DateTime Original", x.date_time_original());
+    show(
+        "Digital Zoom Ratio",
+        x.digital_zoom_ratio()
+            .map(|x| format!("{}\u{00D7}", x.as_f32())),
+    );
+    show("Exposure Time", x.exposure_time().map(|x| x.display()));
+    show("F-Number", x.f_number().map(|x| x.as_f32()));
+    show("Focal Length", x.focal_length().map(|x| x.as_f32()));
+    show("GPS Location", x.gps_location().map(|x| x.iso_6709()));
+    show("ISO Speed Rating", x.iso_speed_rating());
+    show("Lens Make", x.lens_make());
+    show("Lens Model", x.lens_model());
     show(
         "Lens Sepcification",
-        exif.lens_specification().map(|x| x.display()),
+        x.lens_specification().map(|x| x.display()),
     );
-}
-
-fn show<T: Display>(name: &str, x: Option<T>) {
-    let s = match x {
-        Some(x) => x.to_string(),
-        None => String::from("–"),
-    };
-
-    println!("{:>20} {s}", format!("{name}:"));
-}
-
-fn show_<T: Debug>(name: &str, x: Option<T>) {
-    let s = match x {
-        Some(x) => format!("{x:?}"),
-        None => String::from("–"),
-    };
-
-    println!("{:>20} {s}", format!("{name}:"));
+    show("Make", x.make());
+    show("Model", x.model());
+    show_("Orientation", x.orientation());
+    show("Software", x.software());
+    show("User Comment", x.user_comment());
 }
 
 pub fn output<'a, S: Storage<'a>>(exif: &mut Exif<'a, S>) -> String {

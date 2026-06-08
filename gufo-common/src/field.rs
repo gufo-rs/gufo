@@ -161,3 +161,4 @@ macros::make_xmp_tags![(Rights, "rights", Dc)];
 // XMP
 macros::make_xmp_tags![(CreatorTool, Xmp)];
 macros::make_xmp_tags![(ModifyDate, Xmp)];
+macros::make_xmp_tags![(WebStatement, XmpRights)];

@@ -1,5 +1,4 @@
-use std::fmt::{Debug, Display};
-
+use gufo_tools::*;
 use tracing_subscriber::prelude::*;
 
 fn main() {
@@ -17,41 +16,31 @@ fn main() {
     print(metadata);
 }
 
-fn print(metadata: gufo::Metadata) {
-    show_("Camera Owner Name", metadata.camera_owner_name());
-    show("DateTime Original", metadata.date_time_original());
+fn print(x: gufo::Metadata) {
+    show("Camera Owner Name", x.camera_owner_name());
+    show("Creator", x.creator());
+    show("DateTime Original", x.date_time_original());
     show(
-        "Exposure Time",
-        metadata.exposure_time().map(|x| x.display()),
+        "Digital Zoom Ratio",
+        x.digital_zoom_ratio()
+            .map(|x| format!("{}\u{00D7}", x.as_f32())),
     );
-    show("F-Number", metadata.f_number());
-    show("Focal Length", metadata.focal_length());
+    show("Exposure Time", x.exposure_time().map(|x| x.display()));
+    show("F-Number", x.f_number());
+    show("Focal Length", x.focal_length().map(|x| x.as_f32()));
+    show("GPS Location", x.gps_location().map(|x| x.iso_6709()));
+    show("ISO Speed Rating", x.iso_speed_rating());
+    show("Lens Make", x.lens_make());
+    show("Lens Model", x.lens_model());
     show(
-        "GPS Location",
-        metadata.gps_location().map(|x| x.iso_6709()),
+        "Lens Sepcification",
+        x.lens_specification().map(|x| x.display()),
     );
-    show("ISO Speed Rating", metadata.iso_speed_rating());
-    show("Make", metadata.make());
-    show("Model", metadata.model());
-    show_("Orientation", metadata.orientation());
-    show("Software", metadata.software());
-    show("User Comment", metadata.user_comment());
-}
-
-fn show<T: Display>(name: &str, x: Option<T>) {
-    let s = match x {
-        Some(x) => x.to_string(),
-        None => String::from("–"),
-    };
-
-    println!("{:>20} {s}", format!("{name}:"));
-}
-
-fn show_<T: Debug>(name: &str, x: Option<T>) {
-    let s = match x {
-        Some(x) => format!("{x:?}"),
-        None => String::from("–"),
-    };
-
-    println!("{:>20} {s}", format!("{name}:"));
+    show("Make", x.make());
+    show("Model", x.model());
+    show_("Orientation", x.orientation());
+    show("Rights", x.rights());
+    show("Rights Web Statement", x.rights_web_statement());
+    show("Software", x.software());
+    show("User Comment", x.user_comment());
 }

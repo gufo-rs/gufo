@@ -27,7 +27,9 @@ pub fn main() {
     p("ISO", metadata.iso_speed_rating());
     p(
         "Focal length",
-        metadata.focal_length().map(|x| format!("{x} mm")),
+        metadata
+            .focal_length()
+            .map(|x| format!("{} mm", x.as_f32())),
     );
 
     p("Creator", metadata.creator());
