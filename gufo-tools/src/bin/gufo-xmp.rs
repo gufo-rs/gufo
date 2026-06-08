@@ -1,6 +1,7 @@
 use std::collections::BTreeSet;
 
 use gufo_tools::*;
+use gufo_xmp::Value;
 use tracing_subscriber::prelude::*;
 
 fn main() {
@@ -14,7 +15,6 @@ fn main() {
     let image_data = std::fs::read(path).unwrap();
 
     let (mut raw_metadata, _) = gufo::RawMetadata::for_guessed(image_data).unwrap();
-
     let xmp_data = raw_metadata.xmp.pop().unwrap();
 
     print(xmp_data);
@@ -63,7 +63,11 @@ pub fn output(xmp: &gufo_xmp::Xmp) -> String {
         s.push('\n');
         for (tag, value) in xmp.entries() {
             if tag.namespace().to_url() == namespace {
-                s.push_str(&format!("{:>30}: {value}\n", tag.name()));
+                let v = match value {
+                    Value::Generic(s) => s.to_string(),
+                    Value::Bag(vec) => vec.join(", "),
+                };
+                s.push_str(&format!("{:>30}: {v}\n", tag.name()));
             }
         }
         s.push('\n');

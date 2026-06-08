@@ -17,7 +17,7 @@ members = [
     "gufo-common",
     "gufo-exif",
     "gufo-jpeg",
-    "gufo-png",
+    "gufo-png", "gufo-svg",
     "gufo-tiff",
     "gufo-tools",
     "gufo-webp",

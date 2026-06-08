@@ -10,6 +10,8 @@ use gufo_common::types::Rational;
 use gufo_common::xmp::Namespace;
 use xml::name::OwnedName;
 
+pub use crate::parsing::Value;
+
 #[derive(Debug, Clone, PartialEq, PartialOrd, Eq, Ord)]
 pub struct Tag {
     namespace: Namespace,
@@ -53,7 +55,7 @@ impl<T: gufo_common::xmp::Field> From<T> for Tag {
 #[derive(Debug, Clone)]
 pub struct Xmp {
     inner: Vec<u8>,
-    entries: BTreeMap<Tag, String>,
+    entries: BTreeMap<Tag, Value>,
 }
 
 #[derive(Debug, Clone, thiserror::Error)]
@@ -63,6 +65,14 @@ pub enum Error {
     XmlReader(xml::reader::Error),
     #[error("XmlWriter: {0}")]
     XmlWriter(Arc<xml::writer::Error>),
+    #[error("Other: {0}")]
+    Other(String),
+}
+
+impl Error {
+    fn other(s: &str) -> Self {
+        Self::Other(s.to_string())
+    }
 }
 
 impl From<xml::reader::Error> for Error {
@@ -87,7 +97,7 @@ impl Xmp {
         })
     }
 
-    pub fn update(&mut self, updates: BTreeMap<Tag, String>) -> Result<(), Error> {
+    pub fn update(&mut self, updates: BTreeMap<Tag, Value>) -> Result<(), Error> {
         let (entries, data) = Self::lookup_and_update(&self.inner, updates)?;
         self.entries = entries;
         self.inner = data;
@@ -95,12 +105,20 @@ impl Xmp {
         Ok(())
     }
 
-    pub fn get(&self, tag: impl Into<Tag>) -> Option<&str> {
-        self.entries.get(&tag.into()).map(|x| x.as_str())
+    pub fn lookup_generic(&self, tag: impl Into<Tag>) -> Option<&str> {
+        let Some(x) = self.entries.get(&tag.into()) else {
+            return None;
+        };
+
+        if let Value::Generic(s) = x {
+            Some(s)
+        } else {
+            None
+        }
     }
 
     pub fn get_frac(&self, tag: impl Into<Tag>) -> Option<Rational<u32>> {
-        let (x, y) = self.get(tag)?.split_once('/')?;
+        let (x, y) = self.lookup_generic(tag)?.split_once('/')?;
         let x = x.parse().ok()?;
         let y = y.parse().ok()?;
 
@@ -113,18 +131,18 @@ impl Xmp {
     }
 
     pub fn get_u16(&self, tag: impl Into<Tag>) -> Option<u16> {
-        self.get(tag)?.parse().ok()
+        self.lookup_generic(tag)?.parse().ok()
     }
 
     #[cfg(feature = "chrono")]
     pub fn get_date_time(&self, tag: impl Into<Tag>) -> Option<gufo_common::datetime::DateTime> {
         Some(gufo_common::datetime::DateTime::FixedOffset(
-            self.get(tag)
+            self.lookup_generic(tag)
                 .and_then(|x| chrono::DateTime::parse_from_rfc3339(x).ok())?,
         ))
     }
 
-    pub fn entries(&self) -> &BTreeMap<Tag, String> {
+    pub fn entries(&self) -> &BTreeMap<Tag, Value> {
         &self.entries
     }
 

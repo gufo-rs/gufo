@@ -525,6 +525,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "gufo-svg"
+version = "0.4.1"
+dependencies = [
+ "xml-rs",
+]
+
+[[package]]
 name = "gufo-tiff"
 version = "0.4.1"
 dependencies = [
@@ -559,6 +566,7 @@ dependencies = [
  "chrono",
  "gufo-common",
  "thiserror 2.0.18",
+ "tracing",
  "xml-rs",
 ]
 

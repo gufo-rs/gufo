@@ -10,9 +10,11 @@ repository.workspace = true
 [features]
 default = []
 chrono = ["dep:chrono", "gufo-common/chrono"]
+tracing = ["dep:tracing"]
 
 [dependencies]
 chrono = { workspace = true, optional = true }
 gufo-common.workspace = true
 thiserror.workspace = true
 xml-rs.workspace = true
+tracing = { workspace = true, optional = true }

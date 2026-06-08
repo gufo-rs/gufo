@@ -5,15 +5,17 @@ use super::Xmp;
 
 impl Xmp {
     pub fn creator(&self) -> Option<String> {
-        self.get(field::Creator).map(ToString::to_string)
+        self.lookup_generic(field::Creator).map(ToString::to_string)
     }
 
     pub fn creator_tool(&self) -> Option<String> {
-        self.get(field::CreatorTool).map(ToString::to_string)
+        self.lookup_generic(field::CreatorTool)
+            .map(ToString::to_string)
     }
 
     pub fn camera_owner_name(&self) -> Option<String> {
-        self.get(field::CameraOwnerName).map(ToString::to_string)
+        self.lookup_generic(field::CameraOwnerName)
+            .map(ToString::to_string)
     }
 
     #[cfg(feature = "chrono")]
@@ -48,42 +50,47 @@ impl Xmp {
     }
 
     pub fn lens_make(&self) -> Option<String> {
-        self.get(field::LensMake).map(ToString::to_string)
+        self.lookup_generic(field::LensMake)
+            .map(ToString::to_string)
     }
 
     pub fn lens_model(&self) -> Option<String> {
-        self.get(field::LensMake).map(ToString::to_string)
+        self.lookup_generic(field::LensMake)
+            .map(ToString::to_string)
     }
 
     pub fn make(&self) -> Option<String> {
-        self.get(field::Make).map(ToString::to_string)
+        self.lookup_generic(field::Make).map(ToString::to_string)
     }
 
     pub fn model(&self) -> Option<String> {
-        self.get(field::Model).map(ToString::to_string)
+        self.lookup_generic(field::Model).map(ToString::to_string)
     }
 
     pub fn orientation(&self) -> Option<orientation::Orientation> {
         orientation::Orientation::try_from(
-            self.get(field::UserComment)
+            self.lookup_generic(field::UserComment)
                 .and_then(|x| str::parse::<u16>(x).ok())?,
         )
         .ok()
     }
 
     pub fn rights(&self) -> Option<String> {
-        self.get(field::Rights).map(ToString::to_string)
+        self.lookup_generic(field::Rights).map(ToString::to_string)
     }
 
     pub fn rights_web_statement(&self) -> Option<String> {
-        self.get(field::WebStatement).map(ToString::to_string)
+        self.lookup_generic(field::WebStatement)
+            .map(ToString::to_string)
     }
 
     pub fn software(&self) -> Option<String> {
-        self.get(field::CreatorTool).map(ToString::to_string)
+        self.lookup_generic(field::CreatorTool)
+            .map(ToString::to_string)
     }
 
     pub fn user_comment(&self) -> Option<String> {
-        self.get(field::UserComment).map(ToString::to_string)
+        self.lookup_generic(field::UserComment)
+            .map(ToString::to_string)
     }
 }
