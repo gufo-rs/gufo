@@ -1,5 +1,5 @@
-use gufo_common::field;
 use gufo_common::types::Rational;
+use gufo_common::{field, orientation};
 
 use super::Xmp;
 
@@ -10,6 +10,10 @@ impl Xmp {
 
     pub fn creator_tool(&self) -> Option<String> {
         self.get(field::CreatorTool).map(ToString::to_string)
+    }
+
+    pub fn camera_owner_name(&self) -> Option<String> {
+        self.get(field::CameraOwnerName).map(ToString::to_string)
     }
 
     #[cfg(feature = "chrono")]
@@ -45,5 +49,21 @@ impl Xmp {
 
     pub fn model(&self) -> Option<String> {
         self.get(field::Model).map(ToString::to_string)
+    }
+
+    pub fn orientation(&self) -> Option<orientation::Orientation> {
+        orientation::Orientation::try_from(
+            self.get(field::UserComment)
+                .and_then(|x| str::parse::<u16>(x).ok())?,
+        )
+        .ok()
+    }
+
+    pub fn software(&self) -> Option<String> {
+        self.get(field::CreatorTool).map(ToString::to_string)
+    }
+
+    pub fn user_comment(&self) -> Option<String> {
+        self.get(field::UserComment).map(ToString::to_string)
     }
 }

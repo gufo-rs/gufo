@@ -31,6 +31,14 @@ impl Tag {
             None
         }
     }
+
+    pub fn name(&self) -> &str {
+        &self.name
+    }
+
+    pub fn namespace(&self) -> &Namespace {
+        &self.namespace
+    }
 }
 
 impl<T: gufo_common::xmp::Field> From<T> for Tag {

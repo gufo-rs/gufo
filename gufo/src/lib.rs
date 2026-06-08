@@ -214,7 +214,7 @@ impl Metadata {
     }
 
     pub fn creator(&self) -> Option<String> {
-        self.get_xmp(Xmp::creator)
+        self.exif_xmp(Exif::artist, Xmp::creator)
     }
 
     #[cfg(feature = "chrono")]
@@ -256,8 +256,7 @@ impl Metadata {
     }
 
     pub fn orientation(&self) -> Option<Orientation> {
-        // TODO: Should work from XMP as well
-        self.get_exif(Exif::orientation)
+        self.exif_xmp(Exif::orientation, Xmp::orientation)
     }
 
     pub fn software(&self) -> Option<String> {

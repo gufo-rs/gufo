@@ -15,6 +15,10 @@ impl<'a, S: Storage<'a>> Exif<'a, S> {
         self.document.access(|x| f(x))
     }
 
+    pub fn artist(&self) -> Option<String> {
+        self.document(|x| x.artist())
+    }
+
     /// Owner of the camera used in photography
     pub fn camera_owner_name(&self) -> Option<String> {
         self.document(|x| x.camera_owner_name())
