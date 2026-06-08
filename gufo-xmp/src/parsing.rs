@@ -229,6 +229,15 @@ impl Xmp {
                                 reader_state = ReaderState::RdfTag;
                             }
                         }
+                        ReaderState::RdfLi(tag) => reader_state = ReaderState::RdfBag(tag),
+                        ReaderState::RdfBag(_) => {
+                            if useless_level > 0 {
+                                reader_state = RdfTagUselessLevel;
+                            } else {
+                                // TODO: We don't know if we were in a RdfTag
+                                reader_state = ReaderState::RdfTag
+                            }
+                        }
                         _ => {}
                     }
 

@@ -17,6 +17,7 @@ fn main() {
     let (mut raw_metadata, _) = gufo::RawMetadata::for_guessed(image_data).unwrap();
     let xmp_data = raw_metadata.xmp.pop().unwrap();
 
+    println!("{}", String::from_utf8_lossy(&xmp_data));
     print(xmp_data);
 }
 
