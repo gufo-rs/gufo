@@ -582,7 +582,7 @@ dependencies = [
  "gufo-common",
  "memchr",
  "thiserror",
- "xml-rs",
+ "xml",
 ]
 
 [[package]]
@@ -621,7 +621,7 @@ dependencies = [
  "gufo-common",
  "thiserror",
  "tracing",
- "xml-rs",
+ "xml",
 ]
 
 [[package]]
@@ -1765,10 +1765,10 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1ebf944e87a7c253233ad6766e082e3cd714b5d03812acc24c318f549614536e"
 
 [[package]]
-name = "xml-rs"
-version = "0.8.28"
+name = "xml"
+version = "1.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3ae8337f8a065cfc972643663ea4279e04e7256de865aa66fe25cec5fb912d3f"
+checksum = "636f85e5ca6488e96401b61eb7de54f4e44755c988af0f52cf90230c312a1a89"
 
 [[package]]
 name = "y4m"

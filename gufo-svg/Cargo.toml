@@ -7,10 +7,10 @@ rust-version.workspace = true
 repository.workspace = true
 
 [dependencies]
-xml-rs.workspace = true
 gufo-common.workspace = true
-thiserror.workspace = true
 memchr.workspace = true
+thiserror.workspace = true
+xml.workspace = true
 
 [lints]
 workspace = true

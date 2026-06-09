@@ -59,6 +59,6 @@ static_assertions = "1.1.0"
 thiserror = "2.0.3"
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["fmt", "env-filter"] }
-xml-rs = "0.8.19"
+xml = "1.0.0"
 zvariant = "5.6"
 zerocopy = "0.8.48"
