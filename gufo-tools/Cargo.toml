@@ -8,12 +8,12 @@ rust-version.workspace = true
 repository.workspace = true
 
 [dependencies]
-gufo-exif = { workspace = true, features = ["chrono"] }
-gufo-common.workspace = true
-gufo-jpeg = { workspace = true }
 gufo = { workspace = true, features = ["all-image-formats", "chrono"] }
-tracing-subscriber = { version = "0.3", features = ["fmt", "env-filter"] }
+gufo-common.workspace = true
+gufo-exif = { workspace = true, features = ["chrono"] }
+gufo-jpeg = { workspace = true }
 gufo-xmp = { workspace = true, features = ["tracing"] }
+tracing-subscriber.workspace = true
 
 [lints]
 workspace = true
