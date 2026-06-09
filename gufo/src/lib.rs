@@ -137,6 +137,7 @@ pub struct Metadata {
 }
 
 #[derive(Debug, thiserror::Error)]
+#[non_exhaustive]
 pub enum Error {
     #[error("Generic")]
     GenericError,
