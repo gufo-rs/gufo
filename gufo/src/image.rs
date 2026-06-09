@@ -7,10 +7,12 @@ use crate::Error;
 #[non_exhaustive]
 #[derive(Debug)]
 pub enum Image {
-    #[cfg(feature = "png")]
-    Png(gufo_png::Png),
     #[cfg(feature = "jpeg")]
     Jpeg(gufo_jpeg::Jpeg),
+    #[cfg(feature = "png")]
+    Png(gufo_png::Png),
+    #[cfg(feature = "svg")]
+    Svg(gufo_svg::Svg),
 }
 
 impl Image {
@@ -37,15 +39,19 @@ impl Image {
             Self::Jpeg(jpeg) => jpeg.into_inner(),
             #[cfg(feature = "png")]
             Self::Png(png) => png.into_inner(),
+            #[cfg(feature = "svg")]
+            Self::Svg(svg) => svg.into_inner(),
         }
     }
 
     pub fn dyn_metadata(&self) -> Box<&dyn ImageMetadata> {
         match *self {
-            #[cfg(feature = "png")]
-            Self::Png(ref png) => Box::new(png as &dyn ImageMetadata),
             #[cfg(feature = "jpeg")]
             Self::Jpeg(ref jpeg) => Box::new(jpeg as &dyn ImageMetadata),
+            #[cfg(feature = "png")]
+            Self::Png(ref png) => Box::new(png as &dyn ImageMetadata),
+            #[cfg(feature = "svg")]
+            Self::Svg(ref svg) => Box::new(svg as &dyn ImageMetadata),
         }
     }
 

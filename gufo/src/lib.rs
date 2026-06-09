@@ -48,9 +48,15 @@ impl RawMetadata {
 
         #[cfg(feature = "webp")]
         if gufo_webp::WebP::is_filetype(&data) {
-            let webp: gufo_webp::WebP =
-                gufo_webp::WebP::new(data).map_err(|x| x.map_err(Error::WebP))?;
+            let webp = gufo_webp::WebP::new(data).map_err(|x| x.map_err(Error::WebP))?;
             return Ok((Self::for_webp(&webp), webp.into_inner()));
+        }
+
+        // Check SVG as last file type since the detection is most unstable and slow
+        #[cfg(feature = "svg")]
+        if gufo_svg::Svg::is_filetype(&data) {
+            let svg = gufo_svg::Svg::new(data).map_err(|x| x.map_err(Error::Svg))?;
+            return Ok((Self::for_svg(&svg), svg.into_inner()));
         }
 
         Err(ErrorWithData::new(Error::NoSupportedFiletypeFound, data))
@@ -85,6 +91,15 @@ impl RawMetadata {
         let mut raw_metadata = Self::default();
 
         raw_metadata.exif.extend(tiff.exif().map(|x| x.to_vec()));
+
+        raw_metadata
+    }
+
+    #[cfg(feature = "svg")]
+    pub fn for_svg(svg: &gufo_svg::Svg) -> Self {
+        let mut raw_metadata = Self::default();
+
+        raw_metadata.xmp.extend(svg.xmp());
 
         raw_metadata
     }
@@ -135,12 +150,19 @@ pub enum Error {
     #[cfg(feature = "jpeg")]
     #[error("JPEG: {0}")]
     Jpeg(gufo_jpeg::Error),
+
     #[cfg(feature = "png")]
     #[error("PNG: {0}")]
     Png(gufo_png::Error),
+
+    #[cfg(feature = "svg")]
+    #[error["Svg: {0}"]]
+    Svg(gufo_svg::Error),
+
     #[cfg(feature = "tiff")]
     #[error["TIFF: {0}"]]
     Tiff(gufo_tiff::Error),
+
     #[cfg(feature = "webp")]
     #[error["WebP: {0}"]]
     WebP(gufo_webp::Error),

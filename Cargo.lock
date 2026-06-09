@@ -469,6 +469,7 @@ dependencies = [
  "gufo-exif",
  "gufo-jpeg",
  "gufo-png",
+ "gufo-svg",
  "gufo-tiff",
  "gufo-webp",
  "gufo-xmp",
@@ -528,6 +529,9 @@ dependencies = [
 name = "gufo-svg"
 version = "0.4.1"
 dependencies = [
+ "gufo-common",
+ "memchr",
+ "thiserror 2.0.18",
  "xml-rs",
 ]
 
@@ -814,9 +818,9 @@ dependencies = [
 
 [[package]]
 name = "memchr"
-version = "2.7.6"
+version = "2.8.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f52b00d39961fc5b2736ea853c9cc86238e165017a493d1d5c8eac6bdc4cc273"
+checksum = "6b947ae49db0d222b1dbc6b113ce7248a3fc3a6ca21b696717bfc000ba4484d8"
 
 [[package]]
 name = "minimal-lexical"

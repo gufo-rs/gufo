@@ -55,7 +55,7 @@ impl Xmp {
     }
 
     pub fn lens_model(&self) -> Option<String> {
-        self.lookup_generic(field::LensMake)
+        self.lookup_generic(field::LensModel)
             .map(ToString::to_string)
     }
 

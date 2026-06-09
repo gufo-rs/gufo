@@ -21,7 +21,6 @@ const XML_NS_XMP_RIGHTS: &str = "http://ns.adobe.com/xap/1.0/rights/";
 pub const XML_NS_RDF: &str = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
 const XML_NS_PS: &str = "http://ns.adobe.com/photoshop/1.0/";
 const XML_NS_DC: &str = "http://purl.org/dc/elements/1.1/";
-pub const XML_NS_CC: &str = "http://creativecommons.org/ns#";
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Namespace {

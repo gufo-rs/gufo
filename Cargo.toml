@@ -17,7 +17,8 @@ members = [
     "gufo-common",
     "gufo-exif",
     "gufo-jpeg",
-    "gufo-png", "gufo-svg",
+    "gufo-png",
+    "gufo-svg",
     "gufo-tiff",
     "gufo-tools",
     "gufo-webp",
@@ -42,6 +43,7 @@ gufo-common = { version = "1.1.0", path = "gufo-common" }
 gufo-exif = { version = "0.4.0", path = "gufo-exif" }
 gufo-jpeg = { version = "0.4.0", path = "gufo-jpeg" }
 gufo-png = { version = "0.4.1", path = "gufo-png" }
+gufo-svg = { version = "0.4.0", path = "gufo-svg" }
 gufo-tiff = { version = "0.4.0", path = "gufo-tiff" }
 gufo-webp = { version = "0.4.0", path = "gufo-webp" }
 gufo-xmp = { version = "0.4.0", path = "gufo-xmp" }
@@ -49,6 +51,7 @@ indexmap = "2.10"
 jpeg-encoder = "0.7.0"
 kamadak-exif = "0.6.1"
 hex = "0.4.0"
+memchr = "2.8.1"
 miniz_oxide = "0.9.0"
 paste = "1.0.15"
 serde = { version = "1.0.202", features = ["derive"] }

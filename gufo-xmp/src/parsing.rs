@@ -1,34 +1,30 @@
 use std::collections::BTreeMap;
 use std::io::Cursor;
 
-use gufo_common::xmp::{XML_NS_CC, XML_NS_RDF};
+use gufo_common::xmp::XML_NS_RDF;
 use xml::name::OwnedName;
 use xml::reader::XmlEvent;
 use xml::{EmitterConfig, ParserConfig, writer};
-
-use crate::parsing::ReaderState::RdfTagUselessLevel;
 
 use super::{Error, Tag, Xmp};
 
 #[derive(Debug)]
 enum ReaderState {
     Nothing,
-    /// Inside a description where the XMP properties are defined
-    RdfDescription,
+    RdfTag,
+    /// Inside an rdf:Description or similar where the XMP properties are defined
+    TypedNode,
     /// Inside an XMP property (also called XMP packet)
     Property(Tag),
-    RdfTag,
-    RdfTagUselessLevel,
-    RdfTagData(Tag),
     /// Inside an rdf:Bag (unordered list with duplicates)
     RdfBag(Tag),
-    RdfLi(Tag),
+    RdfBagLi(Tag),
+    /// Inside an rdf:Seq
+    RdfSeq(Tag),
+    RdfSeqLi(Tag),
 }
 
 trait OwnedNameExt {
-    fn is_rdf_description(&self) -> bool;
-    fn is_rdf_open_tag(&self) -> bool;
-    fn is_useless_level(&self) -> bool;
     fn is_rdf(&self, name: &str) -> bool;
 }
 
@@ -36,25 +32,13 @@ impl OwnedNameExt for OwnedName {
     fn is_rdf(&self, name: &str) -> bool {
         self.local_name == name && self.namespace_ref() == Some(XML_NS_RDF)
     }
-
-    fn is_rdf_description(&self) -> bool {
-        self.local_name == "Description" && self.namespace_ref() == Some(XML_NS_RDF)
-    }
-
-    fn is_rdf_open_tag(&self) -> bool {
-        self.local_name == "RDF" && self.namespace_ref() == Some(XML_NS_RDF)
-    }
-
-    fn is_useless_level(&self) -> bool {
-        (self.local_name == "Work" || self.local_name == "Agent")
-            && self.namespace_ref() == Some(XML_NS_CC)
-    }
 }
 
 #[derive(Debug, Clone)]
 pub enum Value {
     Generic(String),
     Bag(Vec<String>),
+    Seq(Vec<String>),
 }
 
 impl Xmp {
@@ -84,8 +68,8 @@ impl Xmp {
             .pad_self_closing(false)
             .create_writer(&mut output);
 
-        let mut reader_state = ReaderState::Nothing;
-        let mut useless_level = 0;
+        let mut reader_state: ReaderState = ReaderState::Nothing;
+        let mut level_below_property_node = 0;
         let mut found_properties = BTreeMap::new();
 
         for event in parser {
@@ -96,65 +80,76 @@ impl Xmp {
                     ref namespace,
                 } => {
                     let mut event = event.clone();
-                    if let ReaderState::Property(tag) | ReaderState::RdfTagData(tag) = &reader_state
-                        && name.is_rdf("Bag")
-                    {
-                        reader_state = ReaderState::RdfBag(tag.clone());
-                    } else if let ReaderState::RdfBag(tag) = &reader_state
-                        && name.is_rdf("li")
-                    {
-                        reader_state = ReaderState::RdfLi(tag.clone());
-                    } else if matches!(reader_state, ReaderState::RdfTag) {
-                        if !name.is_useless_level() {
-                            if let Some(tag) = Tag::from_name(name) {
-                                reader_state = ReaderState::RdfTagData(tag);
-                                useless_level += 1;
+
+                    match &reader_state {
+                        ReaderState::Nothing => {
+                            if name.is_rdf("RDF") {
+                                reader_state = ReaderState::RdfTag;
+                            } else {
+                                #[cfg(feature = "tracing")]
+                                tracing::debug!("Unknown element in toplevel: {name:?}");
                             }
                         }
-                    } else if name.is_rdf_open_tag() {
-                        reader_state = ReaderState::RdfTag;
-                    } else if name.is_rdf_description() {
-                        // Start of a rdf:Description section with XMP elements
-                        reader_state = ReaderState::RdfDescription;
+                        ReaderState::RdfTag => {
+                            // Start of a rdf:Description section with XMP elements
+                            reader_state = ReaderState::TypedNode;
 
-                        let mut attributes = attributes.clone();
+                            let mut attributes = attributes.clone();
 
-                        // The rdf:Description element can contain simple XMP properties directly as
-                        // attributes according to Section 7.9.2.2 of Part 1
-                        for attr in attributes.iter_mut() {
-                            if let Some(tag) = Tag::from_name(&attr.name) {
-                                if UPDATE {
-                                    // Apply updates
-                                    if let Some(value) = updates.get(&tag) {
-                                        if let Value::Generic(s) = value {
-                                            s.clone_into(&mut attr.value);
-                                        } else {
-                                            return Err(Error::other(
-                                                "Writing other values than generic into attributes is not supported.",
-                                            ));
-                                        }
-                                    };
+                            // The rdf:Description element can contain simple XMP properties directly as
+                            // attributes according to Section 7.9.2.2 of Part 1
+                            for attr in attributes.iter_mut() {
+                                if let Some(tag) = Tag::from_name(&attr.name) {
+                                    if UPDATE {
+                                        // Apply updates
+                                        if let Some(value) = updates.get(&tag) {
+                                            if let Value::Generic(s) = value {
+                                                s.clone_into(&mut attr.value);
+                                            } else {
+                                                return Err(Error::other(
+                                                    "Writing other values than generic into attributes is not supported.",
+                                                ));
+                                            }
+                                        };
+                                    }
+                                    // Store property
+                                    found_properties
+                                        .entry(tag)
+                                        .or_insert(Value::Generic(attr.value.clone()));
                                 }
-                                // Store property
-                                found_properties
-                                    .entry(tag)
-                                    .or_insert(Value::Generic(attr.value.clone()));
                             }
-                        }
 
-                        if UPDATE {
-                            // Rewrite element with potentially updated properties
-                            event = XmlEvent::StartElement {
-                                name: name.to_owned(),
-                                attributes,
-                                namespace: namespace.to_owned(),
+                            if UPDATE {
+                                // Rewrite element with potentially updated properties
+                                event = XmlEvent::StartElement {
+                                    name: name.to_owned(),
+                                    attributes,
+                                    namespace: namespace.to_owned(),
+                                }
                             }
                         }
-                    } else if matches!(reader_state, ReaderState::RdfDescription) {
-                        // Inside rdf:Description, hence we are entering a property
-                        if let Some(tag) = Tag::from_name(name) {
-                            reader_state = ReaderState::Property(tag);
+                        ReaderState::TypedNode => {
+                            // Inside rdf:Description, hence we are entering a property
+                            if let Some(tag) = Tag::from_name(name) {
+                                reader_state = ReaderState::Property(tag);
+                            }
                         }
+                        ReaderState::Property(tag) => {
+                            level_below_property_node += 1;
+
+                            if name.is_rdf("Bag") {
+                                reader_state = ReaderState::RdfBag(tag.clone());
+                            } else if name.is_rdf("Seq") {
+                                reader_state = ReaderState::RdfSeq(tag.clone());
+                            }
+                        }
+                        ReaderState::RdfBag(tag) if name.is_rdf("li") => {
+                            reader_state = ReaderState::RdfBagLi(tag.clone());
+                        }
+                        ReaderState::RdfSeq(tag) if name.is_rdf("li") => {
+                            reader_state = ReaderState::RdfSeqLi(tag.clone());
+                        }
+                        _ => {}
                     }
 
                     if UPDATE {
@@ -183,20 +178,27 @@ impl Xmp {
                         found_properties
                             .entry(tag.to_owned())
                             .or_insert(Value::Generic(data.clone()));
-                    } else if let ReaderState::RdfTagData(tag) = &reader_state {
-                        found_properties
-                            .entry(tag.to_owned())
-                            .or_insert(Value::Generic(data.clone()));
-                    } else if let ReaderState::RdfLi(tag) = &reader_state {
-                        let x = found_properties
+                    } else if let ReaderState::RdfBagLi(tag) = &reader_state {
+                        let value = found_properties
                             .entry(tag.to_owned())
                             .or_insert(Value::Bag(Vec::new()));
 
-                        if let Value::Bag(bag) = x {
+                        if let Value::Bag(bag) = value {
                             bag.push(data.clone());
                         } else {
                             #[cfg(feature = "tracing")]
-                            tracing::debug!("Reader state is RdfLi but value is not Bag");
+                            tracing::debug!("Reader state is RdfBagLi but value is not Bag");
+                        }
+                    } else if let ReaderState::RdfSeqLi(tag) = &reader_state {
+                        let value = found_properties
+                            .entry(tag.to_owned())
+                            .or_insert(Value::Seq(Vec::new()));
+
+                        if let Value::Seq(seq) = value {
+                            seq.push(data.clone());
+                        } else {
+                            #[cfg(feature = "tracing")]
+                            tracing::debug!("Reader state is RdSeqfLi but value is not Seq");
                         }
                     }
 
@@ -204,39 +206,27 @@ impl Xmp {
                         writer.write(event)?;
                     }
                 }
-                ref event @ XmlEvent::EndElement { ref name } => {
+                ref event @ XmlEvent::EndElement { .. } => {
                     match reader_state {
-                        ReaderState::RdfDescription if name.is_rdf_description() => {
-                            // rdf:Description closed
+                        ReaderState::RdfTag => {
+                            // rdf:RDF closed
                             reader_state = ReaderState::Nothing;
                         }
+                        ReaderState::TypedNode => {
+                            // rdf:Description or similar closed
+                            reader_state = ReaderState::RdfTag;
+                        }
                         ReaderState::Property(_) => {
-                            // Property closed
-                            reader_state = ReaderState::RdfDescription;
-                        }
-                        ReaderState::RdfTagData(_) => {
-                            if useless_level > 0 {
-                                reader_state = RdfTagUselessLevel;
+                            if level_below_property_node == 0 {
+                                reader_state = ReaderState::TypedNode;
                             } else {
-                                reader_state = ReaderState::RdfTag
+                                level_below_property_node -= 1;
                             }
                         }
-                        ReaderState::RdfTagUselessLevel => {
-                            if useless_level > 0 {
-                                reader_state = ReaderState::RdfTagUselessLevel;
-                                useless_level -= 1;
-                            } else {
-                                reader_state = ReaderState::RdfTag;
-                            }
-                        }
-                        ReaderState::RdfLi(tag) => reader_state = ReaderState::RdfBag(tag),
-                        ReaderState::RdfBag(_) => {
-                            if useless_level > 0 {
-                                reader_state = RdfTagUselessLevel;
-                            } else {
-                                // TODO: We don't know if we were in a RdfTag
-                                reader_state = ReaderState::RdfTag
-                            }
+                        ReaderState::RdfBagLi(tag) => reader_state = ReaderState::RdfBag(tag),
+                        ReaderState::RdfSeqLi(tag) => reader_state = ReaderState::RdfSeq(tag),
+                        ReaderState::RdfBag(_) | ReaderState::RdfSeq(_) => {
+                            reader_state = ReaderState::RdfTag;
                         }
                         _ => {}
                     }

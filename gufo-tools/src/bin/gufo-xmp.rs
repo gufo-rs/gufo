@@ -17,7 +17,6 @@ fn main() {
     let (mut raw_metadata, _) = gufo::RawMetadata::for_guessed(image_data).unwrap();
     let xmp_data = raw_metadata.xmp.pop().unwrap();
 
-    println!("{}", String::from_utf8_lossy(&xmp_data));
     print(xmp_data);
 }
 
@@ -66,7 +65,7 @@ pub fn output(xmp: &gufo_xmp::Xmp) -> String {
             if tag.namespace().to_url() == namespace {
                 let v = match value {
                     Value::Generic(s) => s.to_string(),
-                    Value::Bag(vec) => vec.join(", "),
+                    Value::Bag(vec) | Value::Seq(vec) => vec.join(", "),
                 };
                 s.push_str(&format!("{:>30}: {v}\n", tag.name()));
             }
