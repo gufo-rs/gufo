@@ -10,10 +10,10 @@ repository.workspace = true
 chrono = { workspace = true, optional = true }
 gufo-common.workspace = true
 indexmap.workspace = true
+ouroboros.workspace = true
 thiserror.workspace = true
 tracing = { workspace = true, optional = true }
 zerocopy = { workspace = true, features = ["derive"] }
-ouroboros = "0.18"
 
 [lints]
 workspace = true
