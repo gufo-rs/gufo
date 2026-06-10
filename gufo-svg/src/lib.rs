@@ -1,12 +1,11 @@
-use std::{borrow::Cow, io::Cursor};
+use std::borrow::Cow;
+use std::io::Cursor;
 
-use gufo_common::{error::ErrorWithData, image::ImageMetadata};
-use xml::{
-    EmitterConfig, ParserConfig,
-    name::OwnedName,
-    reader::{self, XmlEvent},
-    writer,
-};
+use gufo_common::error::ErrorWithData;
+use gufo_common::image::ImageMetadata;
+use xml::name::OwnedName;
+use xml::reader::{self, XmlEvent};
+use xml::{EmitterConfig, ParserConfig, writer};
 
 #[derive(Debug)]
 pub struct Svg {
@@ -88,7 +87,8 @@ impl Svg {
                             state = State::InSvg;
                             // TODO: Support shifting to a different prefix if already used
                             namespace.0.insert(String::from("x"), NS_XMP.to_string());
-                            // Reinterpret the <xml> tag as <xmpmeta> tag, this way we can copy the namespace defintions
+                            // Reinterpret the <xml> tag as <xmpmeta> tag, this way we can copy the
+                            // namespace defintions
                             let name = OwnedName {
                                 local_name: String::from("xmpmeta"),
                                 namespace: None,
@@ -105,7 +105,8 @@ impl Svg {
                         if name.namespace.as_deref() == Some(NS_SVG)
                             && name.local_name == "metadata"
                         {
-                            // TODO: In theory, this element could have namespace definitions that we need to keep
+                            // TODO: In theory, this element could have namespace definitions that
+                            // we need to keep
                             state = State::InMetadata;
                         }
                     }

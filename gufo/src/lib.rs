@@ -28,89 +28,44 @@ pub struct RawMetadata {
 impl RawMetadata {
     #[cfg(any(feature = "jpeg", feature = "png", feature = "webp"))]
     pub fn for_guessed(data: Vec<u8>) -> Result<(Self, Vec<u8>), ErrorWithData<Error>> {
-        #[cfg(feature = "jpeg")]
-        if gufo_jpeg::Jpeg::is_filetype(&data) {
-            let jpeg = gufo_jpeg::Jpeg::new(data).map_err(|x| x.map_err(Error::Jpeg))?;
-            return Ok((Self::for_jpeg(&jpeg), jpeg.into_inner()));
-        }
+        let image = Image::new(data)?;
 
-        #[cfg(feature = "png")]
-        if gufo_png::Png::is_filetype(&data) {
-            let png = gufo_png::Png::new(data).map_err(|x| x.map_err(Error::Png))?;
-            return Ok((Self::for_png(&png), png.into_inner()));
-        }
+        Ok((Self::load(*image.dyn_metadata()), image.into_inner()))
+    }
 
-        #[cfg(feature = "tiff")]
-        if gufo_tiff::Tiff::is_filetype(&data) {
-            let tiff = gufo_tiff::Tiff::new(data).map_err(|x| x.map_err(Error::Tiff))?;
-            return Ok((Self::for_tiff(&tiff), tiff.into_inner()));
-        }
+    fn load(metadata: &dyn ImageMetadata) -> Self {
+        let mut raw_metadata = Self::default();
 
-        #[cfg(feature = "webp")]
-        if gufo_webp::WebP::is_filetype(&data) {
-            let webp = gufo_webp::WebP::new(data).map_err(|x| x.map_err(Error::WebP))?;
-            return Ok((Self::for_webp(&webp), webp.into_inner()));
-        }
+        raw_metadata.exif.extend(metadata.exif());
+        raw_metadata.xmp.extend(metadata.xmp());
+        raw_metadata.key_value.extend(metadata.key_value());
 
-        // Check SVG as last file type since the detection is most unstable and slow
-        #[cfg(feature = "svg")]
-        if gufo_svg::Svg::is_filetype(&data) {
-            let svg = gufo_svg::Svg::new(data).map_err(|x| x.map_err(Error::Svg))?;
-            return Ok((Self::for_svg(&svg), svg.into_inner()));
-        }
-
-        Err(ErrorWithData::new(Error::NoSupportedFiletypeFound, data))
+        raw_metadata
     }
 
     #[cfg(feature = "jpeg")]
     pub fn for_jpeg(jpeg: &gufo_jpeg::Jpeg) -> Self {
-        let mut raw_metadata = Self::default();
-
-        raw_metadata
-            .exif
-            .extend(jpeg.exif_data().map(|x| x.to_vec()));
-
-        raw_metadata.xmp.extend(jpeg.xmp_data().map(|x| x.to_vec()));
-
-        raw_metadata
+        Self::load(jpeg)
     }
 
     #[cfg(feature = "png")]
     pub fn for_png(png: &gufo_png::Png) -> Self {
-        let mut raw_metadata = Self::default();
-
-        raw_metadata.exif.extend(png.exif());
-        raw_metadata.xmp.extend(png.xmp());
-        raw_metadata.key_value.extend(png.key_value());
-
-        raw_metadata
+        Self::load(png)
     }
 
     #[cfg(feature = "tiff")]
     pub fn for_tiff(tiff: &gufo_tiff::Tiff) -> Self {
-        let mut raw_metadata = Self::default();
-
-        raw_metadata.exif.extend(tiff.exif().map(|x| x.to_vec()));
-
-        raw_metadata
+        Self::load(tiff)
     }
 
     #[cfg(feature = "svg")]
     pub fn for_svg(svg: &gufo_svg::Svg) -> Self {
-        let mut raw_metadata = Self::default();
-
-        raw_metadata.xmp.extend(svg.xmp());
-
-        raw_metadata
+        Self::load(svg)
     }
 
     #[cfg(feature = "webp")]
     pub fn for_webp(webp: &gufo_webp::WebP) -> Self {
-        let mut raw_metadata = Self::default();
-
-        raw_metadata.exif.extend(webp.exif().map(|x| x.to_vec()));
-
-        raw_metadata
+        Self::load(webp)
     }
 
     pub fn into_metadata(self) -> Metadata {
@@ -124,6 +79,8 @@ impl RawMetadata {
             let _ = metadata.add_raw_xmp(xmp);
         }
 
+        metadata.key_value.extend(self.key_value);
+
         metadata
     }
 }
@@ -134,6 +91,7 @@ static_assertions::assert_impl_all!(Metadata: Send, Sync);
 pub struct Metadata {
     exif: Vec<ExifOwned>,
     xmp: Vec<Xmp>,
+    key_value: BTreeMap<String, String>,
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -206,6 +164,12 @@ impl Metadata {
         Ok(())
     }
 
+    pub fn add_key_value(&mut self, data: BTreeMap<String, String>) -> Result<(), Error> {
+        self.key_value.extend(data);
+
+        Ok(())
+    }
+
     pub fn xmp(&self) -> &[Xmp] {
         &self.xmp
     }
@@ -214,19 +178,38 @@ impl Metadata {
         self.xmp.is_empty() && self.exif.is_empty()
     }
 
-    fn get_exif<T>(&self, exif_op: impl Fn(&ExifOwned) -> Option<T>) -> Option<T> {
+    fn lookup_exif<T>(&self, exif_op: impl Fn(&ExifOwned) -> Option<T>) -> Option<T> {
         self.exif.iter().find_map(exif_op)
     }
 
-    fn get_xmp<T>(&self, xmp_op: impl Fn(&Xmp) -> Option<T>) -> Option<T> {
+    fn lookup_keyval<T>(
+        &self,
+        keyval_op: impl Fn(&BTreeMap<String, String>) -> Option<T>,
+    ) -> Option<T> {
+        keyval_op(&self.key_value)
+    }
+
+    fn lookup_xmp<T>(&self, xmp_op: impl Fn(&Xmp) -> Option<T>) -> Option<T> {
         self.xmp.iter().find_map(xmp_op)
     }
 
-    fn exif_xmp<T>(
+    fn lookup_exif_xmp<T>(
         &self,
         exif_op: impl Fn(&ExifOwned) -> Option<T>,
         xmp_op: impl Fn(&Xmp) -> Option<T>,
     ) -> Option<T> {
-        self.get_exif(exif_op).or_else(|| self.get_xmp(xmp_op))
+        self.lookup_exif(exif_op)
+            .or_else(|| self.lookup_xmp(xmp_op))
+    }
+
+    fn lookup_exif_xmp_keyval<T>(
+        &self,
+        exif_op: impl Fn(&ExifOwned) -> Option<T>,
+        xmp_op: impl Fn(&Xmp) -> Option<T>,
+        keyval_op: impl Fn(&BTreeMap<String, String>) -> Option<T>,
+    ) -> Option<T> {
+        self.lookup_exif(exif_op)
+            .or_else(|| self.lookup_xmp(xmp_op))
+            .or_else(|| self.lookup_keyval(keyval_op))
     }
 }

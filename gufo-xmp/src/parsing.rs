@@ -12,7 +12,8 @@ use super::{Error, Tag, Xmp};
 enum ReaderState {
     Nothing,
     RdfTag,
-    /// Inside an rdf:Description or similar where the XMP properties are defined
+    /// Inside an rdf:Description or similar where the XMP properties are
+    /// defined
     TypedNode,
     /// Inside an XMP property (also called XMP packet)
     Property(Tag),
@@ -96,8 +97,9 @@ impl Xmp {
 
                             let mut attributes = attributes.clone();
 
-                            // The rdf:Description element can contain simple XMP properties directly as
-                            // attributes according to Section 7.9.2.2 of Part 1
+                            // The rdf:Description element can contain simple XMP properties
+                            // directly as attributes according to
+                            // Section 7.9.2.2 of Part 1
                             for attr in attributes.iter_mut() {
                                 if let Some(tag) = Tag::from_name(&attr.name) {
                                     if UPDATE {

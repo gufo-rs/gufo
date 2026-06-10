@@ -1,3 +1,5 @@
+use std::collections::BTreeMap;
+
 use crate::cicp::Cicp;
 
 pub trait ImageFormat {
@@ -16,6 +18,10 @@ pub trait ImageMetadata {
 
     fn xmp(&self) -> Vec<Vec<u8>> {
         Vec::new()
+    }
+
+    fn key_value(&self) -> BTreeMap<String, String> {
+        BTreeMap::new()
     }
 }
 

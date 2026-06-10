@@ -1,10 +1,18 @@
 use gufo_common::error::ErrorWithData;
+use gufo_common::image::ImageMetadata;
 
 const LE_MAGIC_BYTES: &[u8] = b"II*\0";
 const BE_MAGIC_BYTES: &[u8] = b"MM\0*";
 
+#[derive(Debug)]
 pub struct Tiff {
     data: Vec<u8>,
+}
+
+impl ImageMetadata for Tiff {
+    fn exif(&self) -> Vec<Vec<u8>> {
+        vec![self.data.clone()]
+    }
 }
 
 /// Representation of a TIFF image
@@ -19,10 +27,6 @@ impl Tiff {
 
     pub fn into_inner(self) -> Vec<u8> {
         self.data
-    }
-
-    pub fn exif(&self) -> Result<&[u8], Error> {
-        Ok(&self.data)
     }
 }
 

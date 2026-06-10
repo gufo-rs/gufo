@@ -5,6 +5,7 @@ use std::ops::Range;
 use std::slice::SliceIndex;
 
 use gufo_common::error::ErrorWithData;
+use gufo_common::image::ImageMetadata;
 
 pub const RIFF_MAGIC_BYTES: &[u8] = b"RIFF";
 pub const WEBP_MAGIC_BYTES: &[u8] = b"WEBP";
@@ -13,6 +14,16 @@ pub const WEBP_MAGIC_BYTES: &[u8] = b"WEBP";
 pub struct WebP {
     data: Vec<u8>,
     chunks: Vec<RawChunk>,
+}
+
+impl ImageMetadata for WebP {
+    fn exif(&self) -> Vec<Vec<u8>> {
+        let Some(exif) = self.exif_data() else {
+            return vec![];
+        };
+
+        vec![exif.to_vec()]
+    }
 }
 
 /// Representation of a WEBP image
@@ -44,7 +55,7 @@ impl WebP {
         self.chunks.iter().map(|x| x.chunk(self)).collect()
     }
 
-    pub fn exif(&self) -> Option<&[u8]> {
+    fn exif_data(&self) -> Option<&[u8]> {
         self.chunks
             .iter()
             .find(|x| x.four_cc == FourCC::EXIF)
