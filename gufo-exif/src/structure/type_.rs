@@ -1,5 +1,6 @@
 use std::fmt::Display;
 
+use gufo_common::math::cheq;
 use gufo_common::types::Rational;
 
 use crate::Error;
@@ -199,9 +200,9 @@ impl Typed {
         }
     }
 
-    pub fn count(&self) -> usize {
-        match self {
-            Self::Ascii(x) => x.len() + 1,
+    pub fn count(&self) -> Result<usize, Error> {
+        Ok(match self {
+            Self::Ascii(x) => (cheq(x.len()) + 1).check()?,
             Self::Byte(x) => x.len(),
             Self::Long(x) => x.len(),
             Self::Rational(x) => x.len(),
@@ -210,8 +211,8 @@ impl Typed {
             Self::Short(x) => x.len(),
             Self::Undefined(x) => x.len(),
             Self::Unknown(_, x) => x.len(),
-            Self::Utf8(x) => x.len() + 1,
-        }
+            Self::Utf8(x) => (cheq(x.len()) + 1).check()?,
+        })
     }
 
     pub fn type_(&self) -> Type {

@@ -2,6 +2,7 @@ use std::collections::BTreeMap;
 use std::marker::PhantomData;
 
 use gufo_common::exif::{Field, IfdId};
+use gufo_common::math::cheq;
 use indexmap::IndexMap;
 use zerocopy::{BigEndian, ByteOrder, FromBytes, LittleEndian, U16, U32, U64};
 
@@ -122,7 +123,7 @@ impl<'a> Parser<'a> {
 
         // Add remaining data in document since it can contain data referenced from
         // entrties
-        self.read_remaining_data();
+        self.read_remaining_data()?;
 
         Ok(ifds)
     }
@@ -171,7 +172,7 @@ impl<'a> Parser<'a> {
         }
     }
 
-    pub fn read_remaining_data(&mut self) {
+    pub fn read_remaining_data(&mut self) -> Result<(), Error> {
         crate::forall_formats_self!(self, file, file.read_remaining_data())
     }
 }
@@ -261,7 +262,7 @@ impl<'a, T: IndexType, O: ByteOrder> ParserGeneric<'a, T, O> {
             };
 
             let (read, remaining_data) = data.split_at_mut_checked(n_bytes).unwrap();
-            let new_pos = self.pos + read.len();
+            let new_pos = (cheq(self.pos) + read.len()).check()?;
 
             if remaining_data.len() > 0 {
                 self.data.push((new_pos, remaining_data));
@@ -373,12 +374,13 @@ impl<'a, T: IndexType, O: ByteOrder> ParserGeneric<'a, T, O> {
         })
     }
 
-    fn read_remaining_data(&mut self) {
+    fn read_remaining_data(&mut self) -> Result<(), Error> {
         let remaining_data = std::mem::take(&mut self.remaining_data);
         let pos = self.pos;
-        self.pos += remaining_data.len();
+        self.pos = (cheq(self.pos) + remaining_data.len()).check()?;
 
         self.data.push((pos, remaining_data));
+        Ok(())
     }
 
     fn n_entries_size(&self) -> usize {

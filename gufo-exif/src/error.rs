@@ -3,6 +3,7 @@ use std::fmt::Display;
 use std::num::TryFromIntError;
 use std::ops::Range;
 
+use gufo_common::math::MathError;
 use zerocopy::ConvertError;
 
 use crate::structure::Type;
@@ -31,6 +32,8 @@ pub enum Error {
     InputDataWrongLength(usize, usize),
     #[error("WouldIncreaseDataStore")]
     WouldIncreaseDataStore,
+    #[error("MathError: {0}")]
+    MathError(#[from] MathError),
     #[error("Other: {0}")]
     Other(String),
 }

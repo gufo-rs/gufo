@@ -182,14 +182,14 @@ impl<'a, S: Storage<'a>> Exif<'a, S> {
                 return Err(Error::WouldIncreaseDataStore);
             } else if current_data_store.is_none() && !new_data_store {
                 // Data remains in ifd
-                entry.update(tag_ifd.tag, value.type_(), value.count(), data)?;
+                entry.update(tag_ifd.tag, value.type_(), value.count()?, data)?;
             } else if let Some(old_data_offset) = current_data_store
                 && !new_data_store
             {
                 // Currently stored in data, but new in ifd
                 let old_data_offset_end = old_data_offset + old_data_len;
 
-                entry.update_offset(tag_ifd.tag, value.type_(), value.count(), old_data_offset)?;
+                entry.update_offset(tag_ifd.tag, value.type_(), value.count()?, old_data_offset)?;
 
                 document
                     .data(old_data_offset..old_data_offset_end)
@@ -207,7 +207,7 @@ impl<'a, S: Storage<'a>> Exif<'a, S> {
                 // Data remains in in store
                 let old_data_offset_end = old_data_offset + old_data_len;
 
-                entry.update_offset(tag_ifd.tag, value.type_(), value.count(), old_data_offset)?;
+                entry.update_offset(tag_ifd.tag, value.type_(), value.count()?, old_data_offset)?;
 
                 let x = document
                     .data(old_data_offset..old_data_offset_end)

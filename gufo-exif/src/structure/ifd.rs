@@ -66,14 +66,6 @@ impl<'a> Ifd<'a> {
         )
     }
 
-    pub const fn slist_length(&self) -> usize {
-        crate::forall_formats_self!(
-            self,
-            ifd,
-            ifd.n_entries.get() as usize * std::mem::size_of_val(ifd.n_entries)
-        )
-    }
-
     pub fn n_entries(&self) -> usize {
         crate::forall_formats_self!(self, ifd, ifd.entries.len())
     }

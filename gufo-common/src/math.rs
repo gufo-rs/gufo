@@ -1,4 +1,4 @@
-//! Math utils
+//! Convienet utils for checked math
 
 #[derive(Debug, thiserror::Error, Clone, Copy)]
 pub enum MathError {
@@ -54,6 +54,10 @@ impl<T> std::ops::Deref for Checked<T> {
     fn deref(&self) -> &Self::Target {
         &self.0
     }
+}
+
+pub fn cheq<T>(val: T) -> Checked<T> {
+    Checked::new(val)
 }
 
 #[macro_export]

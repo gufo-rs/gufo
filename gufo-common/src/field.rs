@@ -79,10 +79,10 @@ macros::make_tags![
     // Exif
     (0x829A, ExposureTime, IfdId::Exif, xmp = Exif),
     (0x829D, FNumber, IfdId::Exif, xmp = Exif),
-    /// Points to the start of the [`Ifd::Exif`] entries list
+    /// Points to the start of the [`IfdId::Exif`] entries list
     (0x8769,  ExifIFDPointer, IfdId::Primary),
     (0x8822, ExposureProgram, IfdId::Exif, xmp = Exif),
-    /// Points to the start of the [`Ifd::GPS`] entries list
+    /// Points to the start of the [`IfdId::Gps`] entries list
     (0x8825, GPSInfoIFDPointer, IfdId::Primary),
     /// Also called ISOSpeedRatings (new xmp value since Exif 2.3 or later)
     (0x8827, PhotographicSensitivity, IfdId::Exif, xmp = ExifEX),
