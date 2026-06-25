@@ -110,7 +110,8 @@ macro_rules! mut_checked [
     };
 ];
 
-pub use {checked, mut_checked};
+pub use checked;
+pub use mut_checked;
 
 macro_rules! impl_operator {
     ($op:ident, $f:ident, $t:ty) => {

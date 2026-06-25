@@ -65,58 +65,46 @@ impl<'a> Parser<'a> {
         // Read Exif Ifd if available
         if let Some(mut exif_ifd_pointer) =
             primary_ifd.entry_by_tag(gufo_common::field::ExifIFDPointer::TAG)
+            && let Some(offset) = handle_error_(exif_ifd_pointer.ifd_pointer()).map(|x| x as usize)
         {
-            if let Some(offset) = handle_error_(exif_ifd_pointer.ifd_pointer()).map(|x| x as usize)
+            self.seek_absolute(offset)?;
+            let mut exif_ifd = self.read_ifd(IfdId::Exif)?;
+
+            // Read Maker Info Ifd if available
+            if let Some(mut maker_ifd_pointer) =
+                exif_ifd.entry_by_tag(gufo_common::field::MakerNote::TAG)
+                && let Some(offset) =
+                    handle_error_(maker_ifd_pointer.ifd_pointer()).map(|x| x as usize)
+                && handle_error_(self.seek_absolute(offset)).is_some()
+                && let Some(maker_info_ifd) = handle_error_(self.read_ifd(IfdId::MakerNote))
+            {
+                ifds.insert(IfdId::MakerNote, (offset, maker_info_ifd));
+            }
+
+            if let Some(mut interoperability_ifd) =
+                exif_ifd.entry_by_tag(gufo_common::field::InteroperabilityIfd::TAG)
+                && let Some(offset) =
+                    handle_error_(interoperability_ifd.ifd_pointer()).map(|x| x as usize)
             {
                 self.seek_absolute(offset)?;
-                let mut exif_ifd = self.read_ifd(IfdId::Exif)?;
-
-                // Read Maker Info Ifd if available
-                if let Some(mut maker_ifd_pointer) =
-                    exif_ifd.entry_by_tag(gufo_common::field::MakerNote::TAG)
-                {
-                    if let Some(offset) =
-                        handle_error_(maker_ifd_pointer.ifd_pointer()).map(|x| x as usize)
-                    {
-                        if handle_error_(self.seek_absolute(offset)).is_some() {
-                            if let Some(maker_info_ifd) =
-                                handle_error_(self.read_ifd(IfdId::MakerNote))
-                            {
-                                ifds.insert(IfdId::MakerNote, (offset, maker_info_ifd));
-                            }
-                        }
-                    }
-                }
-
-                if let Some(mut interoperability_ifd) =
-                    exif_ifd.entry_by_tag(gufo_common::field::InteroperabilityIfd::TAG)
-                {
-                    if let Some(offset) =
-                        handle_error_(interoperability_ifd.ifd_pointer()).map(|x| x as usize)
-                    {
-                        self.seek_absolute(offset)?;
-                        let interoperability_ifd_content =
-                            self.read_ifd(IfdId::Interoperability)?;
-                        ifds.insert(
-                            IfdId::Interoperability,
-                            (offset, interoperability_ifd_content),
-                        );
-                    }
-                }
-
-                ifds.insert(IfdId::Exif, (offset, exif_ifd));
+                let interoperability_ifd_content = self.read_ifd(IfdId::Interoperability)?;
+                ifds.insert(
+                    IfdId::Interoperability,
+                    (offset, interoperability_ifd_content),
+                );
             }
+
+            ifds.insert(IfdId::Exif, (offset, exif_ifd));
         }
 
         // Read GPS Info Ifd if available
         if let Some(mut gps_ifd_pointer) =
             primary_ifd.entry_by_tag(gufo_common::field::GPSInfoIFDPointer::TAG)
+            && let Some(offset) = handle_error_(gps_ifd_pointer.ifd_pointer()).map(|x| x as usize)
         {
-            if let Some(offset) = handle_error_(gps_ifd_pointer.ifd_pointer()).map(|x| x as usize) {
-                self.seek_absolute(offset)?;
-                let gps_info_ifd = self.read_ifd(IfdId::Gps)?;
-                ifds.insert(IfdId::Gps, (offset, gps_info_ifd));
-            }
+            self.seek_absolute(offset)?;
+            let gps_info_ifd = self.read_ifd(IfdId::Gps)?;
+            ifds.insert(IfdId::Gps, (offset, gps_info_ifd));
         }
 
         ifds.insert(IfdId::Primary, (primary_ifd_offset, primary_ifd));
@@ -264,7 +252,7 @@ impl<'a, T: IndexType, O: ByteOrder> ParserGeneric<'a, T, O> {
             let (read, remaining_data) = data.split_at_mut_checked(n_bytes).unwrap();
             let new_pos = (cheq(self.pos) + read.len()).check()?;
 
-            if remaining_data.len() > 0 {
+            if !remaining_data.is_empty() {
                 self.data.push((new_pos, remaining_data));
             }
 

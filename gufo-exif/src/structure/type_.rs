@@ -66,10 +66,10 @@ impl Typed {
             Type::Ascii => {
                 let mut data = data.to_vec();
 
-                if let Some(last) = data.last() {
-                    if *last == b'\0' {
-                        data.pop();
-                    }
+                if let Some(last) = data.last()
+                    && *last == b'\0'
+                {
+                    data.pop();
                 }
 
                 Ok(Self::Ascii(data))
@@ -137,10 +137,10 @@ impl Typed {
             Type::Utf8 => {
                 let mut s: String = String::from_utf8_lossy(data).to_string();
 
-                if let Some(last) = s.bytes().last() {
-                    if last == b'\0' {
-                        s.pop();
-                    }
+                if let Some(last) = s.bytes().last()
+                    && last == b'\0'
+                {
+                    s.pop();
                 }
 
                 Ok(Self::Utf8(s))

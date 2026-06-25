@@ -115,4 +115,5 @@ macro_rules! maybe_convertible_enum {
     }
 }
 
-pub use {convertible_enum, maybe_convertible_enum};
+pub use convertible_enum;
+pub use maybe_convertible_enum;

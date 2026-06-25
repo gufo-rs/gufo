@@ -58,4 +58,5 @@ macro_rules! make_xmp_tags {
     };
 }
 
-pub(crate) use {make_tags, make_xmp_tags};
+pub(crate) use make_tags;
+pub(crate) use make_xmp_tags;
