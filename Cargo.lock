@@ -151,7 +151,7 @@ dependencies = [
 
 [[package]]
 name = "benches"
-version = "0.5.0-alpha"
+version = "0.5.0-alpha.1"
 dependencies = [
  "criterion",
  "gufo-common",
@@ -511,7 +511,7 @@ dependencies = [
 
 [[package]]
 name = "gufo"
-version = "0.5.0-alpha"
+version = "0.5.0-alpha.1"
 dependencies = [
  "chrono",
  "gufo",
@@ -540,7 +540,7 @@ dependencies = [
 
 [[package]]
 name = "gufo-exif"
-version = "0.5.0-alpha"
+version = "0.5.0-alpha.1"
 dependencies = [
  "chrono",
  "gufo-common",
@@ -554,7 +554,7 @@ dependencies = [
 
 [[package]]
 name = "gufo-jpeg"
-version = "0.5.0-alpha"
+version = "0.5.0-alpha.1"
 dependencies = [
  "gufo-common",
  "indexmap",
@@ -565,7 +565,7 @@ dependencies = [
 
 [[package]]
 name = "gufo-png"
-version = "0.5.0-alpha"
+version = "0.5.0-alpha.1"
 dependencies = [
  "crc32fast",
  "encoding_rs",
@@ -577,7 +577,7 @@ dependencies = [
 
 [[package]]
 name = "gufo-svg"
-version = "0.5.0-alpha"
+version = "0.5.0-alpha.1"
 dependencies = [
  "gufo-common",
  "memchr",
@@ -587,7 +587,7 @@ dependencies = [
 
 [[package]]
 name = "gufo-tiff"
-version = "0.5.0-alpha"
+version = "0.5.0-alpha.1"
 dependencies = [
  "gufo-common",
  "thiserror",
@@ -595,7 +595,7 @@ dependencies = [
 
 [[package]]
 name = "gufo-tools"
-version = "0.5.0-alpha"
+version = "0.5.0-alpha.1"
 dependencies = [
  "gufo",
  "gufo-common",
@@ -607,7 +607,7 @@ dependencies = [
 
 [[package]]
 name = "gufo-webp"
-version = "0.5.0-alpha"
+version = "0.5.0-alpha.1"
 dependencies = [
  "gufo-common",
  "thiserror",
@@ -615,7 +615,7 @@ dependencies = [
 
 [[package]]
 name = "gufo-xmp"
-version = "0.5.0-alpha"
+version = "0.5.0-alpha.1"
 dependencies = [
  "chrono",
  "gufo-common",
