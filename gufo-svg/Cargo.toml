@@ -1,5 +1,6 @@
 [package]
 name = "gufo-svg"
+description = "Extract XMP metadata data from SVGs"
 version.workspace = true
 license.workspace = true
 edition.workspace = true
