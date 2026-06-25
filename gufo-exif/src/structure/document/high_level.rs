@@ -9,11 +9,11 @@ impl<'a> Document<'a> {
     //! [`Exif`](crate::Exif) for documentation.
 
     pub fn artist(&mut self) -> Option<String> {
-        handle_error(self.lookup_string_raw(field::Artist.into()))
+        handle_error(self.lookup_string(field::Artist.into()))
     }
 
     pub fn camera_owner_name(&mut self) -> Option<String> {
-        if let Some(s) = handle_error(self.lookup_string_raw(field::CameraOwnerName.into())) {
+        if let Some(s) = handle_error(self.lookup_string(field::CameraOwnerName.into())) {
             Some(s)
         } else {
             handle_error(self.lookup_string(field::CanonCameraOwnerName.into()))
@@ -21,7 +21,7 @@ impl<'a> Document<'a> {
     }
 
     pub fn copyright(&mut self) -> Option<String> {
-        handle_error(self.lookup_string_raw(field::Copyright.into()))
+        handle_error(self.lookup_string(field::Copyright.into()))
     }
 
     pub fn digital_zoom_ratio(&mut self) -> Option<Rational<u32>> {
@@ -77,11 +77,11 @@ impl<'a> Document<'a> {
     }
 
     pub fn lens_make(&mut self) -> Option<String> {
-        handle_error(self.lookup_string_raw(field::LensMake.into()))
+        handle_error(self.lookup_string(field::LensMake.into()))
     }
 
     pub fn lens_model(&mut self) -> Option<String> {
-        handle_error(self.lookup_string_raw(field::LensModel.into()))
+        handle_error(self.lookup_string(field::LensModel.into()))
     }
 
     pub fn lens_specification(&mut self) -> Option<hardware::LensSpecification> {
@@ -101,11 +101,11 @@ impl<'a> Document<'a> {
     }
 
     pub fn make(&mut self) -> Option<String> {
-        handle_error(self.lookup_string_raw(field::Make.into()))
+        handle_error(self.lookup_string(field::Make.into()))
     }
 
     pub fn model(&mut self) -> Option<String> {
-        handle_error(self.lookup_string_raw(field::Model.into()))
+        handle_error(self.lookup_string(field::Model.into()))
     }
 
     pub fn orientation(&mut self) -> Option<orientation::Orientation> {
@@ -115,7 +115,7 @@ impl<'a> Document<'a> {
     }
 
     pub fn software(&mut self) -> Option<String> {
-        handle_error(self.lookup_string_raw(field::Software.into()))
+        handle_error(self.lookup_string(field::Software.into()))
     }
 
     pub fn user_comment(&mut self) -> Option<String> {

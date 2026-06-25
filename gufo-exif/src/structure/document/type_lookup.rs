@@ -43,7 +43,7 @@ impl<'a> Document<'a> {
             s.truncate(index);
         }
 
-        Ok(Some(s))
+        Ok(if s.is_empty() { None } else { Some(s) })
     }
 
     /// Lookup entry with multiple short values
