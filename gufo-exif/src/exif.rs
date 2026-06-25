@@ -4,6 +4,7 @@ use std::marker::PhantomData;
 use std::sync::Mutex;
 
 use gufo_common::exif::TagIfd;
+use gufo_common::math::cheq;
 use zerocopy::FromZeros;
 
 use crate::Error;
@@ -106,21 +107,24 @@ impl<'a> Exif<'a, OwnedStore> {
                 let (ifd_pos, ifd) = document.ifd_pos(tag_ifd.ifd).unwrap();
 
                 let ifd_n_entries = ifd.n_entries();
-                let ifd_n_entries_behind_deleted = ifd_n_entries - n_entry;
-                ifd.set_n_entries(ifd_n_entries - 1)?;
+                let ifd_n_entries_behind_deleted = (cheq(ifd_n_entries) - n_entry).check()?;
+                ifd.set_n_entries((cheq(ifd_n_entries) - 1).check()?)?;
 
                 let ifd_pos = *ifd_pos;
 
                 // New position for entries we want to keep, this is the position of the deleted
                 // entry in the list
-                let pos_retain_new = ifd_pos + n_entries_size + n_entry * entry_size;
+                let pos_retain_new =
+                    (cheq(ifd_pos) + n_entries_size + cheq(n_entry) * entry_size).check()?;
                 // This is the range of list entries + next ifd after the deleted entry that we
                 // want to keep
-                let pos_retain_begin = pos_retain_new + entry_size;
-                let pos_retain_end =
-                    pos_retain_begin + (ifd_n_entries_behind_deleted - 1) * entry_size + index_size;
+                let pos_retain_begin = (cheq(pos_retain_new) + entry_size).check()?;
+                let pos_retain_end = (cheq(pos_retain_begin)
+                    + (cheq(ifd_n_entries_behind_deleted) - 1) * entry_size
+                    + index_size)
+                    .check()?;
                 // This is the start of the data that are duplicated after the copy
-                let pos_obsolete_retain_start = pos_retain_end - entry_size;
+                let pos_obsolete_retain_start = (cheq(pos_retain_end) - entry_size).check()?;
 
                 Ok(Some((
                     pos_retain_begin,
@@ -170,7 +174,7 @@ impl<'a, S: Storage<'a>> Exif<'a, S> {
                 return Err(Error::other("Inserting new entries not yet supported."));
             };
 
-            let old_data_len = entry.type_().size() * entry.count()?;
+            let old_data_len = (cheq(entry.type_().size()) * entry.count()?).check()?;
 
             let current_data_store = match entry.value_or_offset()? {
                 ValueOrOffset::Value(_) => None,
@@ -187,7 +191,7 @@ impl<'a, S: Storage<'a>> Exif<'a, S> {
                 && !new_data_store
             {
                 // Currently stored in data, but new in ifd
-                let old_data_offset_end = old_data_offset + old_data_len;
+                let old_data_offset_end = (cheq(old_data_offset) + old_data_len).check()?;
 
                 entry.update_offset(tag_ifd.tag, value.type_(), value.count()?, old_data_offset)?;
 
@@ -205,7 +209,7 @@ impl<'a, S: Storage<'a>> Exif<'a, S> {
                 }
 
                 // Data remains in in store
-                let old_data_offset_end = old_data_offset + old_data_len;
+                let old_data_offset_end = (cheq(old_data_offset) + old_data_len).check()?;
 
                 entry.update_offset(tag_ifd.tag, value.type_(), value.count()?, old_data_offset)?;
 

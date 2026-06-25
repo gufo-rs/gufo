@@ -1,4 +1,5 @@
 use gufo_common::exif::Tag;
+use gufo_common::math::cheq;
 use zerocopy::{BE, BigEndian, ByteOrder, FromBytes, IntoBytes, LE, LittleEndian, U16, U32, U64};
 
 use super::type_::Type;
@@ -129,7 +130,7 @@ impl<T: IndexType + zerocopy::Immutable, O: ByteOrder> EntryGeneric<T, O> {
     }
 
     pub fn value_or_offset(&mut self) -> Result<ValueOrOffset<'_>, Error> {
-        let data_size = self.type_().size() * self.count.try_to_usize()?;
+        let data_size = (cheq(self.type_().size()) * self.count.try_to_usize()?).check()?;
         if data_size > std::mem::size_of::<T>() {
             Ok(ValueOrOffset::Offset(self.value_or_offset.try_to_usize()?))
         } else {

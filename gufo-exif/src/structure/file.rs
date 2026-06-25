@@ -2,7 +2,7 @@ use std::collections::BTreeMap;
 use std::marker::PhantomData;
 
 use gufo_common::exif::{Field, IfdId};
-use gufo_common::math::cheq;
+use gufo_common::math::{MathError, cheq};
 use indexmap::IndexMap;
 use zerocopy::{BigEndian, ByteOrder, FromBytes, LittleEndian, U16, U32, U64};
 
@@ -10,7 +10,7 @@ use super::util::{IndexType, UsizeConversion};
 use super::{Ifd, IfdGeneric};
 use crate::error::Error;
 use crate::structure::EntryGeneric;
-use crate::structure::util::{Endieness, handle_error_};
+use crate::structure::util::{Endieness, IterExt, handle_error_};
 
 const MAGIC_BYTES_LE_32: &[u8] = b"II*\0";
 const MAGIC_BYTES_BE_32: &[u8] = b"MM\0*";
@@ -223,7 +223,9 @@ impl<'a, T: IndexType, O: ByteOrder> ParserGeneric<'a, T, O> {
                 .data
                 .iter()
                 .enumerate()
-                .find(|(_, (pos, x))| (*pos..*pos + x.len()).contains(&self.pos))
+                .try_find_(|(_, (pos, x))| {
+                    Ok::<_, MathError>((*pos..(cheq(*pos) + x.len()).check()?).contains(&self.pos))
+                })?
                 .ok_or(Error::IndexUsed)?
                 .0;
 
@@ -231,7 +233,7 @@ impl<'a, T: IndexType, O: ByteOrder> ParserGeneric<'a, T, O> {
 
             // Split if data block start does not align with current position
             let data = if pos != self.pos {
-                let remaining = self.pos - pos;
+                let remaining = (cheq(self.pos) - pos).check()?;
 
                 #[cfg(feature = "tracing")]
                 tracing::trace!(
@@ -299,10 +301,11 @@ impl<'a, T: IndexType, O: ByteOrder> ParserGeneric<'a, T, O> {
 
             Ok(())
         } else {
-            let pos_found = self
-                .data
-                .iter()
-                .any(|(pos, x)| (*pos..*pos + x.len()).contains(pos));
+            let pos_found = self.data.iter().try_any_(|(pos, x)| {
+                let pos_end = (cheq(*pos) + x.len()).check()?;
+                let range = *pos..pos_end;
+                Ok::<_, MathError>(range.contains(&abs_pos))
+            })?;
 
             if pos_found {
                 self.pos = abs_pos;

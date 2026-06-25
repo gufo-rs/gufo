@@ -5,6 +5,7 @@ use std::collections::BTreeMap;
 use std::ops::Range;
 
 use gufo_common::exif::{IfdId, TagIfd};
+use gufo_common::math::cheq;
 
 use super::Ifd;
 use crate::Error;
@@ -186,8 +187,8 @@ impl<'a> Document<'a> {
         };
 
         let data = if let Some(offset) = offset {
-            let len = count * type_.size();
-            let data_range = offset..offset + len;
+            let len = (cheq(count) * type_.size()).check()?;
+            let data_range = offset..(cheq(offset) + len).check()?;
             self.data(data_range.clone())
                 .ok_or(Error::IndexNotFound(data_range))?
         } else {

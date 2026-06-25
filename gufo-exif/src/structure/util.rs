@@ -210,3 +210,28 @@ macro_rules! forall_formats {
         }
     };
 }
+
+pub trait IterExt<I, E>: Iterator<Item = I> {
+    fn try_any_(&mut self, f: impl Fn(I) -> Result<bool, E>) -> Result<bool, E>;
+    fn try_find_(&mut self, f: impl Fn(&I) -> Result<bool, E>) -> Result<Option<I>, E>;
+}
+
+impl<I, E, T: Iterator<Item = I>> IterExt<I, E> for T {
+    fn try_any_(&mut self, f: impl Fn(I) -> Result<bool, E>) -> Result<bool, E> {
+        self.try_fold(true, |res, x| if res { Ok::<_, E>(true) } else { f(x) })
+    }
+
+    fn try_find_(&mut self, f: impl Fn(&I) -> Result<bool, E>) -> Result<Option<I>, E> {
+        self.try_fold(None, |res, x| {
+            if res.is_some() {
+                Ok(res)
+            } else {
+                match f(&x) {
+                    Ok(true) => Ok(Some(x)),
+                    Ok(false) => Ok(None),
+                    Err(err) => Err(err),
+                }
+            }
+        })
+    }
+}

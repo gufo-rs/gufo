@@ -1,1 +1,1 @@
-arithmetic-side-effects-allowed = ["Checked"]
+arithmetic-side-effects-allowed = ["gufo_common::math::Checked"]
