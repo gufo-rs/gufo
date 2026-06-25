@@ -1,3 +1,7 @@
+//! This crate currently only allows to extract XMP metadata from SVG files.
+//!
+//! Use [`ImageMetadata::xmp`] to obtain the embedded XMP data.
+
 use std::borrow::Cow;
 use std::io::Cursor;
 
@@ -27,6 +31,7 @@ impl Svg {
         Ok(Self { data })
     }
 
+    /// Returns true if the data are likely to be an SVG file
     pub fn is_filetype(data: &[u8]) -> bool {
         let Some(svg_tag) = memchr::memmem::find(data, b"<svg") else {
             return false;
