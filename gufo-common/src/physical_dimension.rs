@@ -83,6 +83,16 @@ impl PhysicalSize {
     pub fn new(x: PhysicalDimension, y: PhysicalDimension) -> Self {
         Self { x, y }
     }
+
+    pub fn display(&self) -> Box<dyn Display> {
+        Box::new(format!(
+            "{}\u{2009}{} \u{d7} {}\u{2009}{}",
+            self.x.value(),
+            self.x.unit().shorthand(),
+            self.y.value(),
+            self.y.unit().shorthand(),
+        ))
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
