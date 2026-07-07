@@ -16,7 +16,7 @@ pub struct Cicp {
 impl Cicp {
     pub const SRGB: Cicp = Cicp {
         color_primaries: ColorPrimaries::Srgb,
-        transfer_characteristics: TransferCharacteristics::Gamma24,
+        transfer_characteristics: TransferCharacteristics::Srgb,
         matrix_coefficients: MatrixCoefficients::Identity,
         video_full_range_flag: VideoRangeFlag::Full,
     };
@@ -87,6 +87,7 @@ impl From<Cicp> for Vec<u8> {
 utils::convertible_enum!(
     #[repr(u8)]
     #[derive(Debug, PartialEq, Eq, Clone, Copy)]
+    #[non_exhaustive]
     pub enum ColorPrimaries {
         Srgb = 1,
         Unspecified = 2,
@@ -99,20 +100,23 @@ utils::convertible_enum!(
 utils::convertible_enum!(
     #[repr(u8)]
     #[derive(Debug, PartialEq, Eq, Clone, Copy)]
+    #[non_exhaustive]
     pub enum TransferCharacteristics {
-        /// Gamma=2.2 curve
-        Gamma22 = 1,
+        /// Mostly Gamma=2.2 curve
+        Bt709 = 1,
         Unspecified = 2,
-        /// Gamma=2.2 curve
-        Gamma22_ = 6,
+        Bt470M = 4,
+        Bt470BG = 5,
+        /// Same as [`Bt709`]
+        Bt601 = 6,
         /// Linear
         Linear = 8,
-        /// Gamma=2.4 curve per IEC 61966-2-1 sRGB
-        Gamma24 = 13,
-        /// Gamma=2.2 curve 10 bit
-        Gamma22Bit10 = 14,
-        /// Gamma=2.2 curve 12 bit
-        Gamma22Bit12 = 15,
+        /// IEC 61966-2-1 sRGB
+        Srgb = 13,
+        /// Rec. BT.2020 (10-bit)
+        Bt709Bit10 = 14,
+        /// Rec. BT.2020 (12-bit)
+        Bt709Bit12 = 15,
         /// Perceptual quantization (PQ) system
         Pq = 16,
         /// SMPTE ST 428-1
@@ -125,6 +129,7 @@ utils::convertible_enum!(
 utils::convertible_enum!(
     #[repr(u8)]
     #[derive(Debug, PartialEq, Eq, Clone, Copy)]
+    #[non_exhaustive]
     pub enum MatrixCoefficients {
         Identity = 0,
         Unspecified = 2,
