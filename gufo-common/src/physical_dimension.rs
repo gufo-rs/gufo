@@ -1,6 +1,6 @@
 use std::fmt::Display;
 
-use crate::types::Rational;
+use crate::{maybe_convertible_enum, types::Rational};
 
 #[derive(Debug, Clone)]
 #[cfg_attr(
@@ -97,20 +97,23 @@ impl PhysicalSize {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-#[cfg_attr(feature = "serde", derive(serde::Deserialize, serde::Serialize))]
-#[cfg_attr(feature = "zvariant", derive(zvariant::Type))]
-#[non_exhaustive]
-pub enum PhysicalDimensionUnit {
-    Inch,
-    /// 1/6 inch
-    Pica,
-    /// 1/72 inch
-    Point,
-    Meter,
-    Centimeter,
-    Millimeter,
-}
+maybe_convertible_enum!(
+    #[repr(i32)]
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    #[cfg_attr(feature = "serde", derive(serde::Deserialize, serde::Serialize))]
+    #[cfg_attr(feature = "zvariant", derive(zvariant::Type))]
+    #[non_exhaustive]
+    pub enum PhysicalDimensionUnit {
+        Inch = 1,
+        /// 1/6 inch
+        Pica = 2,
+        /// 1/72 inch
+        Point = 3,
+        Meter = 4,
+        Centimeter = 5,
+        Millimeter = 6,
+    }
+);
 
 impl PhysicalDimensionUnit {
     pub const fn centimer_factor(self) -> f64 {
