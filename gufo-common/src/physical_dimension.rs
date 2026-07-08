@@ -224,6 +224,10 @@ impl PixelsPerPhysicalDimension {
         self.0.value
     }
 
+    pub const fn value_rational(&self) -> Rational<u32> {
+        self.0.value_rational()
+    }
+
     pub const fn unit(&self) -> PhysicalDimensionUnit {
         self.0.unit
     }
