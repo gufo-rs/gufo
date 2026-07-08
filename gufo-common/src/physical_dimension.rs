@@ -102,6 +102,7 @@ maybe_convertible_enum!(
     #[derive(Debug, Clone, Copy, PartialEq, Eq)]
     #[cfg_attr(feature = "serde", derive(serde::Deserialize, serde::Serialize))]
     #[cfg_attr(feature = "zvariant", derive(zvariant::Type))]
+    #[cfg_attr(feature = "zvariant", zvariant(signature = "s"))]
     #[non_exhaustive]
     pub enum PhysicalDimensionUnit {
         Inch = 1,
