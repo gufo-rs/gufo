@@ -1,5 +1,7 @@
 use std::fmt::Display;
 
+use crate::types::Rational;
+
 #[derive(Debug, Clone)]
 #[cfg_attr(
     feature = "zvariant",
@@ -153,6 +155,27 @@ impl PhysicalDimension {
 
     pub const fn value(&self) -> f64 {
         self.value
+    }
+
+    /// Return the value approximated as rational
+    ///
+    /// ```
+    /// # use gufo_common::physical_dimension::*;
+    /// # use gufo_common::types::Rational;
+    /// let dim = PhysicalDimension::new(12.345, PhysicalDimensionUnit::Inch);
+    /// assert_eq!(dim.value_rational(), Rational::new(12345, 1000));
+    /// ```
+    pub const fn value_rational(&self) -> Rational<u32> {
+        const MAX_PRESISION: f64 = 1_000_000.;
+
+        let x = (self.value() * MAX_PRESISION).round() / MAX_PRESISION;
+
+        let mut div = 1.0_f64;
+        while (x * div).fract() != 0. {
+            div *= 10.;
+        }
+
+        Rational::new((x * div) as u32, div as u32)
     }
 
     pub const fn unit(&self) -> PhysicalDimensionUnit {
