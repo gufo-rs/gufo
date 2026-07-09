@@ -28,8 +28,8 @@ impl PixelDensity {
 
     pub fn physical_size(self, x_pixels: u32, y_pixels: u32) -> PhysicalSize {
         PhysicalSize {
-            x: PhysicalDimension::new(self.x.value() * x_pixels as f64, self.x.unit()),
-            y: PhysicalDimension::new(self.y.value() * y_pixels as f64, self.y.unit()),
+            x: PhysicalDimension::new(x_pixels as f64 / self.x.value(), self.x.unit()),
+            y: PhysicalDimension::new(y_pixels as f64 / self.y.value(), self.y.unit()),
         }
     }
 
