@@ -40,7 +40,7 @@ impl PixelDensity {
     pub fn convert(&self, unit: PhysicalDimensionUnit) -> Self {
         Self {
             x: self.x.convert(unit),
-            y: self.x.convert(unit),
+            y: self.y.convert(unit),
         }
     }
 
