@@ -97,6 +97,13 @@ impl Metadata {
         self.lookup_xmp(Xmp::rights_web_statement)
     }
 
+    /// Resolution (Pixel Density)
+    ///
+    /// Number of pixels per physical unit like DPI
+    pub fn resolution(&self) -> Option<physical_dimension::PixelDensity> {
+        self.lookup_exif_xmp(Exif::resolution, Xmp::resolution)
+    }
+
     /// Name and version of software or firmware
     ///
     /// In practice, this often contains the name, version, and operating system

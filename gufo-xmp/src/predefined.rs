@@ -1,5 +1,6 @@
+use gufo_common::physical_dimension::{PixelDensity, PixelsPerPhysicalDimension};
 use gufo_common::types::Rational;
-use gufo_common::{field, orientation};
+use gufo_common::{field, orientation, physical_dimension};
 
 use super::Xmp;
 
@@ -73,6 +74,22 @@ impl Xmp {
                 .and_then(|x| str::parse::<u16>(x).ok())?,
         )
         .ok()
+    }
+
+    pub fn resolution(&self) -> Option<physical_dimension::PixelDensity> {
+        let x = self.get_frac(field::XResolution)?;
+        let y = self.get_frac(field::YResolution)?;
+        let unit = self.get_u16(field::ResolutionUnit)?;
+        let unit = match unit {
+            2 => physical_dimension::PhysicalDimensionUnit::Inch,
+            3 => physical_dimension::PhysicalDimensionUnit::Centimeter,
+            _ => return None,
+        };
+
+        Some(PixelDensity::new(
+            PixelsPerPhysicalDimension::new(x.as_f64(), unit),
+            PixelsPerPhysicalDimension::new(y.as_f64(), unit),
+        ))
     }
 
     pub fn rights(&self) -> Option<String> {

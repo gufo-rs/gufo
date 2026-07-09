@@ -1,5 +1,6 @@
+use gufo_common::physical_dimension::{PixelDensity, PixelsPerPhysicalDimension};
 use gufo_common::types::Rational;
-use gufo_common::{field, geography, hardware, orientation};
+use gufo_common::{field, geography, hardware, orientation, physical_dimension};
 
 use super::Document;
 use crate::structure::util::{handle_error, handle_error_};
@@ -112,6 +113,27 @@ impl<'a> Document<'a> {
         let orientation = handle_error(self.lookup_short(field::Orientation.into()))?;
 
         handle_error_(orientation::Orientation::try_from(orientation))
+    }
+
+    pub fn resolution(&mut self) -> Option<physical_dimension::PixelDensity> {
+        let x = handle_error(self.lookup_rational(field::XResolution.into()))?;
+        let y = handle_error(self.lookup_rational(field::YResolution.into()))?;
+        let unit = handle_error(self.lookup_short(field::ResolutionUnit.into()))?;
+
+        let unit = match unit {
+            2 => physical_dimension::PhysicalDimensionUnit::Inch,
+            3 => physical_dimension::PhysicalDimensionUnit::Centimeter,
+            unit => {
+                #[cfg(feature = "tracing")]
+                tracing::debug!("Lookup error: Unknown ResolutionUnit {unit}");
+                return None;
+            }
+        };
+
+        Some(PixelDensity::new(
+            PixelsPerPhysicalDimension::new(x.as_f64(), unit),
+            PixelsPerPhysicalDimension::new(y.as_f64(), unit),
+        ))
     }
 
     pub fn software(&mut self) -> Option<String> {

@@ -1,5 +1,5 @@
 use gufo_common::types::Rational;
-use gufo_common::{geography, hardware, orientation};
+use gufo_common::{geography, hardware, orientation, physical_dimension};
 
 use crate::structure::Document;
 use crate::{Error, Exif, Storage};
@@ -97,6 +97,13 @@ impl<'a, S: Storage<'a>> Exif<'a, S> {
     /// correctly
     pub fn orientation(&self) -> Option<orientation::Orientation> {
         self.document(|x| x.orientation())
+    }
+
+    /// Resolution (Pixel Density)
+    ///
+    /// Number of pixels per physical unit like DPI
+    pub fn resolution(&self) -> Option<physical_dimension::PixelDensity> {
+        self.document(|x| x.resolution())
     }
 
     /// Name and version of software or firmware
