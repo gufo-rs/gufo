@@ -1,5 +1,5 @@
 [workspace.package]
-version = "0.5.0-alpha.1"
+version = "0.5.0-alpha.2"
 license = "MPL-2.0 OR LGPL-2.1-or-later"
 edition = "2024"
 rust-version = "1.93"
@@ -39,15 +39,15 @@ chrono = { version = "0.4.38", default-features = false, features = ["std"] }
 crc32fast = "1.2.0"
 criterion = "0.8.2"
 encoding_rs = "0.8.35"
-gufo = { version = "0.5.0-alpha", path = "gufo" }
-gufo-common = { version = "2.0.0-alpha", path = "gufo-common" }
-gufo-exif = { version = "0.5.0-alpha", path = "gufo-exif" }
-gufo-jpeg = { version = "0.5.0-alpha", path = "gufo-jpeg" }
-gufo-png = { version = "0.5.0-alpha", path = "gufo-png" }
-gufo-svg = { version = "0.5.0-alpha", path = "gufo-svg" }
-gufo-tiff = { version = "0.5.0-alpha", path = "gufo-tiff" }
-gufo-webp = { version = "0.5.0-alpha", path = "gufo-webp" }
-gufo-xmp = { version = "0.5.0-alpha", path = "gufo-xmp" }
+gufo = { version = "0.5.0-alpha.1", path = "gufo" }
+gufo-common = { version = "2.0.0-alpha.2", path = "gufo-common" }
+gufo-exif = { version = "0.5.0-alpha.2", path = "gufo-exif" }
+gufo-jpeg = { version = "0.5.0-alpha.2", path = "gufo-jpeg" }
+gufo-png = { version = "0.5.0-alpha.2", path = "gufo-png" }
+gufo-svg = { version = "0.5.0-alpha.2", path = "gufo-svg" }
+gufo-tiff = { version = "0.5.0-alpha.2", path = "gufo-tiff" }
+gufo-webp = { version = "0.5.0-alpha.2", path = "gufo-webp" }
+gufo-xmp = { version = "0.5.0-alpha.2", path = "gufo-xmp" }
 image-compare = "0.5.0"
 indexmap = "2.10"
 jpeg-encoder = "0.7.0"
