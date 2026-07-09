@@ -33,7 +33,7 @@ impl PixelDensity {
         }
     }
 
-    pub fn dpi(&self) -> PixelDensity {
+    pub fn dpi(&self) -> Self {
         self.convert(PhysicalDimensionUnit::Inch)
     }
 
@@ -84,6 +84,17 @@ pub struct PhysicalSize {
 impl PhysicalSize {
     pub fn new(x: PhysicalDimension, y: PhysicalDimension) -> Self {
         Self { x, y }
+    }
+
+    pub fn dpi(&self) -> Self {
+        self.convert(PhysicalDimensionUnit::Inch)
+    }
+
+    pub fn convert(&self, unit: PhysicalDimensionUnit) -> Self {
+        Self {
+            x: self.x.convert(unit),
+            y: self.y.convert(unit),
+        }
     }
 
     pub fn display(&self) -> Box<dyn Display> {
