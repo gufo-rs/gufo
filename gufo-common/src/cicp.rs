@@ -86,6 +86,7 @@ impl From<Cicp> for Vec<u8> {
 
 utils::convertible_enum!(
     #[repr(u8)]
+    #[non_exhaustive]
     #[derive(Debug, PartialEq, Eq, Clone, Copy)]
     pub enum ColorPrimaries {
         Srgb = 1,
@@ -98,6 +99,7 @@ utils::convertible_enum!(
 
 utils::convertible_enum!(
     #[repr(u8)]
+    #[non_exhaustive]
     #[derive(Debug, PartialEq, Eq, Clone, Copy)]
     pub enum TransferCharacteristics {
         /// Gamma=2.2 curve
@@ -124,6 +126,7 @@ utils::convertible_enum!(
 
 utils::convertible_enum!(
     #[repr(u8)]
+    #[non_exhaustive]
     #[derive(Debug, PartialEq, Eq, Clone, Copy)]
     pub enum MatrixCoefficients {
         Identity = 0,
