@@ -15,6 +15,8 @@ use indexmap::IndexMap;
 pub use segments::*;
 use zerocopy::FromBytes;
 
+use crate::Marker::APP14;
+
 pub const EXIF_IDENTIFIER_STRING: &[u8] = b"Exif\0\0";
 pub const XMP_IDENTIFIER_STRING: &[u8] = b"http://ns.adobe.com/xap/1.0/\0";
 
@@ -327,8 +329,13 @@ impl Jpeg {
         buf.extend_from_slice(&MAGIC_BYTES[0..2]);
 
         for segment in &self.segments {
-            if segment.marker.is_some_and(|x| x.is_metadata()) {
-                buf.extend_from_slice(&self.data[segment.complete_data()]);
+            let data = &self.data[segment.complete_data()];
+            // APP14 Adobe defines what color format an image is using which can clash with
+            // the `other` data.
+            if segment.marker.is_some_and(|x| x.is_metadata())
+                && (segment.marker != Some(APP14) || data.get(4..10) != Some(b"Adobe\0"))
+            {
+                buf.extend_from_slice(data);
             }
         }
 
@@ -388,12 +395,15 @@ impl RawSegment {
 
     /// Complete segment including marker and length
     pub fn complete_data(&self) -> Range<usize> {
-        let sub = if self.marker.is_some() { 4 } else { 0 };
+        let sub = if let Some(marker) = self.marker {
+            if marker.is_standalone() { 2 } else { 4 }
+        } else {
+            0
+        };
 
-        self.data
-            .start
-            .checked_sub(sub)
-            .expect("Unreachable: Marker and length fields always exist")..self.data.end
+        self.data.start.checked_sub(sub).expect(&format!(
+            "Unreachable: Marker and length fields always exist: {self:?}"
+        ))..self.data.end
     }
 }
 

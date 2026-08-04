@@ -19,6 +19,18 @@ fn main() {
         let s = String::from_utf8_lossy(&data_init);
 
         println!("{:x?}: {s}", segment.marker());
+
+        if segment.marker() == Some(gufo_jpeg::Marker::APP14)
+            && s == "Adobe"
+            && let Some(color_transform) = segment.data().get(11)
+        {
+            match color_transform {
+                0 => println!(" => RGB"),
+                1 => println!(" => YCbCr"),
+                2 => println!(" => YCCK"),
+                c => println!(" => Unknown color {c}"),
+            }
+        }
     }
 
     println!("Start of frame: {:#?}", jpeg.sof());

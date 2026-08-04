@@ -1,6 +1,7 @@
 use std::fmt::Display;
 
-use crate::{maybe_convertible_enum, types::Rational};
+use crate::maybe_convertible_enum;
+use crate::types::Rational;
 
 #[derive(Debug, Clone)]
 #[cfg_attr(
