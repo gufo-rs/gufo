@@ -206,16 +206,26 @@ impl Jpeg {
     }
 
     pub fn jfif(&self) -> Result<(&Jfif, &[u8]), Error> {
-        if let Some(jfif) = self.segments().get(1) {
-            if jfif.data().get(0..5) == Some(b"JFIF\0") {
-                if let Some(data) = jfif.data().get(5..) {
-                    return Jfif::ref_from_prefix(data)
-                        .map_err(|err| Error::JfifUnavailable(format!("{err:?}")));
-                }
+        if let Some(jfif) = self.jfif_segment() {
+            if let Some(data) = jfif.data().get(5..) {
+                return Jfif::ref_from_prefix(data)
+                    .map_err(|err| Error::JfifUnavailable(format!("{err:?}")));
             }
         }
 
         Err(Error::JfifUnavailable("Not found".to_string()))
+    }
+
+    pub fn jfif_segment(&self) -> Option<Segment<'_>> {
+        if let Some(segment) = self.segments().get(1) {
+            if segment.data().get(0..5) == Some(b"JFIF\0") {
+                Some(segment.clone())
+            } else {
+                None
+            }
+        } else {
+            None
+        }
     }
 
     fn find_segments(data: &[u8]) -> Result<Vec<RawSegment>, Error> {
@@ -303,6 +313,80 @@ impl Jpeg {
         Ok(segments)
     }
 
+    /// Replace or insert Exif segment
+    ///
+    /// Replaces or inserts an APP1 Exif segment. If it exists, the first
+    /// segment is replaced, and further Exif APP1 segments are deleted. If it
+    /// doesn't exist, it is added after the JFIF or SOI segment.
+    pub fn set_exif(&mut self, exif_data: &[u8]) -> Result<(), Error> {
+        let mut data_set = false;
+
+        let mut segment_data = EXIF_IDENTIFIER_STRING.to_vec();
+        segment_data.extend_from_slice(exif_data);
+
+        loop {
+            if data_set {
+                // Delete all other segments if we replaced the first occurance
+                let old_segment = self
+                    .exif_segments()
+                    .skip(1)
+                    .next()
+                    .map(|x| x.unsafe_raw_segment());
+                if let Some(old_segment) = old_segment {
+                    self.delete_segment(old_segment)?;
+                } else {
+                    break Ok(());
+                }
+            } else {
+                let old_segment = self.exif_segments().next().map(|x| x.unsafe_raw_segment());
+                if let Some(old_segment) = old_segment {
+                    let new_segment =
+                        NewSegment::unsafe_new(old_segment.marker().unwrap(), &segment_data)?;
+                    self.replace_segment(old_segment, new_segment)?;
+                } else {
+                    let new_segment = NewSegment::unsafe_new(Marker::APP1, &segment_data)?;
+                    self.insert_segment(new_segment)?;
+                }
+
+                data_set = true;
+            }
+        }
+    }
+
+    pub fn insert_segment(&mut self, new_segment: NewSegment) -> Result<(), Error> {
+        let split = if let Some(exif_segment) = self.exif_segments().next() {
+            // Exif segments should stay directly after SOI marker or after JFIF segment
+            exif_segment.data.end
+        } else if let Some(jfif_segment) = self.jfif_segment() {
+            // JFIF segment should stay directly after SOI marker
+            jfif_segment.data.end
+        } else {
+            // Can be added directly after SOI marker
+            2
+        };
+
+        let mut new = Vec::new();
+        new.extend_from_slice(&self.data[..split]);
+        new_segment.write_to(&mut new);
+        new.extend_from_slice(&self.data[split..]);
+
+        self.data = new;
+        self.segments = Self::find_segments(&self.data)?;
+        Ok(())
+    }
+
+    pub fn delete_segment(&mut self, old_segment: RawSegment) -> Result<(), Error> {
+        let old_range = old_segment.complete_data();
+
+        let mut new = Vec::new();
+        new.extend_from_slice(&self.data[..old_range.start]);
+        new.extend_from_slice(&self.data[old_range.end..]);
+
+        self.data = new;
+        self.segments = Self::find_segments(&self.data)?;
+        Ok(())
+    }
+
     pub fn replace_segment(
         &mut self,
         old_segment: RawSegment,
@@ -360,7 +444,7 @@ pub struct NewSegment<'a> {
 }
 
 impl<'a> NewSegment<'a> {
-    pub fn new(marker: Marker, data: &'a [u8]) -> Result<Self, Error> {
+    pub fn unsafe_new(marker: Marker, data: &'a [u8]) -> Result<Self, Error> {
         let total_len = data.len().u16()?.safe_add(2)?;
 
         Ok(Self {
@@ -385,6 +469,10 @@ pub struct RawSegment {
 }
 
 impl RawSegment {
+    pub fn marker(&self) -> Option<Marker> {
+        self.marker
+    }
+
     pub fn segment<'a>(&self, jpeg: &'a Jpeg) -> Segment<'a> {
         Segment {
             marker: self.marker,

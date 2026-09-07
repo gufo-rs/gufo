@@ -1,6 +1,8 @@
+use std::assert_matches;
 use std::io::{Cursor, Seek};
 
 use gufo_common::field;
+use gufo_common::image::ImageMetadata;
 use gufo_exif::structure::Typed;
 use gufo_jpeg::Jpeg;
 use zune_jpeg::zune_core::colorspace;
@@ -33,6 +35,58 @@ fn jpeg_xmp() {
             "CreatorTool".into()
         )),
         Some("GIMP 2.10")
+    );
+}
+
+#[test]
+fn jpeg_overwrite_exif() {
+    let data = std::fs::read("test-images/exif/jpeg/canon-400d.jpg").unwrap();
+
+    let mut jpeg = gufo_jpeg::Jpeg::new(data).unwrap();
+    let exif_data = jpeg.exif().pop().unwrap();
+    let mut exif = gufo_exif::Exif::for_vec(exif_data).unwrap();
+    assert!(exif.camera_owner_name().is_some());
+    assert_matches!(
+        exif.delete(gufo_common::field::CanonCameraOwnerName.into()),
+        Ok(true)
+    );
+
+    jpeg.set_exif(&exif.serialize().unwrap()).unwrap();
+    let new_data = jpeg.into_inner();
+
+    // Check result
+    let changed_jpeg = gufo_jpeg::Jpeg::new(new_data).unwrap();
+    let mut exif_data = changed_jpeg.exif();
+    let new_exif = gufo_exif::Exif::for_vec(exif_data.pop().unwrap()).unwrap();
+
+    assert_matches!(exif_data.pop(), None);
+    assert_matches!(new_exif.camera_owner_name(), None);
+}
+
+#[test]
+fn jpeg_insert_exif() {
+    let data = std::fs::read("test-images/images/color/color.jpg").unwrap();
+
+    let mut jpeg = gufo_jpeg::Jpeg::new(data).unwrap();
+    assert_matches!(jpeg.exif().first(), None);
+
+    // Get Exif from other image
+    let data = std::fs::read("test-images/exif/jpeg/canon-400d.jpg").unwrap();
+    let other_jpeg = gufo_jpeg::Jpeg::new(data).unwrap();
+    let exif_data = other_jpeg.exif().pop().unwrap();
+
+    jpeg.set_exif(&exif_data).unwrap();
+    let new_data = jpeg.into_inner();
+
+    // Check result
+    let changed_jpeg = gufo_jpeg::Jpeg::new(new_data).unwrap();
+    let mut exif_data = changed_jpeg.exif();
+    let new_exif = gufo_exif::Exif::for_vec(exif_data.pop().unwrap()).unwrap();
+
+    assert_matches!(exif_data.pop(), None);
+    assert_eq!(
+        new_exif.camera_owner_name(),
+        Some(String::from("Sophie Herold"))
     );
 }
 
