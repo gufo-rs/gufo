@@ -41,6 +41,11 @@ impl ImageMetadata for Jpeg {
         self.exif_data().map(|x| x.to_vec()).collect()
     }
 
+    fn set_exif(&mut self, exif_data: &[u8]) -> Result<(), gufo_common::image::ImageMetadataError> {
+        self.set_exif_internal(exif_data)
+            .map_err(gufo_common::image::ImageMetadataError::other)
+    }
+
     fn xmp(&self) -> Vec<Vec<u8>> {
         self.xmp_data().map(|x| x.to_vec()).collect()
     }
@@ -318,7 +323,7 @@ impl Jpeg {
     /// Replaces or inserts an APP1 Exif segment. If it exists, the first
     /// segment is replaced, and further Exif APP1 segments are deleted. If it
     /// doesn't exist, it is added after the JFIF or SOI segment.
-    pub fn set_exif(&mut self, exif_data: &[u8]) -> Result<(), Error> {
+    fn set_exif_internal(&mut self, exif_data: &[u8]) -> Result<(), Error> {
         let mut data_set = false;
 
         let mut segment_data = EXIF_IDENTIFIER_STRING.to_vec();
@@ -327,11 +332,7 @@ impl Jpeg {
         loop {
             if data_set {
                 // Delete all other segments if we replaced the first occurance
-                let old_segment = self
-                    .exif_segments()
-                    .skip(1)
-                    .next()
-                    .map(|x| x.unsafe_raw_segment());
+                let old_segment = self.exif_segments().nth(1).map(|x| x.unsafe_raw_segment());
                 if let Some(old_segment) = old_segment {
                     self.delete_segment(old_segment)?;
                 } else {
