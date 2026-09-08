@@ -1,4 +1,4 @@
-use std::ops::Deref;
+use std::{num::NonZeroUsize, ops::Deref};
 
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub struct TagIfd {
@@ -77,4 +77,6 @@ pub enum IfdId {
     Gps,
     Interoperability,
     MakerNote,
+    /// Numbered(1) is often used for thumbnails
+    Numbered(NonZeroUsize),
 }

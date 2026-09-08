@@ -1,5 +1,6 @@
 use std::collections::BTreeMap;
 use std::marker::PhantomData;
+use std::num::NonZeroUsize;
 
 use gufo_common::exif::{Field, IfdId};
 use gufo_common::math::{MathError, cheq};
@@ -61,6 +62,24 @@ impl<'a> Parser<'a> {
         self.seek_absolute(primary_ifd_offset)?;
 
         let mut primary_ifd = self.read_ifd(IfdId::Primary)?;
+
+        let mut next_ifd_offset = primary_ifd.next_ifd_offset()?;
+
+        for n in NonZeroUsize::MIN.. {
+            self.seek_absolute(next_ifd_offset)?;
+
+            let current_ifd_offset = next_ifd_offset;
+            let ifd_id = IfdId::Numbered(n);
+            let ifd = self.read_ifd(ifd_id)?;
+
+            next_ifd_offset = ifd.next_ifd_offset()?;
+
+            ifds.insert(ifd_id, (current_ifd_offset, ifd));
+
+            if next_ifd_offset == 0 {
+                break;
+            }
+        }
 
         // Read Exif Ifd if available
         if let Some(mut exif_ifd_pointer) =

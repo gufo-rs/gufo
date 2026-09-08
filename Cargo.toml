@@ -2,7 +2,7 @@
 version = "0.6.0-alpha"
 license = "MPL-2.0 OR LGPL-2.1-or-later"
 edition = "2024"
-rust-version = "1.93"
+rust-version = "1.96"
 repository = "https://github.com/gufo-rs/gufo"
 
 [profile.release]

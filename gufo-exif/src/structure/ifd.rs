@@ -69,6 +69,10 @@ impl<'a> Ifd<'a> {
     pub fn n_entries(&self) -> usize {
         crate::forall_formats_self!(self, ifd, ifd.entries.len())
     }
+
+    pub fn next_ifd_offset(&self) -> Result<usize, Error> {
+        crate::forall_formats_self!(self, ifd, ifd.next_ifd_offset.try_to_usize())
+    }
 }
 
 #[derive(Debug)]
