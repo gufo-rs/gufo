@@ -4,6 +4,7 @@ use std::marker::PhantomData;
 use std::sync::Mutex;
 
 use gufo_common::exif::TagIfd;
+use gufo_common::field;
 use gufo_common::math::cheq;
 use zerocopy::FromZeros;
 
@@ -156,6 +157,28 @@ impl<'a> Exif<'a, OwnedStore> {
         self.document = exif.document;
 
         Ok(true)
+    }
+
+    pub fn delete_thumbnail(&mut self) -> Result<bool, Error> {
+        let result = self.document(|x| x.thumbnail_data().map(|x| x.map(|y| y.zero())))?;
+
+        if result.is_some() {
+            let result = self.delete(field::ThumbnailJPEGInterchangeFormat.into())?
+                && self.delete(field::ThumbnailJPEGInterchangeFormatLength.into())?;
+
+            for f in [
+                field::ThumbnailCompression.into(),
+                field::ThumbnailXResolution.into(),
+                field::ThumbnailYResolution.into(),
+                field::ThumbnailResolutionUnit.into(),
+            ] {
+                let _ = self.delete(f);
+            }
+
+            Ok(result)
+        } else {
+            Ok(false)
+        }
     }
 }
 
