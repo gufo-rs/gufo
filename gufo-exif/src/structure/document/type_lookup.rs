@@ -76,6 +76,36 @@ impl<'a> Document<'a> {
         }
     }
 
+    /// Lookup entry with multiple long values
+    pub fn lookup_longs(&mut self, tag_ifd: TagIfd) -> Result<Option<Vec<u32>>, Error> {
+        let Some(typed) = self.lookup(tag_ifd)? else {
+            return Ok(None);
+        };
+
+        if let Typed::Long(longs) = typed {
+            Ok(Some(longs))
+        } else {
+            Err(Error::TypeMissmatch(typed.type_(), &[Type::Long]))
+        }
+    }
+
+    /// Lookup entry with single long entry
+    pub fn lookup_long(&mut self, tag_ifd: TagIfd) -> Result<Option<u32>, Error> {
+        let Some(vec) = self.lookup_longs(tag_ifd)? else {
+            return Ok(None);
+        };
+
+        if let Some((first, rest)) = vec.split_first() {
+            if !rest.is_empty() {
+                Err(Error::ElementCountMissmatch(vec.len(), 1))
+            } else {
+                Ok(Some(*first))
+            }
+        } else {
+            Ok(None)
+        }
+    }
+
     /// Lookup entry with multiple rational entries
     pub fn lookup_rationals<const N: usize>(
         &mut self,

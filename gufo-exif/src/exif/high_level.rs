@@ -118,4 +118,9 @@ impl<'a, S: Storage<'a>> Exif<'a, S> {
     pub fn user_comment(&self) -> Option<String> {
         self.document(|x| x.user_comment())
     }
+
+    /// Thumbnail image as raw JPEG data
+    pub fn thumbnail(&self) -> Option<Vec<u8>> {
+        self.document(|x| x.thumbnail())
+    }
 }

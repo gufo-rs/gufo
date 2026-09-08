@@ -68,5 +68,6 @@ fn show_jpeg(jpeg: gufo::jpeg::Jpeg) {
     }
     println!("Color Model: {:?}", jpeg.color_model().unwrap());
 
-    println!("X: {:#?}", jpeg.jfif().unwrap());
+    println!("JFIF: {:#?}", jpeg.jfif().unwrap());
+    println!("SOF: {:#?}", jpeg.sof().unwrap());
 }

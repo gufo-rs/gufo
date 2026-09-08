@@ -39,10 +39,11 @@ macros::make_tags![
 
     // Primary/Thumbnail
     (0x100, ImageWidth, IfdId::Primary, xmp = Exif),
-    (0x100, ThumbnailImageWidth, IfdId::Thumbnail),
+    (0x100, ThumbnailImageWidth, IfdId::THUMBNAIL),
     (0x101, ImageHeight, IfdId::Primary, xmp = Exif),
     (0x102, BitsPerSample, IfdId::Primary, xmp = Tiff),
     (0x103, Compression, IfdId::Primary, xmp = Tiff),
+    (0x103, ThumbnailCompression, IfdId::THUMBNAIL),
     (0x106, PhotometricInterpretation, IfdId::Primary, xmp = Tiff),
     (0x10A, FillOrder, IfdId::Primary),
     (0x10E, ImageDescription, IfdId::Primary, xmp = Dc),
@@ -51,16 +52,19 @@ macros::make_tags![
     (0x111, StripOffsets, IfdId::Primary),
     /// Image orientation and mirroring
     (0x112, Orientation, IfdId::Primary, xmp = Tiff),
-    (0x112, ThumbnailOrientation, IfdId::Thumbnail),
+    (0x112, ThumbnailOrientation, IfdId::THUMBNAIL),
     (0x115, SamplesPerPixel, IfdId::Primary, xmp = Tiff),
     (0x116, RowsPerStrip, IfdId::Primary),
     (0x117, StripByteCounts, IfdId::Primary),
     (0x11A, XResolution, IfdId::Primary, xmp = Tiff),
+    (0x11A, ThumbnailXResolution, IfdId::THUMBNAIL),
     (0x11B, YResolution, IfdId::Primary, xmp = Tiff),
+    (0x11B, ThumbnailYResolution, IfdId::THUMBNAIL),
     (0x11C, PlanarConfiguration, IfdId::Primary, xmp = Tiff),
     (0x11E, XPosition, IfdId::Primary),
     (0x11F, YPosition, IfdId::Primary),
     (0x128, ResolutionUnit, IfdId::Primary, xmp = Tiff),
+    (0x128, ThumbnailResolutionUnit, IfdId::THUMBNAIL),
     (0x129, PageNumber, IfdId::Primary),
     /// The XMP equivalent is [`CreatorTool`]
     (0x131, Software, IfdId::Primary),
@@ -71,6 +75,8 @@ macros::make_tags![
     (0x13E, WhitePoint, IfdId::Primary, xmp = Tiff),
     (0x13F, PrimaryChromaticities, IfdId::Primary, xmp = Tiff),
     (0x213, YCbCrPositioning, IfdId::Primary),
+    (0x201, ThumbnailJPEGInterchangeFormat, IfdId::THUMBNAIL),
+    (0x202, ThumbnailJPEGInterchangeFormatLength, IfdId::THUMBNAIL),
     (0x258, Xmp, IfdId::Primary),
     /// The XMP equivalent is [`Rights`]
     (0x8298, Copyright, IfdId::Primary),

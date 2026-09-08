@@ -1,4 +1,5 @@
 mod high_level;
+mod thumbnail;
 mod type_lookup;
 
 use std::collections::BTreeMap;
@@ -230,6 +231,15 @@ impl<'a> Document<'a> {
             .iter_mut()
             .find(|(p, x)| *p <= range.start && range.end <= p + x.len())
             .and_then(|(p, x)| x.get_mut(range.start - *p..range.end - *p))
+    }
+
+    pub fn data_start_len(
+        &mut self,
+        start_offset: usize,
+        len: usize,
+    ) -> Result<Option<&mut [u8]>, Error> {
+        let range = start_offset..(cheq(start_offset) + len).check()?;
+        Ok(self.data(range))
     }
 
     pub fn data_blocks(&mut self) -> &[(usize, &mut [u8])] {

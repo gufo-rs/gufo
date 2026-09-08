@@ -1,4 +1,5 @@
-use std::{num::NonZeroUsize, ops::Deref};
+use std::num::NonZeroUsize;
+use std::ops::Deref;
 
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub struct TagIfd {
@@ -72,11 +73,14 @@ impl Deref for Tag {
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub enum IfdId {
     Primary,
-    Thumbnail,
     Exif,
     Gps,
     Interoperability,
     MakerNote,
     /// Numbered(1) is often used for thumbnails
     Numbered(NonZeroUsize),
+}
+
+impl IfdId {
+    pub const THUMBNAIL: Self = Self::Numbered(NonZeroUsize::MIN);
 }

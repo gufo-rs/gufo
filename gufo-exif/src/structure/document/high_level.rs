@@ -151,4 +151,8 @@ impl<'a> Document<'a> {
             Some(tr.to_string())
         }
     }
+
+    pub fn thumbnail(&mut self) -> Option<Vec<u8>> {
+        handle_error(self.thumbnail_data()).map(|x| x.to_vec())
+    }
 }

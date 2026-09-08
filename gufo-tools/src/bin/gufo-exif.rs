@@ -49,6 +49,22 @@ fn print(exif_data: Vec<u8>) {
     show_("Orientation", x.orientation());
     show("Software", x.software());
     show("User Comment", x.user_comment());
+
+    let thumbnail = if let Some(thumbnail) = x.thumbnail() {
+        let jpeg = gufo_jpeg::Jpeg::new(thumbnail);
+
+        match jpeg {
+            Err(err) => Some(format!("Error: {err}")),
+            Ok(jpeg) => match jpeg.sof() {
+                Err(err) => Some(format!("Error: {err}")),
+                Ok(sof) => Some(format!("{}x{}", sof.x, sof.y)),
+            },
+        }
+    } else {
+        None
+    };
+
+    show("Thumbnail", thumbnail);
 }
 
 pub fn output<'a, S: Storage<'a>>(exif: &mut Exif<'a, S>) -> String {
