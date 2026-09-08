@@ -9,7 +9,7 @@ use gufo_common::read::{ReadExt, SliceExt};
 
 pub use crate::*;
 
-pub const LEGACY_EXIF_KEYWORD: &[u8] = b"Raw profile type exif";
+pub const LEGACY_EXIF_KEYWORD: &str = "Raw profile type exif";
 pub const LEGACY_XMP_KEYWORD: &[u8] = b"Raw profile type xmp";
 pub const XMP_KEYWORD: &[u8] = b"XML:com.adobe.xmp";
 
@@ -180,7 +180,7 @@ impl<'a> Chunk<'a> {
     /// Returns the Exif data stored in a [`tEXt`](ChunkType::tEXt) or
     /// [`zTXt`](ChunkType::zTXt) chunk
     pub fn legacy_exif(&self, inflate_limit: usize) -> Option<Vec<u8>> {
-        if self.keyword().ok()? != LEGACY_EXIF_KEYWORD {
+        if self.keyword().ok()? != LEGACY_EXIF_KEYWORD.as_bytes() {
             return None;
         }
 
@@ -351,6 +351,21 @@ impl NewChunk {
         }
     }
 
+    pub fn ztxt(keyword: &str, text: &str) -> Self {
+        let compressed_text = miniz_oxide::deflate::compress_to_vec_zlib(text.as_bytes(), 6);
+
+        let mut data = Vec::new();
+        data.extend_from_slice(keyword.as_bytes());
+        data.push(0x00);
+        data.push(0x00);
+        data.extend_from_slice(&compressed_text);
+
+        NewChunk {
+            chunk_type: ChunkType::tEXt,
+            data,
+        }
+    }
+
     pub fn phys_meter(x_pixels_per_meter: u32, y_pixels_per_meter: u32) -> Self {
         let mut data = Vec::with_capacity(9);
         data.extend_from_slice(&x_pixels_per_meter.to_be_bytes());
@@ -367,14 +382,18 @@ impl NewChunk {
     pub fn to_bytes(&self) -> Vec<u8> {
         let mut buf = Vec::with_capacity(self.data.len());
 
-        buf.extend((self.data.len() as u32).to_be_bytes());
-        buf.extend(self.chunk_type.bytes());
-        buf.extend(&self.data);
-
-        let crc = crc32fast::hash(&buf[4..]);
-
-        buf.extend(crc.to_be_bytes());
+        self.write_to(&mut buf);
 
         buf
+    }
+
+    pub fn write_to(&self, vec: &mut Vec<u8>) {
+        vec.extend((self.data.len() as u32).to_be_bytes());
+        vec.extend(self.chunk_type.bytes());
+        vec.extend(&self.data);
+
+        let crc = crc32fast::hash(&vec[4..]);
+
+        vec.extend(crc.to_be_bytes());
     }
 }

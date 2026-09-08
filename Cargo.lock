@@ -1528,6 +1528,7 @@ dependencies = [
  "gufo-common",
  "gufo-exif",
  "gufo-jpeg",
+ "gufo-png",
  "gufo-xmp",
  "image",
  "image-compare",

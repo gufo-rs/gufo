@@ -61,6 +61,11 @@ impl ImageMetadata for Png {
         result
     }
 
+    fn set_exif(&mut self, exif_data: &[u8]) -> Result<(), gufo_common::image::ImageMetadataError> {
+        self.set_exif_internal(exif_data)
+            .map_err(gufo_common::image::ImageMetadataError::other)
+    }
+
     fn xmp(&self) -> Vec<Vec<u8>> {
         let chunks = self.chunks();
 
@@ -165,6 +170,19 @@ impl Png {
 
         self.chunks = Self::find_chunks(&self.data)?;
 
+        Ok(())
+    }
+
+    pub fn replace_chunk(&mut self, old_chunk: RawChunk, new_chunk: NewChunk) -> Result<(), Error> {
+        let old_range = old_chunk.complete_data();
+
+        let mut new = Vec::new();
+        new.extend_from_slice(&self.data[..old_range.start]);
+        new_chunk.write_to(&mut new);
+        new.extend_from_slice(&self.data[old_range.end..]);
+
+        self.data = new;
+        self.chunks = Self::find_chunks(&self.data)?;
         Ok(())
     }
 
@@ -297,6 +315,47 @@ impl Png {
         Ok(())
     }
 
+    fn set_exif_internal(&mut self, exif_data: &[u8]) -> Result<(), Error> {
+        // Set the PNG 3 standard eXIf chunk
+        let new_chunk = NewChunk::new(ChunkType::eXIf, exif_data.to_vec());
+
+        if let Some(first_exif_chunk) = self.chunks.iter().find(|x| x.chunk_type == ChunkType::eXIf)
+        {
+            self.replace_chunk(first_exif_chunk.clone(), new_chunk)?;
+        } else {
+            self.insert_chunk(new_chunk)?;
+        }
+
+        while let Some(other_exif_chunk) = self
+            .chunks
+            .iter()
+            .filter(|x| x.chunk_type == ChunkType::eXIf)
+            .nth(1)
+        {
+            self.remove_chunk(other_exif_chunk.clone())?;
+        }
+
+        // Remove legacy exif chunks
+        while let Some(first_legacy_chunk) = self
+            .chunks
+            .iter()
+            .find(|x| x.chunk(self).legacy_exif(self.inflate_limit).is_some())
+        {
+            self.remove_chunk(first_legacy_chunk.clone())?;
+        }
+
+        // Remove text chunks where the keyword starts with 'exif:'
+        while let Some(exif_text_chunk) = self.chunks.iter().find(|x| {
+            x.chunk(self)
+                .textual(self.inflate_limit)
+                .is_ok_and(|(k, _)| k.starts_with(b"exif:"))
+        }) {
+            self.remove_chunk(exif_text_chunk.clone())?;
+        }
+
+        Ok(())
+    }
+
     fn get_result(&self, index: Range<usize>) -> Result<&[u8], Error> {
         self.data
             .get(index.clone())
@@ -318,7 +377,7 @@ mod tests {
             png.cicp(),
             Some(Cicp {
                 color_primaries: ColorPrimaries::DisplayP3,
-                transfer_characteristics: TransferCharacteristics::Gamma24,
+                transfer_characteristics: TransferCharacteristics::Srgb,
                 matrix_coefficients: MatrixCoefficients::Identity,
                 video_full_range_flag: VideoRangeFlag::Full,
             })

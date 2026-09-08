@@ -33,7 +33,14 @@ fn show_png(png: gufo::png::Png) {
     let mut n_repeats = 1;
     let mut last_type = gufo::png::ChunkType::IEND;
     for chunk in png.chunks() {
-        if chunk.chunk_type() != last_type {
+        if let Ok((keyword, value)) = chunk.textual(200000) {
+            let chunk_type = chunk.chunk_type();
+            let keyword = String::from_utf8_lossy(keyword);
+            let value = String::from_utf8_lossy(&value);
+            println!(" - {chunk_type:?}: {keyword}\n   {value}");
+
+            last_type = chunk_type;
+        } else if chunk.chunk_type() != last_type {
             show_repeats(&mut n_repeats, &last_type);
             last_type = chunk.chunk_type();
         } else {
