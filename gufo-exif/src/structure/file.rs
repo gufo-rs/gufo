@@ -63,9 +63,14 @@ impl<'a> Parser<'a> {
 
         let mut primary_ifd = self.read_ifd(IfdId::Primary)?;
 
+        // Read additional ifds as Numbered(n) if available
         let mut next_ifd_offset = primary_ifd.next_ifd_offset()?;
-
         for n in NonZeroUsize::MIN.. {
+            // There are no more ifds in line
+            if next_ifd_offset == 0 {
+                break;
+            }
+
             self.seek_absolute(next_ifd_offset)?;
 
             let current_ifd_offset = next_ifd_offset;
@@ -75,10 +80,6 @@ impl<'a> Parser<'a> {
             next_ifd_offset = ifd.next_ifd_offset()?;
 
             ifds.insert(ifd_id, (current_ifd_offset, ifd));
-
-            if next_ifd_offset == 0 {
-                break;
-            }
         }
 
         // Read Exif Ifd if available
