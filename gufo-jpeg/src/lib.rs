@@ -42,7 +42,7 @@ impl ImageMetadata for Jpeg {
     }
 
     fn xmp(&self) -> Vec<Vec<u8>> {
-        self.exif_data().map(|x| x.to_vec()).collect()
+        self.xmp_data().map(|x| x.to_vec()).collect()
     }
 
     fn pixel_density(&self) -> Option<PixelDensity> {
