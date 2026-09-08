@@ -386,7 +386,7 @@ impl<'a, T: IndexType, O: ByteOrder> ParserGeneric<'a, T, O> {
 
     fn read_remaining_data(&mut self) -> Result<(), Error> {
         let remaining_data = std::mem::take(&mut self.remaining_data);
-        let pos = self.pos;
+        let pos = self.remaining_data_pos;
         self.pos = (cheq(self.pos) + remaining_data.len()).check()?;
 
         self.data.push((pos, remaining_data));
