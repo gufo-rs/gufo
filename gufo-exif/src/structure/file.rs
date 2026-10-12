@@ -255,7 +255,10 @@ impl<'a, T: IndexType, O: ByteOrder> ParserGeneric<'a, T, O> {
                 data
             };
 
-            let (read, remaining_data) = data.split_at_mut_checked(n_bytes).unwrap();
+            // TODO: Could have it's own error
+            let (read, remaining_data) = data
+                .split_at_mut_checked(n_bytes)
+                .ok_or_else(|| Error::IndexNotFound(0..n_bytes))?;
             let new_pos = (cheq(self.pos) + read.len()).check()?;
 
             if !remaining_data.is_empty() {
