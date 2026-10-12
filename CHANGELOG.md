@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.5.2 (Unreleased)
+
+### Fixed
+
+- Parsing of exif data with non Canon MakerNote sub-ifd format can fail.
+
 ## 0.5.1 (2026-09-08)
 
 ### Fixed
