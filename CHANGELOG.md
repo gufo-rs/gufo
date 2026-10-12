@@ -5,6 +5,7 @@
 ### Fixed
 
 - exif: Don't use unwrap in `ParserGeneric::read_bytes` #15
+- exif: Only parse canon-style MakerNote if Make is "Canon". This fixes parse errors on Exif from camera makers with different MakerNote structure.
 - png: Fix TransferCharacteristics test
 
 ## 0.5.1 (2026-09-08)

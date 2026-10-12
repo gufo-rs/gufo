@@ -1,5 +1,6 @@
 use std::collections::BTreeMap;
 use std::marker::PhantomData;
+use std::ops::Range;
 
 use gufo_common::exif::{Field, IfdId};
 use gufo_common::math::{MathError, cheq};
@@ -9,8 +10,8 @@ use zerocopy::{BigEndian, ByteOrder, FromBytes, LittleEndian, U16, U32, U64};
 use super::util::{IndexType, UsizeConversion};
 use super::{Ifd, IfdGeneric};
 use crate::error::Error;
-use crate::structure::EntryGeneric;
 use crate::structure::util::{Endieness, IterExt, handle_error_};
+use crate::structure::{EntryGeneric, ValueOrOffset};
 
 const MAGIC_BYTES_LE_32: &[u8] = b"II*\0";
 const MAGIC_BYTES_BE_32: &[u8] = b"MM\0*";
@@ -70,15 +71,24 @@ impl<'a> Parser<'a> {
             self.seek_absolute(offset)?;
             let mut exif_ifd = self.read_ifd(IfdId::Exif)?;
 
-            // Read Maker Info Ifd if available
-            if let Some(mut maker_ifd_pointer) =
-                exif_ifd.entry_by_tag(gufo_common::field::MakerNote::TAG)
-                && let Some(offset) =
-                    handle_error_(maker_ifd_pointer.ifd_pointer()).map(|x| x as usize)
-                && handle_error_(self.seek_absolute(offset)).is_some()
-                && let Some(maker_info_ifd) = handle_error_(self.read_ifd(IfdId::MakerNote))
+            // Only try to read MakerNote for canon cameras
+            if let Some(mut make_entry) =
+                dbg!(primary_ifd.entry_by_tag(gufo_common::field::Make::TAG))
+                && let Ok(make_count) = make_entry.count()
+                && let Ok(ValueOrOffset::Offset(make_offset)) = make_entry.value_or_offset()
+                && let Ok(make) = self.peek_bytes(make_offset..make_offset + make_count)
+                && make.eq_ignore_ascii_case(b"canon\0")
             {
-                ifds.insert(IfdId::MakerNote, (offset, maker_info_ifd));
+                // Read Maker Info Ifd if available
+                if let Some(mut maker_ifd_pointer) =
+                    exif_ifd.entry_by_tag(gufo_common::field::MakerNote::TAG)
+                    && let Some(offset) =
+                        handle_error_(maker_ifd_pointer.ifd_pointer()).map(|x| x as usize)
+                    && handle_error_(self.seek_absolute(offset)).is_some()
+                    && let Some(maker_info_ifd) = handle_error_(self.read_ifd(IfdId::MakerNote))
+                {
+                    ifds.insert(IfdId::MakerNote, (offset, maker_info_ifd));
+                }
             }
 
             if let Some(mut interoperability_ifd) =
@@ -140,6 +150,10 @@ impl<'a> Parser<'a> {
         crate::forall_formats_self!(self, file, file.seek_absolute(abs_pos))
     }
 
+    pub fn peek_bytes(&mut self, byte_range: Range<usize>) -> Result<&mut [u8], Error> {
+        crate::forall_formats_self!(self, file, file.peek_bytes(byte_range))
+    }
+
     pub fn read_ifd(&mut self, ifd: IfdId) -> Result<Ifd<'a>, Error> {
         Ok(match self {
             Parser::Be32(x) => Ifd::Be32(x.read_ifd(ifd)?),
@@ -188,6 +202,25 @@ impl<'a, T: IndexType, O: ByteOrder> ParserGeneric<'a, T, O> {
             endieness: Default::default(),
             primary_ifd_offset: Default::default(),
             data: Default::default(),
+        }
+    }
+
+    pub fn peek_bytes(&mut self, byte_range: Range<usize>) -> Result<&mut [u8], Error> {
+        if let Some((offset, s)) = self
+            .data
+            .iter_mut()
+            .find(|(start, s)| *start >= byte_range.start && start + s.len() > byte_range.end)
+        {
+            Ok(&mut s[byte_range.start - *offset..byte_range.end - *offset])
+        } else if byte_range.start > self.remaining_data_pos {
+            self.remaining_data
+                .get_mut(
+                    byte_range.start - self.remaining_data_pos
+                        ..byte_range.end - self.remaining_data_pos,
+                )
+                .ok_or(Error::IndexNotFound(byte_range))
+        } else {
+            Err(Error::IndexNotFound(byte_range))
         }
     }
 
@@ -314,7 +347,7 @@ impl<'a, T: IndexType, O: ByteOrder> ParserGeneric<'a, T, O> {
                 self.pos = abs_pos;
                 Ok(())
             } else {
-                Err(Error::IndexUsed)
+                Err(dbg!(Error::IndexUsed))
             }
         }
     }
