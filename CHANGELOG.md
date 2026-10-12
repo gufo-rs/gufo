@@ -4,8 +4,9 @@
 
 ### Fixed
 
-- Parsing of exif data with non Canon MakerNote sub-ifd format can fail.
-- Don't use unwrap in `ParserGeneric::read_bytes` #15
+- exif: Parsing of exif data with non Canon MakerNote sub-ifd format can fail.
+- exif: Don't use unwrap in `ParserGeneric::read_bytes` #15
+- png: Fix TransferCharacteristics test
 
 ## 0.5.1 (2026-09-08)
 

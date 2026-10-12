@@ -318,7 +318,7 @@ mod tests {
             png.cicp(),
             Some(Cicp {
                 color_primaries: ColorPrimaries::DisplayP3,
-                transfer_characteristics: TransferCharacteristics::Gamma24,
+                transfer_characteristics: TransferCharacteristics::Srgb,
                 matrix_coefficients: MatrixCoefficients::Identity,
                 video_full_range_flag: VideoRangeFlag::Full,
             })
