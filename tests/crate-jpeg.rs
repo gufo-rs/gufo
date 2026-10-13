@@ -50,8 +50,7 @@ fn jpeg_rotate() {
 
     let mut data = jpeg.into_inner();
 
-    let new_rotation =
-        dbg!(current_orientation.rotate()) + gufo_common::orientation::Rotation::_180;
+    let new_rotation = current_orientation.rotate() + gufo_common::orientation::Rotation::_180;
     let new_orientation =
         gufo_common::orientation::Orientation::new(current_orientation.mirror(), new_rotation);
 

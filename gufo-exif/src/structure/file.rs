@@ -72,8 +72,7 @@ impl<'a> Parser<'a> {
             let mut exif_ifd = self.read_ifd(IfdId::Exif)?;
 
             // Only try to read MakerNote for canon cameras
-            if let Some(mut make_entry) =
-                dbg!(primary_ifd.entry_by_tag(gufo_common::field::Make::TAG))
+            if let Some(mut make_entry) = primary_ifd.entry_by_tag(gufo_common::field::Make::TAG)
                 && let Ok(make_count) = make_entry.count()
                 && let Ok(ValueOrOffset::Offset(make_offset)) = make_entry.value_or_offset()
                 && let Ok(make) = self.peek_bytes(make_offset..make_offset + make_count)
@@ -347,7 +346,7 @@ impl<'a, T: IndexType, O: ByteOrder> ParserGeneric<'a, T, O> {
                 self.pos = abs_pos;
                 Ok(())
             } else {
-                Err(dbg!(Error::IndexUsed))
+                Err(Error::IndexUsed)
             }
         }
     }
