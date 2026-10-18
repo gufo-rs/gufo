@@ -208,7 +208,7 @@ impl<'a, T: IndexType, O: ByteOrder> ParserGeneric<'a, T, O> {
         if let Some((offset, s)) = self
             .data
             .iter_mut()
-            .find(|(start, s)| *start <= byte_range.start && start + s.len() > byte_range.end)
+            .find(|(start, s)| *start <= byte_range.start && start + s.len() >= byte_range.end)
         {
             Ok(&mut s[byte_range.start - *offset..byte_range.end - *offset])
         } else if byte_range.start > self.remaining_data_pos {
