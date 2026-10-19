@@ -93,6 +93,31 @@ pub fn gufo_nikon_d5100() {
     );
 }
 
+#[test]
+pub fn gufo_nikon_d3300() {
+    let data = std::fs::read("../test-images/exif/jpeg/nikon-d3300.jpg").unwrap();
+    let metadata = gufo::Metadata::for_guessed(data).unwrap();
+
+    check(
+        &metadata,
+        &Reference {
+            camera_owner: None,
+            creator: Some("Lukas Fink"),
+            date_time_original: Some("2017-08-12 19:40:30.900"),
+            exposure_time: Some(Rational::new(1, 200)),
+            f_number: Some(7.1),
+            focal_length: Some(35.),
+            gps_location: None,
+            iso_speed_rating: Some(100),
+            make: Some("NIKON CORPORATION"),
+            model: Some("NIKON D3300"),
+            orientation: Some(Orientation::Id),
+            software: Some("Adobe Photoshop Lightroom 6.0 (Windows)"),
+            user_comment: None,
+        },
+    );
+}
+
 #[derive(Default)]
 struct Reference<'a> {
     camera_owner: Option<&'a str>,
