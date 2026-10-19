@@ -9,7 +9,7 @@ rust-version.workspace = true
 workspace = true
 
 [dev-dependencies]
-gufo = { workspace = true, features = ["jpeg", "png"] }
+gufo = { workspace = true, features = ["jpeg", "png", "chrono"] }
 gufo-common.workspace = true
 gufo-exif.workspace = true
 gufo-jpeg = { workspace = true, features = ["encoder"] }
@@ -26,3 +26,7 @@ path = "crate-jpeg.rs"
 [[test]]
 name = "exif"
 path = "crate-exif.rs"
+
+[[test]]
+name = "gufo"
+path = "crate-gufo.rs"

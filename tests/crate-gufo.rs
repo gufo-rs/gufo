@@ -2,7 +2,7 @@ pub use gufo_common::orientation::Orientation;
 use gufo_common::types::Rational;
 
 #[test]
-pub fn canon_eos400d() {
+pub fn gufo_canon_eos400d() {
     let reference = Reference {
         camera_owner: Some("Sophie Herold"),
         creator: None,
@@ -29,7 +29,7 @@ pub fn canon_eos400d() {
 }
 
 #[test]
-pub fn canon_eos400d_xmp() {
+pub fn gufo_canon_eos400d_xmp() {
     let mut reference: Reference<'_> = Default::default();
     reference.software = Some("GIMP 2.10");
 
@@ -43,7 +43,7 @@ pub fn canon_eos400d_xmp() {
 }
 
 #[test]
-pub fn apple_iphone6() {
+pub fn gufo_apple_iphone6() {
     let data = std::fs::read("../test-images/exif/jpeg/apple-iphone6.jpg").unwrap();
     let metadata = gufo::Metadata::for_guessed(data).unwrap();
 
@@ -68,7 +68,7 @@ pub fn apple_iphone6() {
 }
 
 #[test]
-pub fn nikon_d5100() {
+pub fn gufo_nikon_d5100() {
     let data = std::fs::read("../test-images/exif/jpeg/nikon-d5100.jpg").unwrap();
     let metadata = gufo::Metadata::for_guessed(data).unwrap();
 
