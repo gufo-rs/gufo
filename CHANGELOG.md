@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.5.4 (2026-10-19)
+
+### Fixed
+
+- exif: Fix panic during initial camera manufacturer lookup
+
+## 0.5.3 (2026-10-13)
+
+### Fixed
+
+- Remove unnecessary dbg! statements
+
 ## 0.5.2 (2026-10-13)
 
 ### Fixed
