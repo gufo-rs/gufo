@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.5.5 (2026-10-26)
+
+### Fixed
+
+- exif: Fix wrong offset in data for lookups in some images where the remaining data were read from a wrong position.
+
 ## 0.5.4 (2026-10-19)
 
 ### Fixed
